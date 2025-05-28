@@ -26,8 +26,8 @@ import org.palladiosimulator.analyzer.slingshot.common.events.DESEvent;
 import org.palladiosimulator.analyzer.slingshot.common.utils.LambdaVisitor;
 import org.palladiosimulator.analyzer.slingshot.common.utils.events.ModelPassedEvent;
 import org.palladiosimulator.analyzer.slingshot.core.api.SimulationEngine;
-import org.palladiosimulator.analyzer.slingshot.snapshot.entities.JobRecord;
-import org.palladiosimulator.analyzer.slingshot.snapshot.entities.LessInvasiveInMemoryRecord;
+import org.palladiosimulator.analyzer.slingshot.snapshot.entities.RecordedJob;
+import org.palladiosimulator.analyzer.slingshot.snapshot.entities.InMemoryRecorder;
 import org.palladiosimulator.analyzer.slingshot.snapshot.events.SnapshotInitiated;
 import org.palladiosimulator.analyzer.slingshot.snapshot.events.SnapshotTaken;
 import org.palladiosimulator.pcm.core.CoreFactory;
@@ -57,7 +57,7 @@ public abstract class Camera {
 	private static final String FAKE = "fakeID";
 
 	/** Access to past events, that must go into the snapshot.*/
-	private final LessInvasiveInMemoryRecord record;
+	private final InMemoryRecorder record;
 
 	/** Access to future events, that must go into the snapshot.*/
 	private final SimulationEngine engine;
@@ -73,7 +73,7 @@ public abstract class Camera {
 	 * @param engine
 	 * @param stateValues
 	 */
-	public Camera(final LessInvasiveInMemoryRecord record, final SimulationEngine engine, final Collection<SPDAdjustorStateValues> stateValues) {
+	public Camera(final InMemoryRecorder record, final SimulationEngine engine, final Collection<SPDAdjustorStateValues> stateValues) {
 		this.record = record;
 		this.engine = engine;
 
@@ -179,10 +179,10 @@ public abstract class Camera {
 	 * @param jobrecords
 	 * @return
 	 */
-	protected Set<JobInitiated> createInitEventsForProcSharing(final Set<JobRecord> jobrecords) {
+	protected Set<JobInitiated> createInitEventsForProcSharing(final Set<RecordedJob> jobrecords) {
 		final Set<JobInitiated> rval = new HashSet<>();
 	
-		for (final JobRecord jobRecord : jobrecords) {
+		for (final RecordedJob jobRecord : jobrecords) {
 			// do the Proc Sharing Math
 			final double ratio = jobRecord.getNormalizedDemand() == 0 ? 0
 					: jobRecord.getCurrentDemand() / jobRecord.getNormalizedDemand();
@@ -212,13 +212,13 @@ public abstract class Camera {
 	 *                       snapshot
 	 * @return events to reinsert all open jobs to their respective FCFS Resource
 	 */
-	protected Set<JobInitiated> createInitEventsForFCFS(final Set<JobRecord> jobrecords, final Set<AbstractJobEvent> fcfsProgressed) {
+	protected Set<JobInitiated> createInitEventsForFCFS(final Set<RecordedJob> jobrecords, final Set<AbstractJobEvent> fcfsProgressed) {
 		final Set<JobInitiated> rval = new HashSet<>();
 	
 		final Map<Job, AbstractJobEvent> progressedJobs = new HashMap<>();
 		fcfsProgressed.stream().forEach(event -> progressedJobs.put(event.getEntity(), event));
 	
-		for (final JobRecord record : jobrecords) {
+		for (final RecordedJob record : jobrecords) {
 			if (record.getNormalizedDemand() == 0) { // For Linking Jobs.
 				if (record.getJob().getDemand() != 0) {
 					throw new IllegalStateException(
@@ -343,8 +343,8 @@ public abstract class Camera {
 		final Set<DESEvent> relevantEvents = engine.getScheduledEvents();
 	
 		// get events to recreate state of queues
-		final Set<JobRecord> fcfsRecords = record.getFCFSJobRecords();
-		final Set<JobRecord> procsharingRecords = record.getProcSharingJobRecords();
+		final Set<RecordedJob> fcfsRecords = record.getFCFSJobRecords();
+		final Set<RecordedJob> procsharingRecords = record.getProcSharingJobRecords();
 	
 		final Set<AbstractJobEvent> progressedFcfs = relevantEvents.stream()
 				.filter(e -> (e instanceof JobProgressed) || (e instanceof JobFinished)).map(e -> (AbstractJobEvent) e)

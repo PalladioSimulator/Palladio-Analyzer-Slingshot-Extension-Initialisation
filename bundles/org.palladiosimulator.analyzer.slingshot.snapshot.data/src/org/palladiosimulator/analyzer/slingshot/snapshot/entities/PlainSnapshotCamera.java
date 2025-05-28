@@ -20,7 +20,7 @@ import org.palladiosimulator.analyzer.slingshot.snapshot.api.Snapshot;
  */
 public final class PlainSnapshotCamera extends Camera {
 	
-	public PlainSnapshotCamera(final LessInvasiveInMemoryRecord record, final SimulationEngine engine, final Collection<SPDAdjustorStateValues> policyIdToValues) {
+	public PlainSnapshotCamera(final InMemoryRecorder record, final SimulationEngine engine, final Collection<SPDAdjustorStateValues> policyIdToValues) {
 		super(record, engine, policyIdToValues);
 	}
 

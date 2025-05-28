@@ -6,7 +6,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.palladiosimulator.analyzer.slingshot.snapshot.serialization.util.Shareables;
+import org.palladiosimulator.analyzer.slingshot.snapshot.serialization.util.SnapshotSerialisationUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
@@ -87,7 +87,7 @@ public class EntityTypeAdapterFactory implements TypeAdapterFactory {
 					throw new JsonParseException("this should not have happened.");
 				}
 
-				final String refId = Shareables.getReferenceId(value);
+				final String refId = SnapshotSerialisationUtils.getReferenceId(value);
 
 				if (alreadyJsoned.contains(refId)) {
 					elementAdapter.write(out, new JsonPrimitive(refId));

@@ -26,16 +26,16 @@ import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.eventcon
 import org.palladiosimulator.analyzer.slingshot.eventdriver.entity.interceptors.InterceptorInformation;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.returntypes.InterceptionResult;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.returntypes.Result;
+import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.providers.EventsToInitOnWrapper;
 import org.palladiosimulator.analyzer.slingshot.snapshot.api.Camera;
-import org.palladiosimulator.analyzer.slingshot.snapshot.api.EventRecord;
+import org.palladiosimulator.analyzer.slingshot.snapshot.api.EventRecorder;
 import org.palladiosimulator.analyzer.slingshot.snapshot.api.Snapshot;
-import org.palladiosimulator.analyzer.slingshot.snapshot.entities.JobRecord;
-import org.palladiosimulator.analyzer.slingshot.snapshot.entities.LessInvasiveInMemoryRecord;
+import org.palladiosimulator.analyzer.slingshot.snapshot.entities.RecordedJob;
+import org.palladiosimulator.analyzer.slingshot.snapshot.entities.InMemoryRecorder;
 import org.palladiosimulator.analyzer.slingshot.snapshot.entities.PlainSnapshotCamera;
 import org.palladiosimulator.analyzer.slingshot.snapshot.events.SnapshotFinished;
 import org.palladiosimulator.analyzer.slingshot.snapshot.events.SnapshotInitiated;
 import org.palladiosimulator.analyzer.slingshot.snapshot.events.SnapshotTaken;
-import org.palladiosimulator.analyzer.slingshot.stateexploration.providers.EventsToInitOnWrapper;
 import org.palladiosimulator.pcm.allocation.Allocation;
 import org.palladiosimulator.pcm.allocation.AllocationContext;
 import org.palladiosimulator.pcm.seff.StartAction;
@@ -52,7 +52,7 @@ import org.palladiosimulator.pcm.usagemodel.Stop;
  * included in the snapshot but cannot be accessed directly once taking a
  * snapshot is triggered. This behaviour subscribes to, or pre- and postintercepts the
  * recorded events, but the actual recording is forwarded to a instance of
- * {@link EventRecord}.
+ * {@link EventRecorder}.
  * 
  * For taking the actual snapshot, this class uses an instance of {@link Camera}.
  *
@@ -71,7 +71,7 @@ public class SnapshotRecordingBehavior implements SimulationBehaviorExtension {
 	private boolean snapshotIsTaken = false;
 	private boolean snapshotIsFinished = false;
 
-	private final LessInvasiveInMemoryRecord recorder;
+	private final InMemoryRecorder recorder;
 	
 	private final Camera camera;
 
@@ -83,7 +83,7 @@ public class SnapshotRecordingBehavior implements SimulationBehaviorExtension {
 		// can i somehow include this in the injection part?
 		// should work with this Model and the 'bind' instruction.
 
-		this.recorder = new LessInvasiveInMemoryRecord();
+		this.recorder = new InMemoryRecorder();
 		//this.camera = new LessInvasiveInMemoryCamera(this.recorder, engine, set.get(), wrapper.getStateInitEvents().stream().map(e -> e.getStateValues()).toList());
 		//this.camera = new SerializingCamera(this.recorder, engine, set.get(), wrapper.getStateInitEvents().stream().map(e -> e.getStateValues()).toList());
 		this.camera = new PlainSnapshotCamera(this.recorder, engine, wrapper.getStateInitEvents().stream().map(e -> e.getStateValues()).toList());
@@ -119,7 +119,7 @@ public class SnapshotRecordingBehavior implements SimulationBehaviorExtension {
 	}
 
 	/**
-	 * Create a {@link JobRecord} before the {@link JobInitiated} get processed to capture the initial
+	 * Create a {@link RecordedJob} before the {@link JobInitiated} get processed to capture the initial
 	 * demand.
 	 *
 	 * @see {@link SnapshotRecordingBehavior#postInterceptJobInitiated(InterceptorInformation, JobInitiated, Result)s}
