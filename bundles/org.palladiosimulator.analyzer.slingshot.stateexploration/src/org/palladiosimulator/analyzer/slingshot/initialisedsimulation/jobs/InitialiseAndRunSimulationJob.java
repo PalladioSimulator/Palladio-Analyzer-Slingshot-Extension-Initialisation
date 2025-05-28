@@ -1,4 +1,4 @@
-package org.palladiosimulator.analyzer.slingshot.initialisedsimulation.explorer.configuration;
+package org.palladiosimulator.analyzer.slingshot.initialisedsimulation.jobs;
 
 import java.nio.file.Path;
 
@@ -7,8 +7,9 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.emf.common.util.URI;
 import org.palladiosimulator.analyzer.slingshot.core.Slingshot;
 import org.palladiosimulator.analyzer.slingshot.core.extension.PCMResourceSetPartitionProvider;
-import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.explorer.SimulationStarter;
-import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.explorer.SimulationStarter.SimulationResult;
+import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.SimulationStarter;
+import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.SimulationStarter.SimulationResult;
+import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.configuration.InitialiseSimulationWorkflowConfiguration;
 import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.providers.AdditionalConfigurationModule;
 import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.serialiser.InitStateDeSerialization;
 import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.serialiser.OtherStuffDeserialization;

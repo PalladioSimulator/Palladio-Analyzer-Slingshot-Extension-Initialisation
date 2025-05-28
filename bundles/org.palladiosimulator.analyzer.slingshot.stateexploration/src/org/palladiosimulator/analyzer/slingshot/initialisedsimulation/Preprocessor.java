@@ -1,4 +1,4 @@
-package org.palladiosimulator.analyzer.slingshot.initialisedsimulation.explorer.planning;
+package org.palladiosimulator.analyzer.slingshot.initialisedsimulation;
 
 import java.util.ArrayList;
 import java.util.Collection;

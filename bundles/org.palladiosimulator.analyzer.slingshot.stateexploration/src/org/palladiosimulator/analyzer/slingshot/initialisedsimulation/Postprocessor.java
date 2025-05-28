@@ -1,4 +1,4 @@
-package org.palladiosimulator.analyzer.slingshot.initialisedsimulation.explorer.planning;
+package org.palladiosimulator.analyzer.slingshot.initialisedsimulation;
 
 import org.apache.log4j.Logger;
 import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.ModelAdjustmentRequested;

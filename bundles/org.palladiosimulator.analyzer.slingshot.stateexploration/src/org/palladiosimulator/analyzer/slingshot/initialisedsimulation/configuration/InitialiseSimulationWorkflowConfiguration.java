@@ -1,4 +1,4 @@
-package org.palladiosimulator.analyzer.slingshot.initialisedsimulation.explorer.configuration;
+package org.palladiosimulator.analyzer.slingshot.initialisedsimulation.configuration;
 
 
 import java.nio.file.Path;

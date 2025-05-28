@@ -1,9 +1,6 @@
 package org.palladiosimulator.analyzer.slingshot.initialisedsimulation.providers;
 
 import org.palladiosimulator.analyzer.slingshot.core.extension.AbstractSlingshotExtension;
-import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.providers.EventsToInitOnProvider;
-import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.providers.EventsToInitOnWrapper;
-import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.providers.SnapshotConfigurationProvider;
 import org.palladiosimulator.analyzer.slingshot.snapshot.configuration.SnapshotConfiguration;
 import org.palladiosimulator.analyzer.slingshot.stateexploration.data.ExploredStateBuilder;
 
@@ -32,6 +29,6 @@ public class AdditionalConfigurationModule extends AbstractSlingshotExtension{
 
 	@Override
 	public String getName() {
-		return "Additional Configuration for Stateexploration";
+		return "Additional Configuration for Simulation Initalisation";
 	}
 }

@@ -1,6 +1,7 @@
-package org.palladiosimulator.analyzer.slingshot.initialisedsimulation.explorer.configuration;
+package org.palladiosimulator.analyzer.slingshot.initialisedsimulation.jobs;
 
 import org.eclipse.debug.core.ILaunch;
+import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.configuration.InitialiseSimulationWorkflowConfiguration;
 import org.palladiosimulator.analyzer.workflow.jobs.LoadModelIntoBlackboardJob;
 import org.palladiosimulator.analyzer.workflow.jobs.PreparePCMBlackboardPartitionJob;
 

@@ -1,4 +1,4 @@
-package org.palladiosimulator.analyzer.slingshot.initialisedsimulation.explorer;
+package org.palladiosimulator.analyzer.slingshot.initialisedsimulation;
 
 import java.util.List;
 import java.util.Set;
@@ -17,8 +17,6 @@ import org.palladiosimulator.analyzer.slingshot.converter.data.StateGraphNode;
 import org.palladiosimulator.analyzer.slingshot.converter.data.Utility;
 import org.palladiosimulator.analyzer.slingshot.core.Slingshot;
 import org.palladiosimulator.analyzer.slingshot.core.api.SimulationDriver;
-import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.explorer.planning.Postprocessor;
-import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.explorer.planning.Preprocessor;
 import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.providers.AdditionalConfigurationModule;
 import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.providers.EventsToInitOnWrapper;
 import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.serialiser.data.InitState;
