@@ -40,15 +40,15 @@ import de.uka.ipd.sdq.workflow.mdsd.blackboard.MDSDBlackboard;
  * @author Sophie Stieß
  *
  */
-public class SingleStateSimulationPreprocessor {
+public class Preprocessor {
 
-	private static final Logger LOGGER = Logger.getLogger(SingleStateSimulationPreprocessor.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(Preprocessor.class.getName());
 
 	private final PCMResourceSetPartition partition;
 	private final Snapshot snapshot;
 	
 	
-	public SingleStateSimulationPreprocessor(final Snapshot snapshot, final MDSDBlackboard blackboard) {
+	public Preprocessor(final Snapshot snapshot, final MDSDBlackboard blackboard) {
 		this.snapshot = snapshot;
 		this.partition = (PCMResourceSetPartition) blackboard.getPartition(ConstantsContainer.DEFAULT_PCM_INSTANCE_PARTITION_ID);
 	}

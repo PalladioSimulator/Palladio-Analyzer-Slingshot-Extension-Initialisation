@@ -1,4 +1,4 @@
-package org.palladiosimulator.analyzer.slingshot.singlestatesimulation.application;
+package org.palladiosimulator.analyzer.slingshot.initialisedsimulation.application;
 
 import org.eclipse.core.runtime.Plugin;
 import org.osgi.framework.BundleContext;
@@ -9,7 +9,7 @@ import org.osgi.framework.BundleContext;
 public class Activator extends Plugin {
 
     // The plug-in ID
-    public static final String PLUGIN_ID = "org.palladiosimulator.analyzer.slingshot.singlestatesimulation.application";
+    public static final String PLUGIN_ID = "org.palladiosimulator.analyzer.slingshot.initialisedsimulation.application";
 
     // The shared instance
     private static Activator plugin;

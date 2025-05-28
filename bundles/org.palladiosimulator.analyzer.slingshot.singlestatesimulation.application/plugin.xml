@@ -2,13 +2,13 @@
 <?eclipse version="3.4"?>
 <plugin>
    <extension
-         id="SingleStateSimulationApplication"
+         id="InitialisedSimulationApplication"
          point="org.eclipse.core.runtime.applications">
       <application
             cardinality="singleton-global"
             thread="main"
             visible="true">
-            <run class="org.palladiosimulator.analyzer.slingshot.singlestatesimulation.application.SingleStateSimulationApplication"></run>
+            <run class="org.palladiosimulator.analyzer.slingshot.initialisedsimulation.application.InitialisedSimulationApplication"></run>
       </application>
    </extension>
 

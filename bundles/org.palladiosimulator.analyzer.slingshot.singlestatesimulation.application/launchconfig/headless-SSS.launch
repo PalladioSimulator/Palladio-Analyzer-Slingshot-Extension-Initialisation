@@ -28,7 +28,7 @@
     <booleanAttribute key="org.eclipse.jdt.launching.ATTR_SHOW_CODEDETAILS_IN_EXCEPTION_MESSAGES" value="true"/>
     <booleanAttribute key="org.eclipse.jdt.launching.ATTR_USE_START_ON_FIRST_THREAD" value="true"/>
     <stringAttribute key="org.eclipse.jdt.launching.JRE_CONTAINER" value="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-17"/>
-    <stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="-os ${target.os} -ws ${target.ws} -arch ${target.arch} -nl ${target.nl} -consoleLog -console -application org.palladiosimulator.analyzer.slingshot.singlestatesimulation.application.SingleStateSimulationApplication /Users/stiesssh/uni/repos/slingshot-example/example-models/EspresssoAccountingMinimalExample/espresso.experiments /var/folders/y4/01qwswz94051py5_hwg72_740000gn/T/snapshot/event.json /var/folders/y4/01qwswz94051py5_hwg72_740000gn/T/snapshot/others.json /var/folders/y4/01qwswz94051py5_hwg72_740000gn/T/resultfolder/"/>
+    <stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="-os ${target.os} -ws ${target.ws} -arch ${target.arch} -nl ${target.nl} -consoleLog -console -application org.palladiosimulator.analyzer.slingshot.initialisedsimulation.application.InitialisedSimulationApplication /Users/stiesssh/uni/repos/slingshot-example/example-models/EspresssoAccountingMinimalExample/espresso.experiments /var/folders/y4/01qwswz94051py5_hwg72_740000gn/T/snapshot/event.json /var/folders/y4/01qwswz94051py5_hwg72_740000gn/T/snapshot/others.json /var/folders/y4/01qwswz94051py5_hwg72_740000gn/T/resultfolder/"/>
     <stringAttribute key="org.eclipse.jdt.launching.SOURCE_PATH_PROVIDER" value="org.eclipse.pde.ui.workbenchClasspathProvider"/>
     <stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Dorg.eclipse.swt.graphics.Resource.reportNonDisposed=true -Dosgi.noShutdown=true -ea -Dlog4j.configuration=file:///Users/stiesssh/uni/repos/slingshot-example/example-models/log4j.properties"/>
     <stringAttribute key="pde.version" value="3.3"/>
@@ -39,8 +39,7 @@
         <setEntry value="com.google.gson@default:default"/>
         <setEntry value="com.google.guava@default:default"/>
         <setEntry value="com.google.inject@default:default"/>
-        <setEntry value="com.ibm.icu*72.1.0.v20221115-2007@default:default"/>
-        <setEntry value="com.ibm.icu*72.1.0@default:default"/>
+        <setEntry value="com.ibm.icu@default:default"/>
         <setEntry value="com.sun.jna.platform@default:default"/>
         <setEntry value="com.sun.jna@default:default"/>
         <setEntry value="de.mdelab.sdm.interpreter.core.eclipse@default:default"/>
@@ -89,16 +88,25 @@
         <setEntry value="net.bytebuddy.byte-buddy@default:default"/>
         <setEntry value="org.apache.ant@default:default"/>
         <setEntry value="org.apache.batik.bridge@default:default"/>
-        <setEntry value="org.apache.batik.constants@default:default"/>
-        <setEntry value="org.apache.batik.css@default:default"/>
+        <setEntry value="org.apache.batik.constants*1.14.0.v20210324-0332@default:default"/>
+        <setEntry value="org.apache.batik.constants*1.9.1.v20180227-1645@default:default"/>
+        <setEntry value="org.apache.batik.css*1.14.0.v20210324-0332@default:default"/>
+        <setEntry value="org.apache.batik.css*1.6.0.v201011041432@default:default"/>
+        <setEntry value="org.apache.batik.css*1.9.1.v20181015-1528@default:default"/>
+        <setEntry value="org.apache.batik.dom*1.6.1.v201505192100@default:default"/>
+        <setEntry value="org.apache.batik.dom*1.9.1.v20190730-1743@default:default"/>
         <setEntry value="org.apache.batik.dom.svg@default:default"/>
-        <setEntry value="org.apache.batik.dom@default:default"/>
-        <setEntry value="org.apache.batik.i18n@default:default"/>
+        <setEntry value="org.apache.batik.i18n*1.14.0.v20210324-0332@default:default"/>
+        <setEntry value="org.apache.batik.i18n*1.9.1.v20180227-1645@default:default"/>
         <setEntry value="org.apache.batik.parser@default:default"/>
-        <setEntry value="org.apache.batik.svggen@default:default"/>
+        <setEntry value="org.apache.batik.svggen*1.6.0.v201011041432@default:default"/>
+        <setEntry value="org.apache.batik.svggen*1.9.1.v20190730-1743@default:default"/>
         <setEntry value="org.apache.batik.transcoder@default:default"/>
-        <setEntry value="org.apache.batik.util@default:default"/>
-        <setEntry value="org.apache.batik.xml@default:default"/>
+        <setEntry value="org.apache.batik.util*1.14.0.v20210324-0332@default:default"/>
+        <setEntry value="org.apache.batik.util*1.6.0.v201011041432@default:default"/>
+        <setEntry value="org.apache.batik.util*1.9.1.v20180703-1553@default:default"/>
+        <setEntry value="org.apache.batik.xml*1.6.0.v201011041432@default:default"/>
+        <setEntry value="org.apache.batik.xml*1.9.1.v20190730-1743@default:default"/>
         <setEntry value="org.apache.commons.cli@default:default"/>
         <setEntry value="org.apache.commons.codec@default:default"/>
         <setEntry value="org.apache.commons.collections15@default:default"/>
@@ -363,7 +371,8 @@
         <setEntry value="org.modelversioning.emfprofile.project@default:default"/>
         <setEntry value="org.modelversioning.emfprofile.registry@default:default"/>
         <setEntry value="org.modelversioning.emfprofile@default:default"/>
-        <setEntry value="org.objectweb.asm@default:default"/>
+        <setEntry value="org.objectweb.asm*9.1.0.v20210209-1849@default:default"/>
+        <setEntry value="org.objectweb.asm*9.2.0.v20210813-1119@default:default"/>
         <setEntry value="org.objenesis@default:default"/>
         <setEntry value="org.opentest4j@default:default"/>
         <setEntry value="org.palladiosimulator.analyzer.accuracy@default:default"/>
@@ -452,18 +461,17 @@
         <setEntry value="org.palladiosimulator.analyzer.slingshot.cost@default:default"/>
         <setEntry value="org.palladiosimulator.analyzer.slingshot.eventdriver.annotationprocessor@default:default"/>
         <setEntry value="org.palladiosimulator.analyzer.slingshot.eventdriver@default:default"/>
+        <setEntry value="org.palladiosimulator.analyzer.slingshot.initialisedsimulation.application@default:default"/>
         <setEntry value="org.palladiosimulator.analyzer.slingshot.monitor.data@default:default"/>
         <setEntry value="org.palladiosimulator.analyzer.slingshot.monitor.processingtype.aggregator@default:default"/>
         <setEntry value="org.palladiosimulator.analyzer.slingshot.monitor.processingtype.feedthrough@default:default"/>
         <setEntry value="org.palladiosimulator.analyzer.slingshot.monitor.utils@default:default"/>
         <setEntry value="org.palladiosimulator.analyzer.slingshot.monitor@default:default"/>
-        <setEntry value="org.palladiosimulator.analyzer.slingshot.singlestatesimulation.application@default:default"/>
         <setEntry value="org.palladiosimulator.analyzer.slingshot.snapshot.data@default:default"/>
         <setEntry value="org.palladiosimulator.analyzer.slingshot.snapshot.serialization@default:default"/>
         <setEntry value="org.palladiosimulator.analyzer.slingshot.snapshot@default:default"/>
         <setEntry value="org.palladiosimulator.analyzer.slingshot.stateexploration.converter@default:default"/>
         <setEntry value="org.palladiosimulator.analyzer.slingshot.stateexploration.data@default:default"/>
-        <setEntry value="org.palladiosimulator.analyzer.slingshot.stateexploration.ui.events@default:default"/>
         <setEntry value="org.palladiosimulator.analyzer.slingshot.stateexploration@default:default"/>
         <setEntry value="org.palladiosimulator.analyzer.slingshot.ui.events@default:default"/>
         <setEntry value="org.palladiosimulator.analyzer.slingshot.workflow.events@default:default"/>

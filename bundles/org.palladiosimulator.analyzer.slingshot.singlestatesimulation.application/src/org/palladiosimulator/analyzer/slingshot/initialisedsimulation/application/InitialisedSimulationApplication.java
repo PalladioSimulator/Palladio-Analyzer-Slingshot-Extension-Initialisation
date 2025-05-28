@@ -1,4 +1,4 @@
-package org.palladiosimulator.analyzer.slingshot.singlestatesimulation.application;
+package org.palladiosimulator.analyzer.slingshot.initialisedsimulation.application;
 
 import java.util.List;
 import java.util.Map;
@@ -15,8 +15,8 @@ import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
 import org.palladiosimulator.analyzer.slingshot.stateexploration.explorer.configuration.ExplorationWorkflowConfiguration;
-import org.palladiosimulator.analyzer.slingshot.stateexploration.explorer.configuration.SingleStateSimulationRootJob;
-import org.palladiosimulator.analyzer.slingshot.stateexploration.explorer.configuration.SingleStateSimulationWorkflowConfiguration;
+import org.palladiosimulator.analyzer.slingshot.stateexploration.explorer.configuration.InitialiseSimulationRootJob;
+import org.palladiosimulator.analyzer.slingshot.stateexploration.explorer.configuration.InitialiseSimulationWorkflowConfiguration;
 import org.palladiosimulator.experimentautomation.application.ExperimentApplication;
 import org.palladiosimulator.experimentautomation.application.tooladapter.abstractsimulation.AbstractSimulationConfigFactory;
 import org.palladiosimulator.experimentautomation.application.tooladapter.slingshot.model.SlingshotConfiguration;
@@ -48,9 +48,9 @@ import de.uka.ipd.sdq.workflow.mdsd.blackboard.MDSDBlackboard;
  * @author Sophie Stieß
  *
  */
-public class SingleStateSimulationApplication implements IApplication {
+public class InitialisedSimulationApplication implements IApplication {
 
-	private final String SINGLE_STATE_SIMULATION_ID = "org.palladiosimulator.singlestatesimulation";
+	private final String SINGLE_STATE_SIMULATION_ID = "org.palladiosimulator.initialisedsimulation";
 
 	@Override
 	public Object start(final IApplicationContext context) throws Exception {
@@ -60,7 +60,7 @@ public class SingleStateSimulationApplication implements IApplication {
 		final Experiment experiment = getStateExplorationExperiment(experimentsLocation).orElseThrow(() -> new IllegalArgumentException(
 				"No Experiment with tool configuration of type StateExploration(Simulation)Configuration. Cannot start exploration."));
 		
-		final SingleStateSimulationWorkflowConfiguration.LocationRecord locationRecord=  createLocationRecord(context);
+		final InitialiseSimulationWorkflowConfiguration.LocationRecord locationRecord=  createLocationRecord(context);
 
 		launchStateExploration(experiment, locationRecord);
 		
@@ -83,12 +83,12 @@ public class SingleStateSimulationApplication implements IApplication {
 		return new Path(args[index - 1]);
 	}
 	
-	private SingleStateSimulationWorkflowConfiguration.LocationRecord createLocationRecord(final IApplicationContext context) {
+	private InitialiseSimulationWorkflowConfiguration.LocationRecord createLocationRecord(final IApplicationContext context) {
 		final java.nio.file.Path snapshotFile = parseCommandlineArguments(context, 2).toFile().toPath();
 		final java.nio.file.Path otherConfigsFile = parseCommandlineArguments(context, 3).toFile().toPath();
 		final java.nio.file.Path resultFolder = parseCommandlineArguments(context, 4).toFile().toPath();
 		
-		return new SingleStateSimulationWorkflowConfiguration.LocationRecord(snapshotFile, otherConfigsFile, resultFolder);
+		return new InitialiseSimulationWorkflowConfiguration.LocationRecord(snapshotFile, otherConfigsFile, resultFolder);
 	}
 
 	/**
@@ -112,18 +112,18 @@ public class SingleStateSimulationApplication implements IApplication {
 	 *
 	 * @param experiment
 	 */
-	private void launchStateExploration(final Experiment experiment, final SingleStateSimulationWorkflowConfiguration.LocationRecord locationRecord) {
+	private void launchStateExploration(final Experiment experiment, final InitialiseSimulationWorkflowConfiguration.LocationRecord locationRecord) {
 
 		final Map<String, Object> configMap = createConfigMap(experiment, SINGLE_STATE_SIMULATION_ID);
 
 		final SimuComConfig simuComconfig = new SimuComConfig(configMap, false);
 
-		final SingleStateSimulationWorkflowConfiguration config = new SingleStateSimulationWorkflowConfiguration(simuComconfig, configMap, locationRecord);
+		final InitialiseSimulationWorkflowConfiguration config = new InitialiseSimulationWorkflowConfiguration(simuComconfig, configMap, locationRecord);
 
 		this.setModelFilesInConfig(experiment, config);
 
 		final BlackboardBasedWorkflow<MDSDBlackboard> workflow = new BlackboardBasedWorkflow<MDSDBlackboard>(
-				new SingleStateSimulationRootJob(config, null),
+				new InitialiseSimulationRootJob(config, null),
 				new MDSDBlackboard());
 
 		try {

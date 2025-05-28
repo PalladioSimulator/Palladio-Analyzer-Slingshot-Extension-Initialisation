@@ -9,8 +9,8 @@ import org.palladiosimulator.analyzer.slingshot.core.Slingshot;
 import org.palladiosimulator.analyzer.slingshot.core.extension.PCMResourceSetPartitionProvider;
 import org.palladiosimulator.analyzer.slingshot.snapshot.configuration.SnapshotConfiguration;
 import org.palladiosimulator.analyzer.slingshot.stateexploration.api.ArchitectureConfigurationUtil;
-import org.palladiosimulator.analyzer.slingshot.stateexploration.explorer.SingleStateSimulationExplorer;
-import org.palladiosimulator.analyzer.slingshot.stateexploration.explorer.SingleStateSimulationExplorer.SimulationResult;
+import org.palladiosimulator.analyzer.slingshot.stateexploration.explorer.SimulationStarter;
+import org.palladiosimulator.analyzer.slingshot.stateexploration.explorer.SimulationStarter.SimulationResult;
 import org.palladiosimulator.analyzer.slingshot.stateexploration.providers.AdditionalConfigurationModule;
 import org.palladiosimulator.analyzer.slingshot.stateexploration.serialiser.InitStateDeSerialization;
 import org.palladiosimulator.analyzer.slingshot.stateexploration.serialiser.OtherStuffDeserialization;
@@ -32,16 +32,16 @@ import de.uka.ipd.sdq.workflow.mdsd.blackboard.MDSDBlackboard;
  *
  * @author Sarah Stieß
  */
-public class RunSingleStateSimulationJob implements IBlackboardInteractingJob<MDSDBlackboard> {
+public class InitialiseAndRunSimulationJob implements IBlackboardInteractingJob<MDSDBlackboard> {
 
-	private static final Logger LOGGER = Logger.getLogger(RunSingleStateSimulationJob.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(InitialiseAndRunSimulationJob.class.getName());
 
 	private MDSDBlackboard blackboard;
 	private final PCMResourceSetPartitionProvider pcmResourceSetPartitionProvider;
 
-	private final SingleStateSimulationWorkflowConfiguration configuration;
+	private final InitialiseSimulationWorkflowConfiguration configuration;
 	
-	public RunSingleStateSimulationJob(final SingleStateSimulationWorkflowConfiguration  config) {
+	public InitialiseAndRunSimulationJob(final InitialiseSimulationWorkflowConfiguration  config) {
 		this.configuration = config;
 		this.pcmResourceSetPartitionProvider = Slingshot.getInstance().getInstance(PCMResourceSetPartitionProvider.class);
 	}
@@ -83,7 +83,7 @@ public class RunSingleStateSimulationJob implements IBlackboardInteractingJob<MD
 		// this.configuration.getlaunchConfigParams() --> access to all the params.
 		
 		// get explorere for single state and run the simulation //	
-		final SingleStateSimulationExplorer explorer = new SingleStateSimulationExplorer(this.configuration.getSimuComConfig(), monitor, this.blackboard, initState.getSnapshot(), initState.getId());
+		final SimulationStarter explorer = new SimulationStarter(this.configuration.getSimuComConfig(), monitor, this.blackboard, initState.getSnapshot(), initState.getId());
 		final SimulationResult result = explorer.simulateSingleState(otherInitThings.getIncomingPolicies(), initState.getPointInTime());
 
 		final String fileName = configuration.getSnapshotFile().getFileName().toString();

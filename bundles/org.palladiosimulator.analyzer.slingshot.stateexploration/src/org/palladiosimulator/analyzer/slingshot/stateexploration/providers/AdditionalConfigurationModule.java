@@ -17,7 +17,7 @@ import org.palladiosimulator.analyzer.slingshot.stateexploration.providers.Snaps
 public class AdditionalConfigurationModule extends AbstractSlingshotExtension{
 
 	public static final SnapshotConfigurationProvider snapConfigProvider = new SnapshotConfigurationProvider();
-	public static final SingleStateExploredStateBuilderProvider defaultStateProvider = new SingleStateExploredStateBuilderProvider();
+	public static final ExploredStateBuilderProvider defaultStateProvider = new ExploredStateBuilderProvider();
 	public static final EventsToInitOnProvider eventsToInitOnProvider = new EventsToInitOnProvider();
 
 	public AdditionalConfigurationModule() {

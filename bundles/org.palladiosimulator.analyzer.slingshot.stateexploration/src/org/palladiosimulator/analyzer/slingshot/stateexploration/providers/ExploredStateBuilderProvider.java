@@ -12,7 +12,7 @@ import org.palladiosimulator.analyzer.slingshot.stateexploration.graph.ExploredS
  *
  */
 @Singleton
-public class SingleStateExploredStateBuilderProvider implements Provider<ExploredStateBuilder> {
+public class ExploredStateBuilderProvider implements Provider<ExploredStateBuilder> {
 
 	private ExploredStateBuilder state;
 

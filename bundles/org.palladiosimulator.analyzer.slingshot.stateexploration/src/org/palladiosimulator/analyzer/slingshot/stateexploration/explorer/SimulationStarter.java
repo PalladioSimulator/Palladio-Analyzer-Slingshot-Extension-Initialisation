@@ -19,7 +19,7 @@ import org.palladiosimulator.analyzer.slingshot.core.Slingshot;
 import org.palladiosimulator.analyzer.slingshot.core.api.SimulationDriver;
 import org.palladiosimulator.analyzer.slingshot.snapshot.api.Snapshot;
 import org.palladiosimulator.analyzer.slingshot.stateexploration.explorer.planning.Postprocessor;
-import org.palladiosimulator.analyzer.slingshot.stateexploration.explorer.planning.SingleStateSimulationPreprocessor;
+import org.palladiosimulator.analyzer.slingshot.stateexploration.explorer.planning.Preprocessor;
 import org.palladiosimulator.analyzer.slingshot.stateexploration.graph.ExploredState;
 import org.palladiosimulator.analyzer.slingshot.stateexploration.graph.ExploredStateBuilder;
 import org.palladiosimulator.analyzer.slingshot.stateexploration.providers.AdditionalConfigurationModule;
@@ -46,23 +46,23 @@ import de.uka.ipd.sdq.workflow.mdsd.blackboard.MDSDBlackboard;
  * @author Sarah Stieß
  *
  */
-public class SingleStateSimulationExplorer {
+public class SimulationStarter {
 
-	private static final Logger LOGGER = Logger.getLogger(SingleStateSimulationExplorer.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(SimulationStarter.class.getName());
 
 	/** content changes with each iteration */
 	private final PCMResourceSetPartition initModels;
 
 	private final SimuComConfig simuComConfig;
 
-	private final SingleStateSimulationPreprocessor preprocessor;
+	private final Preprocessor preprocessor;
 
 	private final IProgressMonitor monitor;	
 	private final String parentId;
 	
 	private final Snapshot snapshot;
 
-	public SingleStateSimulationExplorer(final SimuComConfig config, final IProgressMonitor monitor, 
+	public SimulationStarter(final SimuComConfig config, final IProgressMonitor monitor, 
 			final MDSDBlackboard blackboard, final Snapshot snapshot, final String parentId) {
 		super();
 		this.initModels = (PCMResourceSetPartition) blackboard
@@ -77,7 +77,7 @@ public class SingleStateSimulationExplorer {
 		
 		this.snapshot = snapshot;
 
-		this.preprocessor = new SingleStateSimulationPreprocessor(snapshot, blackboard);
+		this.preprocessor = new Preprocessor(snapshot, blackboard);
 	}
 
 

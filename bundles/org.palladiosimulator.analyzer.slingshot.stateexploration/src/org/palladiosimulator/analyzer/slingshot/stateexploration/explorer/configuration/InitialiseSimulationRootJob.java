@@ -18,10 +18,10 @@ import de.uka.ipd.sdq.workflow.mdsd.blackboard.MDSDBlackboard;
  * @author Sarah Stieß
  *
  */
-public class SingleStateSimulationRootJob extends SequentialBlackboardInteractingJob<MDSDBlackboard> implements ICompositeJob {
+public class InitialiseSimulationRootJob extends SequentialBlackboardInteractingJob<MDSDBlackboard> implements ICompositeJob {
 
-	public SingleStateSimulationRootJob(final SingleStateSimulationWorkflowConfiguration config, final ILaunch launch) {
-		super(SingleStateSimulationRootJob.class.getName(), false);
+	public InitialiseSimulationRootJob(final InitialiseSimulationWorkflowConfiguration config, final ILaunch launch) {
+		super(InitialiseSimulationRootJob.class.getName(), false);
 
 		if (launch == null) {
 			// Nothing. just stay aware that lunch is null, if it is a headless run.
@@ -30,7 +30,7 @@ public class SingleStateSimulationRootJob extends SequentialBlackboardInteractin
 		this.addJob(new PreparePCMBlackboardPartitionJob());
 		config.getPCMModelFiles()
 		.forEach(modelFile -> LoadModelIntoBlackboardJob.parseUriAndAddModelLoadJob(modelFile, this));
-		this.addJob(new RunSingleStateSimulationJob(config));
+		this.addJob(new InitialiseAndRunSimulationJob(config));
 
 
 	}

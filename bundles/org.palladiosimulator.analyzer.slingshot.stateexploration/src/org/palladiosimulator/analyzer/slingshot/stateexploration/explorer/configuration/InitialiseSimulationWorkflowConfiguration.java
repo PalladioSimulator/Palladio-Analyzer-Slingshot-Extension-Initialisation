@@ -9,13 +9,13 @@ import org.palladiosimulator.analyzer.slingshot.workflow.events.PCMWorkflowConfi
 
 import de.uka.ipd.sdq.simucomframework.SimuComConfig;
 
-public class SingleStateSimulationWorkflowConfiguration extends ExplorationWorkflowConfiguration implements PCMWorkflowConfiguration, SimulationConfiguration {
+public class InitialiseSimulationWorkflowConfiguration extends ExplorationWorkflowConfiguration implements PCMWorkflowConfiguration, SimulationConfiguration {
 
 	private final LocationRecord record;
 	
 
 	// i guesss i could also put all those paths into the launchConfigParams. 
-	public SingleStateSimulationWorkflowConfiguration(final SimuComConfig configuration, final Map<String, Object> launchConfigurationParams, final LocationRecord record) {
+	public InitialiseSimulationWorkflowConfiguration(final SimuComConfig configuration, final Map<String, Object> launchConfigurationParams, final LocationRecord record) {
 		super(configuration, launchConfigurationParams);
 		this.record = record;
 	}
