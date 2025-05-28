@@ -2,9 +2,19 @@ package org.palladiosimulator.analyzer.slingshot.converter.data;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.IntStream;
+
+import javax.measure.Measure;
 
 import org.apache.log4j.Logger;
 import org.palladiosimulator.analyzer.slingshot.converter.data.MeasurementSet.Measurement;
+import org.palladiosimulator.metricspec.constants.MetricDescriptionConstants;
+import org.palladiosimulator.servicelevelobjective.LinearFuzzyThreshold;
+import org.palladiosimulator.servicelevelobjective.NegativeQuadraticFuzzyThreshold;
+import org.palladiosimulator.servicelevelobjective.QuadraticFuzzyThreshold;
+import org.palladiosimulator.servicelevelobjective.ServiceLevelObjective;
+import org.palladiosimulator.servicelevelobjective.SoftThreshold;
+import org.palladiosimulator.servicelevelobjective.Threshold;
 
 public class Utility {
 	record UtilityData(String id, double utility, UtilityType type) {
@@ -36,6 +46,36 @@ public class Utility {
 		}
 	}
 
+	public static Utility createUtility(final double startTime, final double endTime,
+			final List<MeasurementSet> measurements, final List<ServiceLevelObjective> slos) {
+		final var utility = new Utility();
+
+		for (final ServiceLevelObjective slo : slos) {
+			final MeasurementSet ms = measurements.stream()
+					.filter(x -> x.getSpecificationId().equals(slo.getMeasurementSpecification().getId())).findFirst()
+					.orElse(null);
+
+			if (ms != null) {
+				// Is this correct?
+				final var points = IntStream.range(0, ms.getElements().size()).mapToObj(x -> {
+					return new Measurement<Number>(
+							getGrade(ms.obtainMeasure().get(x), slo.getLowerThreshold(), slo.getUpperThreshold()),
+							ms.getElements().get(x).timeStamp());
+				}).toList();
+				utility.addDataInstance(slo.getId(), points, Utility.UtilityType.SLO);
+			}
+		}
+
+		for (final var ms : measurements) {
+			if (ms.getMetricDescriptionId().equals(MetricDescriptionConstants.COST_OF_RESOURCE_CONTAINERS.getId())) {
+				utility.addDataInstance(ms.getMonitorName(), ms.getElements(), Utility.UtilityType.COST);
+			}
+		}
+
+		utility.calculateTotalUtility();
+		return utility;
+	}
+	
 	/**
 	 * Calculates the total utility.
 	 *
@@ -273,4 +313,85 @@ public class Utility {
 		return totalUtility;
 	}
 
+	/**
+	 * Computes the grade of fulfillment of a measurement regarding the lower and
+	 * upper threshold
+	 * 
+	 * Taken from:
+	 * https://github.com/PalladioSimulator/Palladio-Addons-ServiceLevelObjectives/blob/master/bundles/org.palladiosimulator.servicelevelobjective.edp2/src/org/palladiosimulator/servicelevelobjective/edp2/mappers/SLOViolationEDP2DatasourceMapper.java
+	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private static double getGrade(final Measure measurement, final Threshold lower, final Threshold upper) {
+
+		if (lower != null) {
+			final Measure lowerThresholdHardLimit = lower.getThresholdLimit();
+			if (measurement.compareTo(lowerThresholdHardLimit) < 0) {
+				return 0.0;
+			}
+			if ((lower instanceof SoftThreshold)) {
+				final Measure lowerThresholdSoftLimit = ((SoftThreshold) lower).getSoftLimit();
+				if (measurement.compareTo(lowerThresholdSoftLimit) < 0) {
+					return gradeSoftLowerThreshold(measurement, (SoftThreshold) lower);
+				}
+			}
+		}
+		if (upper != null) {
+			final Measure upperThresholdHardLimit = upper.getThresholdLimit();
+			if ((upper instanceof SoftThreshold)) {
+				final Measure upperThresholdSoftLimit = ((SoftThreshold) upper).getSoftLimit();
+				if (measurement.compareTo(upperThresholdSoftLimit) <= 0) {
+					return 1.0;
+				} else if (measurement.compareTo(upperThresholdHardLimit) <= 0) {
+					return gradeSoftUpperThreshold(measurement, (SoftThreshold) upper);
+				}
+			} else if (measurement.compareTo(upperThresholdHardLimit) <= 0) {
+				return 1.0;
+			}
+		} else {
+			return 1.0;
+		}
+
+		return 0.0;
+	}
+	
+	/**
+	 * Handles grading of measurements in lower fuzzy range
+	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private static double gradeSoftLowerThreshold(final Measure toGrade, final SoftThreshold lowerThreshold) {
+		final double x = (double) toGrade.getValue();
+		final double soft = lowerThreshold.getSoftLimit().doubleValue(toGrade.getUnit());
+		final double hard = lowerThreshold.getThresholdLimit().doubleValue(toGrade.getUnit());
+
+		if (lowerThreshold instanceof LinearFuzzyThreshold) {
+			return 1 / (soft - hard) * (x - hard);
+		}
+		if (lowerThreshold instanceof QuadraticFuzzyThreshold) {
+			return 1 / Math.pow((soft - hard), 2) * Math.pow((x - hard), 2);
+		}
+		if (lowerThreshold instanceof NegativeQuadraticFuzzyThreshold) {
+			return 1 - (1 / Math.pow((soft - hard), 2) * Math.pow((x - soft), 2));
+		}
+		return 0;
+	}
+
+	/**
+	 * Handles grading of measurements in upper fuzzy range
+	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private static double gradeSoftUpperThreshold(final Measure toGrade, final SoftThreshold upperThreshold) {
+		final double x = (double) toGrade.getValue();
+		final double soft = upperThreshold.getSoftLimit().doubleValue(toGrade.getUnit());
+		final double hard = upperThreshold.getThresholdLimit().doubleValue(toGrade.getUnit());
+		if (upperThreshold instanceof LinearFuzzyThreshold) {
+			return -1 / (hard - soft) * (x - hard);
+		}
+		if (upperThreshold instanceof QuadraticFuzzyThreshold) {
+			return 1 / Math.pow((hard - soft), 2) * Math.pow((x - hard), 2);
+		}
+		if (upperThreshold instanceof NegativeQuadraticFuzzyThreshold) {
+			return 1 - (1 / Math.pow((hard - soft), 2) * Math.pow((x - soft), 2));
+		}
+		return 0;
+	}
 }

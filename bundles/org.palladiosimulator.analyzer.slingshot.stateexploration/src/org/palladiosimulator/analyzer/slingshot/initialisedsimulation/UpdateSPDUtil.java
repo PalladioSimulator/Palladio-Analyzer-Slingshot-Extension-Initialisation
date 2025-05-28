@@ -2,9 +2,7 @@ package org.palladiosimulator.analyzer.slingshot.initialisedsimulation;
 
 import org.apache.log4j.Logger;
 import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.ModelAdjustmentRequested;
-import org.palladiosimulator.analyzer.slingshot.common.utils.PCMResourcePartitionHelper;
 import org.palladiosimulator.analyzer.slingshot.common.utils.ResourceUtils;
-import org.palladiosimulator.analyzer.workflow.blackboard.PCMResourceSetPartition;
 import org.palladiosimulator.spd.SPD;
 import org.palladiosimulator.spd.ScalingPolicy;
 import org.palladiosimulator.spd.triggers.BaseTrigger;
@@ -25,14 +23,9 @@ import org.palladiosimulator.spd.triggers.stimuli.SimulationTime;
  * @author Sophie Stieß
  *
  */
-public class Postprocessor {
+public class UpdateSPDUtil {
 
-	private static final Logger LOGGER = Logger.getLogger(Postprocessor.class.getName());
-	private final SPD spd;
-	
-	public Postprocessor(final PCMResourceSetPartition partition) {
-		this.spd = PCMResourcePartitionHelper.getSPD(partition);
-	}
+	private static final Logger LOGGER = Logger.getLogger(UpdateSPDUtil.class.getName());
 
 	/**
 	 *
@@ -46,8 +39,8 @@ public class Postprocessor {
 	 * @return Configuration for the next simulation run, or empty optional, if
 	 *         fringe has no viable change.
 	 */
-	public void reduceTriggerTime(final double duration) {
-		this.updateSimulationTimeTriggeredPolicy(spd, duration);
+	public static void reduceTriggerTime(final SPD spd, final double duration) {
+		updateSimulationTimeTriggeredPolicy(spd, duration);
 		ResourceUtils.saveResource(spd.eResource());
 	}
 
@@ -62,11 +55,11 @@ public class Postprocessor {
 	 * @param spd    current scaling rules.
 	 * @param offset duration of the previous state
 	 */
-	private void updateSimulationTimeTriggeredPolicy(final SPD spd, final double offset) {
+	private static void updateSimulationTimeTriggeredPolicy(final SPD spd, final double offset) {
 		spd.getScalingPolicies().stream()
-				.filter(policy -> policy.isActive() && this.isSimulationTimeTrigger(policy.getScalingTrigger()))
+				.filter(policy -> policy.isActive() && isSimulationTimeTrigger(policy.getScalingTrigger()))
 				.map(policy -> ((BaseTrigger) policy.getScalingTrigger()))
-				.forEach(trigger -> this.updateValue(((ExpectedTime) trigger.getExpectedValue()), offset));
+				.forEach(trigger -> updateValue(((ExpectedTime) trigger.getExpectedValue()), offset));
 	}
 
 	/**
@@ -76,7 +69,7 @@ public class Postprocessor {
 	 * @param time                  model element to be updated
 	 * @param previousStateDuration duration to subtract from {@code time}.
 	 */
-	private void updateValue(final ExpectedTime time, final double previousStateDuration) {
+	private static  void updateValue(final ExpectedTime time, final double previousStateDuration) {
 		final double triggerTime = time.getValue();
 
 		final ScalingPolicy policy = (ScalingPolicy) time.eContainer().eContainer();
@@ -101,7 +94,7 @@ public class Postprocessor {
 	 * @return true iff the trigger is based on {@link SimulationTime} and
 	 *         {@link ExpectedTime}
 	 */
-	private boolean isSimulationTimeTrigger(final ScalingTrigger trigger) {
+	private static boolean isSimulationTimeTrigger(final ScalingTrigger trigger) {
 		return trigger instanceof final BaseTrigger base && base.getStimulus() instanceof SimulationTime
 				&& base.getExpectedValue() instanceof ExpectedTime;
 	}

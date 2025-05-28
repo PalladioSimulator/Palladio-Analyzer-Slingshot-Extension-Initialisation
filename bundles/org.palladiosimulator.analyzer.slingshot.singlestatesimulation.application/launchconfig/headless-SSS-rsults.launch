@@ -6,7 +6,7 @@
     <stringAttribute key="bootstrap" value=""/>
     <stringAttribute key="checked" value="[NONE]"/>
     <booleanAttribute key="clearConfig" value="true"/>
-    <stringAttribute key="configLocation" value="${workspace_loc}/.metadata/.plugins/org.eclipse.pde.core/headless-SSS"/>
+    <stringAttribute key="configLocation" value="${workspace_loc}/.metadata/.plugins/org.eclipse.pde.core/headless-SSS-rsults"/>
     <booleanAttribute key="default" value="true"/>
     <booleanAttribute key="default_auto_start" value="true"/>
     <intAttribute key="default_start_level" value="4"/>
@@ -28,7 +28,7 @@
     <booleanAttribute key="org.eclipse.jdt.launching.ATTR_SHOW_CODEDETAILS_IN_EXCEPTION_MESSAGES" value="true"/>
     <booleanAttribute key="org.eclipse.jdt.launching.ATTR_USE_START_ON_FIRST_THREAD" value="true"/>
     <stringAttribute key="org.eclipse.jdt.launching.JRE_CONTAINER" value="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-17"/>
-    <stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="-os ${target.os} -ws ${target.ws} -arch ${target.arch} -nl ${target.nl} -consoleLog -console -application org.palladiosimulator.analyzer.slingshot.initialisedsimulation.application.InitialisedSimulationApplication /Users/stiesssh/uni/repos/slingshot-example/example-models/EspresssoAccountingMinimalExample/espresso.experiments /var/folders/y4/01qwswz94051py5_hwg72_740000gn/T/snapshot/event.json /var/folders/y4/01qwswz94051py5_hwg72_740000gn/T/snapshot/others.json /var/folders/y4/01qwswz94051py5_hwg72_740000gn/T/resultfolder/"/>
+    <stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="-os ${target.os} -ws ${target.ws} -arch ${target.arch} -nl ${target.nl} -consoleLog -console -application org.palladiosimulator.analyzer.slingshot.initialisedsimulation.application.InitialisedSimulationApplication /var/folders/y4/01qwswz94051py5_hwg72_740000gn/T/resultfolder/espresso.experiments /var/folders/y4/01qwswz94051py5_hwg72_740000gn/T/resultfolder/snapshot.json /var/folders/y4/01qwswz94051py5_hwg72_740000gn/T/snapshot/others.json /var/folders/y4/01qwswz94051py5_hwg72_740000gn/T/resultfolder2/"/>
     <stringAttribute key="org.eclipse.jdt.launching.SOURCE_PATH_PROVIDER" value="org.eclipse.pde.ui.workbenchClasspathProvider"/>
     <stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Dorg.eclipse.swt.graphics.Resource.reportNonDisposed=true -Dosgi.noShutdown=true -ea -Dlog4j.configuration=file:///Users/stiesssh/uni/repos/slingshot-example/example-models/log4j.properties"/>
     <stringAttribute key="pde.version" value="3.3"/>
@@ -86,6 +86,9 @@
         <setEntry value="lpg.runtime.java@default:default"/>
         <setEntry value="net.bytebuddy.byte-buddy-agent@default:default"/>
         <setEntry value="net.bytebuddy.byte-buddy@default:default"/>
+        <setEntry value="org.antlr.runtime*3.2.0.v201101311130@default:default"/>
+        <setEntry value="org.antlr.runtime*4.7.2.v20200218-0804@default:default"/>
+        <setEntry value="org.aopalliance@default:default"/>
         <setEntry value="org.apache.ant@default:default"/>
         <setEntry value="org.apache.batik.bridge@default:default"/>
         <setEntry value="org.apache.batik.constants*1.14.0.v20210324-0332@default:default"/>
@@ -96,20 +99,25 @@
         <setEntry value="org.apache.batik.dom*1.6.1.v201505192100@default:default"/>
         <setEntry value="org.apache.batik.dom*1.9.1.v20190730-1743@default:default"/>
         <setEntry value="org.apache.batik.dom.svg@default:default"/>
+        <setEntry value="org.apache.batik.ext.awt*1.6.0.v201011041432@default:default"/>
+        <setEntry value="org.apache.batik.ext.awt*1.9.1.v20190730-1743@default:default"/>
         <setEntry value="org.apache.batik.i18n*1.14.0.v20210324-0332@default:default"/>
         <setEntry value="org.apache.batik.i18n*1.9.1.v20180227-1645@default:default"/>
         <setEntry value="org.apache.batik.parser@default:default"/>
+        <setEntry value="org.apache.batik.pdf@default:default"/>
         <setEntry value="org.apache.batik.svggen*1.6.0.v201011041432@default:default"/>
         <setEntry value="org.apache.batik.svggen*1.9.1.v20190730-1743@default:default"/>
         <setEntry value="org.apache.batik.transcoder@default:default"/>
         <setEntry value="org.apache.batik.util*1.14.0.v20210324-0332@default:default"/>
         <setEntry value="org.apache.batik.util*1.6.0.v201011041432@default:default"/>
         <setEntry value="org.apache.batik.util*1.9.1.v20180703-1553@default:default"/>
+        <setEntry value="org.apache.batik.util.gui@default:default"/>
         <setEntry value="org.apache.batik.xml*1.6.0.v201011041432@default:default"/>
         <setEntry value="org.apache.batik.xml*1.9.1.v20190730-1743@default:default"/>
         <setEntry value="org.apache.commons.cli@default:default"/>
         <setEntry value="org.apache.commons.codec@default:default"/>
         <setEntry value="org.apache.commons.collections15@default:default"/>
+        <setEntry value="org.apache.commons.io@default:default"/>
         <setEntry value="org.apache.commons.jxpath@default:default"/>
         <setEntry value="org.apache.commons.lang@default:default"/>
         <setEntry value="org.apache.commons.logging.fragment@default:false"/>
@@ -122,6 +130,9 @@
         <setEntry value="org.apache.log4j@default:default"/>
         <setEntry value="org.apache.xalan@default:default"/>
         <setEntry value="org.apache.xmlgraphics@default:default"/>
+        <setEntry value="org.apiguardian@default:default"/>
+        <setEntry value="org.bouncycastle.bcpg@default:default"/>
+        <setEntry value="org.bouncycastle.bcprov@default:default"/>
         <setEntry value="org.eclipse.ant.core@default:default"/>
         <setEntry value="org.eclipse.ant.launching@default:default"/>
         <setEntry value="org.eclipse.ant.ui@default:default"/>
@@ -256,7 +267,10 @@
         <setEntry value="org.eclipse.gmf.runtime.gef.ui@default:default"/>
         <setEntry value="org.eclipse.gmf.runtime.notation@default:default"/>
         <setEntry value="org.eclipse.help@default:default"/>
+        <setEntry value="org.eclipse.jdt.annotation*2.2.600.v20200408-1511@default:default"/>
         <setEntry value="org.eclipse.jdt.apt.core@default:default"/>
+        <setEntry value="org.eclipse.jdt.compiler.apt@default:default"/>
+        <setEntry value="org.eclipse.jdt.compiler.tool@default:default"/>
         <setEntry value="org.eclipse.jdt.core.manipulation@default:default"/>
         <setEntry value="org.eclipse.jdt.core@default:default"/>
         <setEntry value="org.eclipse.jdt.debug.ui@default:default"/>
@@ -341,19 +355,25 @@
         <setEntry value="org.eclipse.xtend.standalone@default:default"/>
         <setEntry value="org.eclipse.xtend.typesystem.emf@default:default"/>
         <setEntry value="org.eclipse.xtend@default:default"/>
+        <setEntry value="org.eclipse.xtext.builder.standalone@default:default"/>
         <setEntry value="org.eclipse.xtext.builder@default:default"/>
         <setEntry value="org.eclipse.xtext.common.types.ui@default:default"/>
         <setEntry value="org.eclipse.xtext.common.types@default:default"/>
         <setEntry value="org.eclipse.xtext.ecore@default:default"/>
+        <setEntry value="org.eclipse.xtext.generator@default:default"/>
         <setEntry value="org.eclipse.xtext.ide@default:default"/>
+        <setEntry value="org.eclipse.xtext.junit4@default:default"/>
         <setEntry value="org.eclipse.xtext.smap@default:default"/>
+        <setEntry value="org.eclipse.xtext.testing@default:default"/>
         <setEntry value="org.eclipse.xtext.ui.codetemplates.ide@default:default"/>
         <setEntry value="org.eclipse.xtext.ui.codetemplates.ui@default:default"/>
         <setEntry value="org.eclipse.xtext.ui.codetemplates@default:default"/>
         <setEntry value="org.eclipse.xtext.ui.shared@default:default"/>
+        <setEntry value="org.eclipse.xtext.ui.testing@default:default"/>
         <setEntry value="org.eclipse.xtext.ui@default:default"/>
         <setEntry value="org.eclipse.xtext.util@default:default"/>
         <setEntry value="org.eclipse.xtext.xbase.ide@default:default"/>
+        <setEntry value="org.eclipse.xtext.xbase.junit@default:default"/>
         <setEntry value="org.eclipse.xtext.xbase.lib@default:default"/>
         <setEntry value="org.eclipse.xtext.xbase@default:default"/>
         <setEntry value="org.eclipse.xtext.xtext.generator@default:default"/>

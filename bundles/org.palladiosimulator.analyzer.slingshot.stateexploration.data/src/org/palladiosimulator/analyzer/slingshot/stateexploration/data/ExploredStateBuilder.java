@@ -1,10 +1,20 @@
 package org.palladiosimulator.analyzer.slingshot.stateexploration.data;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
+import org.palladiosimulator.analyzer.slingshot.common.utils.PCMResourcePartitionHelper;
+import org.palladiosimulator.analyzer.slingshot.converter.MeasurementConverter;
+import org.palladiosimulator.analyzer.slingshot.converter.data.MeasurementSet;
+import org.palladiosimulator.analyzer.slingshot.converter.data.Utility;
+import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.serialiser.data.InitState;
+import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.serialiser.data.ResultState;
 import org.palladiosimulator.analyzer.slingshot.snapshot.api.Snapshot;
+import org.palladiosimulator.analyzer.workflow.blackboard.PCMResourceSetPartition;
 import org.palladiosimulator.edp2.models.ExperimentData.ExperimentSetting;
+import org.palladiosimulator.spd.ScalingPolicy;
 
 import com.google.common.base.Preconditions;
 
@@ -26,6 +36,8 @@ public class ExploredStateBuilder {
 	private final double startTime;
 	private final String parentId;
 
+	private final String id = UUID.randomUUID().toString();
+
 	/* must be filled at the end of a simulation run */
 	private final Set<ReasonToLeave> reasonsToLeave = new HashSet<>();
 
@@ -35,10 +47,41 @@ public class ExploredStateBuilder {
 
 	/* must be set after configuration of the simulation run */
 	private ExperimentSetting experimentSetting = null;
+	
+	private final PCMResourceSetPartition partition;
 
-	public ExploredStateBuilder(final String parentId, final double startTime) {
+	public ExploredStateBuilder(final String parentId, final double startTime, final PCMResourceSetPartition partition) {
 		this.startTime = startTime;
 		this.parentId = parentId;
+		this.partition = partition;
+	}
+
+	public String getParentId() {
+		return parentId;
+	}
+
+	public String getId() {
+		return id;
+	}
+
+	public Set<ReasonToLeave> getReasonsToLeave() {
+		return reasonsToLeave;
+	}
+
+	public double getDuration() {
+		return duration;
+	}
+
+	public Snapshot getSnapshot() {
+		return snapshot;
+	}
+
+	public ExperimentSetting getExperimentSetting() {
+		return experimentSetting;
+	}
+
+	public PCMResourceSetPartition getPartition() {
+		return partition;
 	}
 
 	public double getStartTime() {
@@ -60,9 +103,6 @@ public class ExploredStateBuilder {
 	public void addReasonToLeave(final ReasonToLeave reasonToLeave) {
 		this.reasonsToLeave.add(reasonToLeave);
 	}
-
-	/** Toggls, to ensure that the builder fathers only one state and one transition */
-	private boolean stateIsBuilt = false;
 	
 	/**
 	 * Build a new {@link ExploredState} based on this builder.
@@ -74,17 +114,27 @@ public class ExploredStateBuilder {
 	 * @throws IllegalStateException if this operation is called while the builder
 	 *                               is still incomplete, or if one attempts to use this builder to create multiple states.
 	 */
-	public ExploredState buildState() {
+	public ResultState buildResultState() {
 		Preconditions.checkState(!reasonsToLeave.isEmpty(), "Cannot build state, reasons to leave were not yet added.");
 		Preconditions.checkState(duration >= 0, "Cannot build state, duration was not yet set.");
 		Preconditions.checkState(snapshot != null, "Cannot build state, because snapshot was not yet set.");
 		Preconditions.checkState(experimentSetting != null,
 				"Cannot build state, because experiment settings were not yet set.");
 
-		Preconditions.checkState(!stateIsBuilt,
-				"Each builder may only be used to build exactly one state. This builder was already used to create a new state and cannot be used again.");
-		this.stateIsBuilt = true;
+		
+		final List<ScalingPolicy> policies = snapshot.getModelAdjustmentRequestedEvent().stream().map(e -> e.getScalingPolicy()).toList();
+		final List<MeasurementSet> measurements = new MeasurementConverter(0.0, duration).visitExperiementSetting(experimentSetting);
 
-		return new ExploredState(startTime, experimentSetting, snapshot, duration, reasonsToLeave, parentId);
+		final Utility utility = Utility.createUtility(startTime, startTime + duration, measurements, PCMResourcePartitionHelper.getSLORepository(partition).getServicelevelobjectives());
+			
+		return new ResultState(startTime + duration, measurements, duration, reasonsToLeave, parentId, policies, utility);
+	}
+	
+	
+	
+	
+	public InitState buildInitState() {
+//		PreconditionsCheck...
+		return new InitState(startTime + duration, snapshot, id);
 	}
 }

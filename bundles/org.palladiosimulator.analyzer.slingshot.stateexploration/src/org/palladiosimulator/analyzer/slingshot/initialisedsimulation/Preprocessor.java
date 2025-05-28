@@ -14,8 +14,8 @@ import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.SPDAdjustorSta
 import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.SPDAdjustorStateValues;
 import org.palladiosimulator.analyzer.slingshot.common.utils.PCMResourcePartitionHelper;
 import org.palladiosimulator.analyzer.slingshot.common.utils.ResourceUtils;
+import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.providers.EventsToInitOnWrapper;
 import org.palladiosimulator.analyzer.slingshot.snapshot.api.Snapshot;
-import org.palladiosimulator.analyzer.workflow.ConstantsContainer;
 import org.palladiosimulator.analyzer.workflow.blackboard.PCMResourceSetPartition;
 import org.palladiosimulator.spd.SPD;
 import org.palladiosimulator.spd.ScalingPolicy;
@@ -24,8 +24,6 @@ import org.palladiosimulator.spd.triggers.BaseTrigger;
 import org.palladiosimulator.spd.triggers.ScalingTrigger;
 import org.palladiosimulator.spd.triggers.expectations.ExpectedTime;
 import org.palladiosimulator.spd.triggers.stimuli.SimulationTime;
-
-import de.uka.ipd.sdq.workflow.mdsd.blackboard.MDSDBlackboard;
 
 /**
  *
@@ -44,46 +42,53 @@ public class Preprocessor {
 
 	private static final Logger LOGGER = Logger.getLogger(Preprocessor.class.getName());
 
-	private final PCMResourceSetPartition partition;
+	private final SPD spd;
+	private final List<ScalingPolicy> policiesToProcess;
 	private final Snapshot snapshot;
 	
-	
-	public Preprocessor(final Snapshot snapshot, final MDSDBlackboard blackboard) {
+	public Preprocessor(final PCMResourceSetPartition partition, final Snapshot snapshot, final List<ScalingPolicy> policiesToProcess) {
+		this.spd = PCMResourcePartitionHelper.getSPD(partition);
 		this.snapshot = snapshot;
-		this.partition = (PCMResourceSetPartition) blackboard.getPartition(ConstantsContainer.DEFAULT_PCM_INSTANCE_PARTITION_ID);
+		this.policiesToProcess = policiesToProcess;
+		this.deactivatePolicies();
 	}
 
 	/**
-	 *
-	 * Ensures, that the state graph node, that will be simulated with the resulting configuration is already connected to the state graph. 
-	 * Ensures, that the at max one planned change is removed from the fringe.
-	 * 
-	 * Ensures, that the SPD model of the new state graph node is updated (e.g. reduced triggertimes for simulation time base triggers, and that the changes are saved to file as well. 
-	 * 
-	 * Ensures, that the {@link ModelAdjustmentRequested events} get copied and point to the corrcet (?) SPD file.
-	 *
-	 * @return Configuration for the next simulation run, or empty optional, if
-	 *         fringe has no viable change.
+	 * TODO 
 	 */
-	public void deactivatePolicies(final List<ScalingPolicy> policies) {
-
-		final SPD spd = PCMResourcePartitionHelper.getSPD(partition); // IOBE, if no spd present.
-
-		this.deactivateReactivePolicies(spd, policies);
-		ResourceUtils.saveResource(spd.eResource());
-	}
-
-
-	
-	public List<ModelAdjustmentRequested> createInitialModelAdjustmentRequested(final List<ScalingPolicy> policies) {
-		return policies.stream().map(p -> new ModelAdjustmentRequested(p)).toList();
+	private void deactivatePolicies() {
+		this.deactivateReactivePolicies(this.spd, policiesToProcess);
+		ResourceUtils.saveResource(this.spd.eResource());
 	}
 	
+	/**
+	 * 
+	 * @return
+	 */
+	public EventsToInitOnWrapper createWrapper() {
+		final Set<SPDAdjustorStateInitialized> stateInitEvents = this.createUpdateStateInitEvents(snapshot);
+		final List<ModelAdjustmentRequested> initialAdjustments = this.createInitialModelAdjustmentRequested();
+		
+		return new EventsToInitOnWrapper(initialAdjustments, stateInitEvents, snapshot.getEvents());
+	}
 	
-	public Set<SPDAdjustorStateInitialized> createUpdateStateInitEvents(final List<ScalingPolicy> policies) {
+	/**
+	 * 
+	 * @return
+	 */
+	private List<ModelAdjustmentRequested> createInitialModelAdjustmentRequested() {
+		return policiesToProcess.stream().map(p -> new ModelAdjustmentRequested(p)).toList();
+	}
+	
+	/**
+	 * 
+	 * @param snapshot
+	 * @return
+	 */
+	private Set<SPDAdjustorStateInitialized> createUpdateStateInitEvents(final Snapshot snapshot) {
 			final Collection<SPDAdjustorStateValues> initValues = new HashSet<>();
 
-			for (final ScalingPolicy policy : policies) {
+			for (final ScalingPolicy policy : policiesToProcess) {
 				initValues.addAll(updateInitValues(policy, snapshot.getSPDAdjustorStateValues()));
 			}
 			

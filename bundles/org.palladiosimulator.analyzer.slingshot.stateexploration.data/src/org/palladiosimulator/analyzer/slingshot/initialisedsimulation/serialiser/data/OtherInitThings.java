@@ -11,19 +11,13 @@ import org.palladiosimulator.spd.ScalingPolicy;
  */
 public class OtherInitThings {
 	
-	private final boolean isRootSuccesor;
 	private final double sensibility; 
 	private final List<ScalingPolicy> incomingPolicies;
 
-	public OtherInitThings(final boolean isRootSuccesor, final double sensibility, final List<ScalingPolicy> incomingPolicies) {
+	public OtherInitThings(final double sensibility, final List<ScalingPolicy> incomingPolicies) {
 		super();
-		this.isRootSuccesor = isRootSuccesor;
 		this.sensibility = sensibility;
 		this.incomingPolicies = incomingPolicies;
-	}
-
-	public boolean isRootSuccesor() {
-		return isRootSuccesor;
 	}
 
 	public double getSensibility() {

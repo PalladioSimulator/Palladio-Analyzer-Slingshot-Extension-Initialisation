@@ -32,12 +32,11 @@ public final class OtherStuffDeserialization implements DeserializeParent<OtherI
 	protected static final Logger LOGGER = Logger.getLogger(OtherStuffDeserialization.class);
 	
 	private final Gson gson;
-	
 	private final SPD spd;
 	
 	public OtherStuffDeserialization(final PCMResourceSetPartition partition) {
 		super();
-				
+			
 		this.spd = PCMResourcePartitionHelper.getSPD(partition);
 		this.gson = createGson();
 	}

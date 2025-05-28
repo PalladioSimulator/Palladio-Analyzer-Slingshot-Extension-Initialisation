@@ -13,12 +13,17 @@ import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.palladiosimulator.analyzer.slingshot.common.utils.ResourceUtils;
 import org.palladiosimulator.edp2.models.measuringpoint.MeasuringpointPackage;
 import org.palladiosimulator.experimentautomation.experiments.ExperimentsPackage;
+import org.palladiosimulator.mdsdprofiles.api.ProfileAPI;
+import org.palladiosimulator.mdsdprofiles.api.StereotypeAPI;
 import org.palladiosimulator.monitorrepository.MonitorRepositoryPackage;
 import org.palladiosimulator.pcm.allocation.AllocationPackage;
 import org.palladiosimulator.pcm.repository.RepositoryPackage;
+import org.palladiosimulator.pcm.resourceenvironment.ResourceEnvironment;
+import org.palladiosimulator.pcm.resourceenvironment.ResourceenvironmentFactory;
 import org.palladiosimulator.pcm.resourceenvironment.ResourceenvironmentPackage;
 import org.palladiosimulator.pcm.system.SystemPackage;
 import org.palladiosimulator.pcm.usagemodel.UsagemodelPackage;
+import org.palladiosimulator.pcm.util.PcmResourceImpl;
 import org.palladiosimulator.semanticspd.SemanticspdPackage;
 import org.palladiosimulator.servicelevelobjective.ServicelevelObjectivePackage;
 import org.palladiosimulator.spd.SpdPackage;
@@ -128,7 +133,8 @@ public class ArchitectureConfigurationUtil {
 			cleanLocation = cleanLocation.substring(0, cleanLocation.length() - 1);
 		}
 
-		// 1. ensure that all models are loaded.
+		// 1. ensure that all models and also the cost stereotypes are loaded.
+		applyStereotypeFake();
 		EcoreUtil.resolveAll(set);
 
 		final List<Resource> whitelisted = ArchitectureConfigurationUtil.getWhitelistedResources(set);
@@ -143,5 +149,44 @@ public class ArchitectureConfigurationUtil {
 
 		// 3. save to new path (thereby create a copy)
 		ArchitectureConfigurationUtil.saveWhitelisted(set);
+	}
+	
+	/**
+	 * Applying a Profile and and the Stereotypes is necessary, because otherwise
+	 * {@link EcoreUtil#resolveAll(org.eclipse.emf.ecore.resource.ResourceSet)}
+	 * fails to resolve stereotype applications for cost.
+	 * 
+	 * This behaviour can also be observed in the PalladioBench UI. When opening a
+	 * resource environment model with stereotypes and profile, we get an exception
+	 * (PackageNotFound). If we create a new resource environment model, apply
+	 * profiles and stereotypes to the new model, and only open the actual resource
+	 * environment model afterwards, it opens just fine.
+	 * 
+	 * Thus, basically, this operation simulates what i have to do in the
+	 * PalladioBench UI. I assume, that they fucked up the loading of profile
+	 * models, but somehow the get loaded upon calling
+	 * {@link ProfileAPI#applyProfile(Resource, String)} and
+	 * {@link StereotypeAPI#applyStereotype(org.eclipse.emf.ecore.EObject, String)}.
+	 * 
+	 * <br>
+	 * <b>Note</b>: Re-applying Profiles to the original model (which works in the
+	 * UI) fails here, because re-application throws an error.
+	 * 
+	 * <br>
+	 * <b>Note</b>: The resource and model created in this operation exist solely
+	 * for getting the cost profile and stereotypes loaded. They have no other
+	 * purpose and (probably) get garbage collect after this operation.
+	 * 
+	 * <br>
+	 * <b>Note</b>: For the state exploration, we must do this <b>before</b> we
+	 * create the root node. When creating the root node, we save a copy of the
+	 * models to file, and all unresolved references go missing on save.
+	 */
+	private static void applyStereotypeFake() {
+		final ResourceEnvironment fake = ResourceenvironmentFactory.eINSTANCE.createResourceEnvironment();
+		final Resource fakeRes = new PcmResourceImpl(URI.createFileURI(java.lang.System.getProperty("java.io.tmpdir")));
+		fakeRes.getContents().add(fake);
+		ProfileAPI.applyProfile(fakeRes, "Cost");
+		StereotypeAPI.applyStereotype(fake, "CostReport");
 	}
 }
