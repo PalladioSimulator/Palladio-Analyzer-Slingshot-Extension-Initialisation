@@ -4,9 +4,6 @@
    <extension
          point="org.palladiosimulator.analyzer.slingshot">
       <slingshot-extension
-            module="org.palladiosimulator.analyzer.slingshot.initialisedsimulation.explorer.ExplorationModule">
-      </slingshot-extension>
-      <slingshot-extension
             module="org.palladiosimulator.analyzer.slingshot.initialisedsimulation.providers.AdditionalConfigurationModule">
       </slingshot-extension>
    </extension>

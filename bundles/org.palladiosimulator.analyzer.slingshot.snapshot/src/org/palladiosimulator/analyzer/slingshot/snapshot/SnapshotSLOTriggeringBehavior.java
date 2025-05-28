@@ -14,6 +14,7 @@ import javax.measure.quantity.Quantity;
 import org.apache.log4j.Logger;
 import org.eclipse.emf.common.util.EList;
 import org.palladiosimulator.analyzer.slingshot.common.annotations.Nullable;
+import org.palladiosimulator.analyzer.slingshot.common.utils.PCMResourcePartitionHelper;
 import org.palladiosimulator.analyzer.slingshot.core.extension.SimulationBehaviorExtension;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.Subscribe;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.eventcontract.OnEvent;
@@ -23,6 +24,8 @@ import org.palladiosimulator.analyzer.slingshot.snapshot.configuration.SnapshotC
 import org.palladiosimulator.analyzer.slingshot.snapshot.events.SnapshotInitiated;
 import org.palladiosimulator.analyzer.slingshot.stateexploration.data.ExploredStateBuilder;
 import org.palladiosimulator.analyzer.slingshot.stateexploration.data.ReasonToLeave;
+import org.palladiosimulator.analyzer.workflow.ConstantsContainer;
+import org.palladiosimulator.analyzer.workflow.blackboard.PCMResourceSetPartition;
 import org.palladiosimulator.metricspec.MetricDescription;
 import org.palladiosimulator.monitorrepository.MeasurementSpecification;
 import org.palladiosimulator.pcm.resourceenvironment.ResourceContainer;
@@ -31,6 +34,8 @@ import org.palladiosimulator.semanticspd.Configuration;
 import org.palladiosimulator.semanticspd.ElasticInfrastructureCfg;
 import org.palladiosimulator.servicelevelobjective.ServiceLevelObjective;
 import org.palladiosimulator.servicelevelobjective.ServiceLevelObjectiveRepository;
+
+import de.uka.ipd.sdq.workflow.mdsd.blackboard.MDSDBlackboard;
 
 /**
  *
@@ -65,14 +70,16 @@ public class SnapshotSLOTriggeringBehavior implements SimulationBehaviorExtensio
 
 	@Inject
 	public SnapshotSLOTriggeringBehavior(final @Nullable ExploredStateBuilder state,
-			final @Nullable ServiceLevelObjectiveRepository sloRepo, final @Nullable SnapshotConfiguration config,
+			final @Nullable MDSDBlackboard blackboard, final @Nullable SnapshotConfiguration config,
 			final @Nullable Configuration semanticSpd) {
+		
+		this.sloRepo = PCMResourcePartitionHelper.getSLORepository((PCMResourceSetPartition)
+				blackboard.getPartition(ConstantsContainer.DEFAULT_PCM_INSTANCE_PARTITION_ID));
 
 		this.activated = state != null && sloRepo != null && config != null
 				&& !sloRepo.getServicelevelobjectives().isEmpty() && semanticSpd != null;
 
 		this.state = state;
-		this.sloRepo = sloRepo;
 		this.semanticSpd = semanticSpd; // maybe optional?
 
 		this.minDuration = activated ? config.getMinDuration() : 0;
