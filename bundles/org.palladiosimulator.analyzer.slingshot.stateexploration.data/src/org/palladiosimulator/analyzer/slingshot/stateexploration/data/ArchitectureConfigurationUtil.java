@@ -32,12 +32,10 @@ import org.scaledl.usageevolution.UsageevolutionPackage;
 import tools.descartes.dlim.DlimPackage;
 
 /**
- * Util class for the {@link ArchitectureConfiguration}.
+ * 
+ * Util class for creating a copy of a set of models.
  *
- * Provides Helpers for persisting Model from an
- * {@link ArchitectureConfiguration}.
- *
- * @author Sarah Stieß
+ * @author Sophie Stieß
  *
  */
 public class ArchitectureConfigurationUtil {
@@ -119,11 +117,19 @@ public class ArchitectureConfigurationUtil {
 	}
 	
 	/**
-	 * Changes als the location of all models in the given set to the given destination Folder and writes them to file.
+	 * Changes als the location of all models in the given set to the given
+	 * destination Folder and writes them to file.
 	 * 
-	 * Beware, this operation has side effects, it actually changes the URIs of the models in the given set.
+	 * First, this operation resolves all references within the models and ensures
+	 * that cost-stereotyes are loaded before the copy. However, this operation
+	 * cannot resolve external references to model element, e.g. inside the
+	 * snapshot. It is upon the caller to enure, that those are resolved upfront.
 	 * 
-	 * @param set set containing the models
+	 * Then this operation updates the URIs of all models in the given set and
+	 * creates the copy by saving them to file. The URI is not reset to the original
+	 * value and remains changed.
+	 * 
+	 * @param set               set containing the models
 	 * @param destinationFolder folder to copy the models to.
 	 */
 	public static void copyToURI(final ResourceSet set, final URI destinationFolder) {
@@ -133,13 +139,11 @@ public class ArchitectureConfigurationUtil {
 			cleanLocation = cleanLocation.substring(0, cleanLocation.length() - 1);
 		}
 
-		// 1. ensure that all models and also the cost stereotypes are loaded.
 		applyStereotypeFake();
 		EcoreUtil.resolveAll(set);
 
 		final List<Resource> whitelisted = ArchitectureConfigurationUtil.getWhitelistedResources(set);
 
-		// 2. update paths
 		for (final Resource resource : whitelisted) {
 			final String file = resource.getURI().lastSegment();
 
@@ -147,7 +151,6 @@ public class ArchitectureConfigurationUtil {
 			resource.setURI(newUri);
 		}
 
-		// 3. save to new path (thereby create a copy)
 		ArchitectureConfigurationUtil.saveWhitelisted(set);
 	}
 	

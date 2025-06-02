@@ -4,6 +4,7 @@ import java.nio.file.Path;
 
 import org.apache.log4j.Logger;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.emf.common.util.URI;
 import org.palladiosimulator.analyzer.slingshot.common.utils.PCMResourcePartitionHelper;
 import org.palladiosimulator.analyzer.slingshot.core.Slingshot;
 import org.palladiosimulator.analyzer.slingshot.core.api.SimulationDriver;
@@ -15,6 +16,7 @@ import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.serialiser
 import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.serialiser.data.InitState;
 import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.serialiser.data.OtherInitThings;
 import org.palladiosimulator.analyzer.slingshot.snapshot.configuration.SnapshotConfiguration;
+import org.palladiosimulator.analyzer.slingshot.stateexploration.data.ArchitectureConfigurationUtil;
 import org.palladiosimulator.analyzer.slingshot.stateexploration.data.ExploredStateBuilder;
 import org.palladiosimulator.analyzer.workflow.ConstantsContainer;
 import org.palladiosimulator.analyzer.workflow.blackboard.PCMResourceSetPartition;
@@ -43,13 +45,17 @@ public class SimulationStarter {
 	final ExploredStateBuilder stateBuilder;
 
 	public SimulationStarter(final SimuComConfig config, final IProgressMonitor monitor, 
-			final MDSDBlackboard blackboard, final Path initStateLocation, final Path otherLocation) {
+			final MDSDBlackboard blackboard, final Path initStateLocation, final Path otherLocation, final Path resultLocation) {
 		super();
 		this.initModels = (PCMResourceSetPartition) blackboard.getPartition(ConstantsContainer.DEFAULT_PCM_INSTANCE_PARTITION_ID);
 		
 	
 		final InitState initstate = getInitState(initStateLocation);
 		final OtherInitThings otherInitThings = getOthers(otherLocation);
+		
+		final URI resultFolder = URI.createFileURI(resultLocation.toString());
+		ArchitectureConfigurationUtil.copyToURI(initModels.getResourceSet(), resultFolder);
+
 		
 		final EventsToInitOnWrapper wrapper = new Preprocessor(this.initModels, initstate.getSnapshot(), otherInitThings.getIncomingPolicies()).createWrapper();
 		final SnapshotConfiguration snaphshotConfig = new SnapshotConfiguration(initstate.getPointInTime() > 0.0, otherInitThings.getSensibility(), config.getSimuTime());			

@@ -2,12 +2,10 @@ package org.palladiosimulator.analyzer.slingshot.initialisedsimulation.jobs;
 
 import org.apache.log4j.Logger;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.emf.common.util.URI;
 import org.palladiosimulator.analyzer.slingshot.core.Slingshot;
 import org.palladiosimulator.analyzer.slingshot.core.extension.PCMResourceSetPartitionProvider;
 import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.SimulationStarter;
 import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.configuration.InitialiseSimulationWorkflowConfiguration;
-import org.palladiosimulator.analyzer.slingshot.stateexploration.data.ArchitectureConfigurationUtil;
 import org.palladiosimulator.analyzer.slingshot.workflow.WorkflowConfigurationModule;
 import org.palladiosimulator.analyzer.workflow.ConstantsContainer;
 import org.palladiosimulator.analyzer.workflow.blackboard.PCMResourceSetPartition;
@@ -56,13 +54,9 @@ public class InitialiseAndRunSimulationJob implements IBlackboardInteractingJob<
 		monitor.subTask("Initialize driver");
 
 		// this.configuration.getlaunchConfigParams() --> access to all the params.
-		
-		final URI resultFolder = URI.createFileURI(this.configuration.getResultsFolder().toString());
-		ArchitectureConfigurationUtil.copyToURI(partition.getResourceSet(), resultFolder);
-
 
 		final SimulationStarter explorer = new SimulationStarter(this.configuration.getSimuComConfig(), monitor,
-				this.blackboard, this.configuration.getSnapshotFile(), this.configuration.getOtherConfigsFile());
+				this.blackboard, this.configuration.getSnapshotFile(), this.configuration.getOtherConfigsFile(), this.configuration.getResultsFolder());
 		explorer.simulateSingleState(this.configuration.getResultsFolder());
 
 		monitor.worked(1);

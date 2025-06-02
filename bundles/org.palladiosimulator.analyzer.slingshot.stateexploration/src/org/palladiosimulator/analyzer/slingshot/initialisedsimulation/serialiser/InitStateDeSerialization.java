@@ -72,7 +72,6 @@ public final class InitStateDeSerialization implements DeserializeParent<InitSta
 	private Gson createGson() {	
 		final GsonBuilder adaptereBuilder = new GsonBuilder();
 
-		// register direct adapters.
 		adaptereBuilder.registerTypeHierarchyAdapter(EObject.class, new EObjectTypeAdapter(partition.getAllocation().eResource().getResourceSet()));
 		
 		adaptereBuilder.registerTypeHierarchyAdapter(Snapshot.class, new SnapshotDeserializer());
