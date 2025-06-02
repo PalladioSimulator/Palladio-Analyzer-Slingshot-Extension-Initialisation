@@ -13,8 +13,8 @@ import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.PreInter
 import org.palladiosimulator.analyzer.slingshot.eventdriver.entity.interceptors.InterceptorInformation;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.returntypes.InterceptionResult;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.returntypes.Result;
+import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.graphstate.StateBuilder;
 import org.palladiosimulator.analyzer.slingshot.snapshot.events.SnapshotFinished;
-import org.palladiosimulator.analyzer.slingshot.stateexploration.data.ExploredStateBuilder;
 
 /**
  * Behaviour to continuously offset the {@link IntervalPassed} events for the
@@ -43,7 +43,7 @@ public class PreventPreemptiveSimulationFinished implements SimulationBehaviorEx
 	private boolean snapshotFinished = false;
 
 	@Inject
-	public PreventPreemptiveSimulationFinished(final @Nullable ExploredStateBuilder stateBuilder) {
+	public PreventPreemptiveSimulationFinished(final @Nullable StateBuilder stateBuilder) {
 
 		this.activated = stateBuilder != null;
 	}

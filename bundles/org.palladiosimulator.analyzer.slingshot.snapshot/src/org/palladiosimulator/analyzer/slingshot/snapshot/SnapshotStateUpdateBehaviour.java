@@ -14,12 +14,12 @@ import org.palladiosimulator.analyzer.slingshot.core.extension.SimulationBehavio
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.Subscribe;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.eventcontract.OnEvent;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.returntypes.Result;
+import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.graphstate.StateBuilder;
+import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.graphstate.ReasonToLeave;
 import org.palladiosimulator.analyzer.slingshot.monitor.data.events.CalculatorRegistered;
 import org.palladiosimulator.analyzer.slingshot.snapshot.api.Snapshot;
 import org.palladiosimulator.analyzer.slingshot.snapshot.configuration.SnapshotConfiguration;
 import org.palladiosimulator.analyzer.slingshot.snapshot.events.SnapshotFinished;
-import org.palladiosimulator.analyzer.slingshot.stateexploration.data.ExploredStateBuilder;
-import org.palladiosimulator.analyzer.slingshot.stateexploration.data.ReasonToLeave;
 import org.palladiosimulator.edp2.impl.RepositoryManager;
 import org.palladiosimulator.edp2.models.ExperimentData.ExperimentGroup;
 import org.palladiosimulator.edp2.models.ExperimentData.ExperimentSetting;
@@ -30,7 +30,7 @@ import de.uka.ipd.sdq.simucomframework.SimuComConfig;
 /**
  *
  * Behavioural Extension for putting more values into the
- * {@link ExploredStateBuilder}.
+ * {@link StateBuilder}.
  *
  * @author Sophie Stieß
  *
@@ -45,7 +45,7 @@ public class SnapshotStateUpdateBehaviour implements SimulationBehaviorExtension
 	private final SimuComConfig simuComConfig;
 
 	/* State representing current simulation run */
-	private final ExploredStateBuilder stateBuilder;
+	private final StateBuilder stateBuilder;
 
 	/**
 	 * 
@@ -55,7 +55,7 @@ public class SnapshotStateUpdateBehaviour implements SimulationBehaviorExtension
 	 * @param simuComConfig  for access to the experiment settings
 	 */
 	@Inject
-	public SnapshotStateUpdateBehaviour(final @Nullable ExploredStateBuilder stateBuilder,
+	public SnapshotStateUpdateBehaviour(final @Nullable StateBuilder stateBuilder,
 			final @Nullable SnapshotConfiguration snapshotConfig, final @Nullable SimuComConfig simuComConfig) {
 
 		this.stateBuilder = stateBuilder;

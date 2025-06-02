@@ -1,0 +1,28 @@
+package org.palladiosimulator.analyzer.slingshot.initialisedsimulation.providers;
+
+import javax.inject.Provider;
+import javax.inject.Singleton;
+
+import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.graphstate.StateBuilder;
+
+/**
+ * Provides the {@link StateBuilder} that represents the next simulation run.
+ *
+ * @author Sarah Stieß
+ *
+ */
+@Singleton
+public class ExploredStateBuilderProvider implements Provider<StateBuilder> {
+
+	private StateBuilder state;
+
+	public void set(final StateBuilder state) {
+		this.state = state;
+	}
+
+	@Override
+	public StateBuilder get() {
+		return state;
+	}
+
+}

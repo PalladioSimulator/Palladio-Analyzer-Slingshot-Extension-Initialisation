@@ -19,11 +19,11 @@ import org.palladiosimulator.analyzer.slingshot.core.extension.SimulationBehavio
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.Subscribe;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.eventcontract.OnEvent;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.returntypes.Result;
+import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.graphstate.StateBuilder;
+import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.graphstate.ReasonToLeave;
 import org.palladiosimulator.analyzer.slingshot.monitor.data.events.MeasurementUpdated;
 import org.palladiosimulator.analyzer.slingshot.snapshot.configuration.SnapshotConfiguration;
 import org.palladiosimulator.analyzer.slingshot.snapshot.events.SnapshotInitiated;
-import org.palladiosimulator.analyzer.slingshot.stateexploration.data.ExploredStateBuilder;
-import org.palladiosimulator.analyzer.slingshot.stateexploration.data.ReasonToLeave;
 import org.palladiosimulator.analyzer.workflow.ConstantsContainer;
 import org.palladiosimulator.analyzer.workflow.blackboard.PCMResourceSetPartition;
 import org.palladiosimulator.metricspec.MetricDescription;
@@ -56,7 +56,7 @@ import de.uka.ipd.sdq.workflow.mdsd.blackboard.MDSDBlackboard;
 public class SnapshotSLOTriggeringBehavior implements SimulationBehaviorExtension {
 	private static final Logger LOGGER = Logger.getLogger(SnapshotSLOTriggeringBehavior.class);
 
-	private final ExploredStateBuilder state;
+	private final StateBuilder state;
 	private final ServiceLevelObjectiveRepository sloRepo;
 	private final Configuration semanticSpd;
 
@@ -69,7 +69,7 @@ public class SnapshotSLOTriggeringBehavior implements SimulationBehaviorExtensio
 	private final double minDuration;
 
 	@Inject
-	public SnapshotSLOTriggeringBehavior(final @Nullable ExploredStateBuilder state,
+	public SnapshotSLOTriggeringBehavior(final @Nullable StateBuilder state,
 			final @Nullable MDSDBlackboard blackboard, final @Nullable SnapshotConfiguration config,
 			final @Nullable Configuration semanticSpd) {
 		
