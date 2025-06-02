@@ -2,7 +2,7 @@ package org.palladiosimulator.analyzer.slingshot.snapshot.serialization.adapters
 
 import java.io.IOException;
 
-import org.palladiosimulator.analyzer.slingshot.snapshot.serialization.util.Shareables;
+import org.palladiosimulator.analyzer.slingshot.snapshot.serialization.util.SnapshotSerialisationUtils;
 
 import com.google.gson.JsonParseException;
 import com.google.gson.TypeAdapter;
@@ -24,7 +24,7 @@ public class ClassTypeAdapter extends TypeAdapter<Class<?>> {
 	public Class<?> read(final JsonReader in) throws IOException {
 		final String s = in.nextString();
 		try {
-			return Shareables.getClassHelper(s);
+			return SnapshotSerialisationUtils.getClassHelper(s);
 		} catch (final ClassNotFoundException e) {
 			throw new JsonParseException("Failed to parse" + s + "to java class.", e);
 		}

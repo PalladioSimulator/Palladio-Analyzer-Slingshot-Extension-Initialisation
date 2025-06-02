@@ -30,7 +30,7 @@ public interface Snapshot {
 	 *            run.
 	 * @return events to initialise the next simulation run on.
 	 */
-	public Set<DESEvent> getEvents(final PCMResourceSetPartition set);
+	public Set<DESEvent> getEvents();
 
 	/**
 	 *

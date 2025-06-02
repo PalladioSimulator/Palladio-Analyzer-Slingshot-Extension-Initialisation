@@ -27,9 +27,9 @@ import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.eventcon
 import org.palladiosimulator.analyzer.slingshot.eventdriver.entity.interceptors.InterceptorInformation;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.returntypes.InterceptionResult;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.returntypes.Result;
+import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.providers.EventsToInitOnWrapper;
 import org.palladiosimulator.analyzer.slingshot.snapshot.configuration.SnapshotConfiguration;
 import org.palladiosimulator.analyzer.slingshot.snapshot.events.SnapshotInitiated;
-import org.palladiosimulator.analyzer.slingshot.stateexploration.providers.EventsToInitOnWrapper;
 
 /**
  *
@@ -97,7 +97,7 @@ public class SnapshotInitFromBehaviour implements SimulationBehaviorExtension {
 	@Subscribe
 	public Result<SnapshotInitiated> onConfigurationStarted(
 			final PreSimulationConfigurationStarted configurationStarted) {
-		return Result.of(new SnapshotInitiated(this.snapshotConfig.getSnapinterval()));
+		return Result.of(new SnapshotInitiated(this.snapshotConfig.getMinDuration()));
 	}
 
 	/**
@@ -154,7 +154,7 @@ public class SnapshotInitFromBehaviour implements SimulationBehaviorExtension {
 			}
 		}
 	}
-
+	
 	/**
 	 * Catch {@link ModelPassedEvent} from the snapshot and offset them into the
 	 * past.

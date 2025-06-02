@@ -1,0 +1,23 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Initialised Simulation Application
+Bundle-SymbolicName: org.palladiosimulator.analyzer.slingshot.initialisedsimulation.application;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Automatic-Module-Name: org.palladiosimulator.analyzer.slingshot.initialisedsimulation.application
+Bundle-RequiredExecutionEnvironment: JavaSE-17
+Require-Bundle: org.eclipse.equinox.app,
+ org.eclipse.core.runtime,
+ de.uka.ipd.sdq.workflow,
+ de.uka.ipd.sdq.simucomframework,
+ org.palladiosimulator.analyzer.slingshot.workflow,
+ org.palladiosimulator.analyzer.slingshot.core,
+ org.palladiosimulator.analyzer.slingshot.workflow.events,
+ org.palladiosimulator.edp2,
+ org.palladiosimulator.recorderframework.edp2,
+ org.palladiosimulator.experimentautomation,
+ org.palladiosimulator.analyzer.slingshot.initialisedsimulation,
+ org.palladiosimulator.experimentautomation.application,
+ org.palladiosimulator.experimentautomation.application.tooladapter.slingshot.model
+Bundle-Activator: org.palladiosimulator.analyzer.slingshot.initialisedsimulation.application.Activator
+Bundle-ActivationPolicy: lazy
+Bundle-ClassPath: .

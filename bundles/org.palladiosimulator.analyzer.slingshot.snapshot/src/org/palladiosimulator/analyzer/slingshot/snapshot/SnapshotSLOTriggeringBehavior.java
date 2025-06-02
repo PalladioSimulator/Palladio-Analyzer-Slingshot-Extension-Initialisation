@@ -14,15 +14,18 @@ import javax.measure.quantity.Quantity;
 import org.apache.log4j.Logger;
 import org.eclipse.emf.common.util.EList;
 import org.palladiosimulator.analyzer.slingshot.common.annotations.Nullable;
+import org.palladiosimulator.analyzer.slingshot.common.utils.PCMResourcePartitionHelper;
 import org.palladiosimulator.analyzer.slingshot.core.extension.SimulationBehaviorExtension;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.Subscribe;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.eventcontract.OnEvent;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.returntypes.Result;
+import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.graphstate.StateBuilder;
+import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.graphstate.ReasonToLeave;
 import org.palladiosimulator.analyzer.slingshot.monitor.data.events.MeasurementUpdated;
 import org.palladiosimulator.analyzer.slingshot.snapshot.configuration.SnapshotConfiguration;
 import org.palladiosimulator.analyzer.slingshot.snapshot.events.SnapshotInitiated;
-import org.palladiosimulator.analyzer.slingshot.stateexploration.api.ReasonToLeave;
-import org.palladiosimulator.analyzer.slingshot.stateexploration.graph.ExploredStateBuilder;
+import org.palladiosimulator.analyzer.workflow.ConstantsContainer;
+import org.palladiosimulator.analyzer.workflow.blackboard.PCMResourceSetPartition;
 import org.palladiosimulator.metricspec.MetricDescription;
 import org.palladiosimulator.monitorrepository.MeasurementSpecification;
 import org.palladiosimulator.pcm.resourceenvironment.ResourceContainer;
@@ -31,6 +34,8 @@ import org.palladiosimulator.semanticspd.Configuration;
 import org.palladiosimulator.semanticspd.ElasticInfrastructureCfg;
 import org.palladiosimulator.servicelevelobjective.ServiceLevelObjective;
 import org.palladiosimulator.servicelevelobjective.ServiceLevelObjectiveRepository;
+
+import de.uka.ipd.sdq.workflow.mdsd.blackboard.MDSDBlackboard;
 
 /**
  *
@@ -51,7 +56,7 @@ import org.palladiosimulator.servicelevelobjective.ServiceLevelObjectiveReposito
 public class SnapshotSLOTriggeringBehavior implements SimulationBehaviorExtension {
 	private static final Logger LOGGER = Logger.getLogger(SnapshotSLOTriggeringBehavior.class);
 
-	private final ExploredStateBuilder state;
+	private final StateBuilder state;
 	private final ServiceLevelObjectiveRepository sloRepo;
 	private final Configuration semanticSpd;
 
@@ -64,15 +69,17 @@ public class SnapshotSLOTriggeringBehavior implements SimulationBehaviorExtensio
 	private final double minDuration;
 
 	@Inject
-	public SnapshotSLOTriggeringBehavior(final @Nullable ExploredStateBuilder state,
-			final @Nullable ServiceLevelObjectiveRepository sloRepo, final @Nullable SnapshotConfiguration config,
+	public SnapshotSLOTriggeringBehavior(final @Nullable StateBuilder state,
+			final @Nullable MDSDBlackboard blackboard, final @Nullable SnapshotConfiguration config,
 			final @Nullable Configuration semanticSpd) {
+		
+		this.sloRepo = PCMResourcePartitionHelper.getSLORepository((PCMResourceSetPartition)
+				blackboard.getPartition(ConstantsContainer.DEFAULT_PCM_INSTANCE_PARTITION_ID));
 
 		this.activated = state != null && sloRepo != null && config != null
 				&& !sloRepo.getServicelevelobjectives().isEmpty() && semanticSpd != null;
 
 		this.state = state;
-		this.sloRepo = sloRepo;
 		this.semanticSpd = semanticSpd; // maybe optional?
 
 		this.minDuration = activated ? config.getMinDuration() : 0;

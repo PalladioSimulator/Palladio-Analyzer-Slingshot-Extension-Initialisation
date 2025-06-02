@@ -10,7 +10,7 @@ import org.palladiosimulator.analyzer.slingshot.cost.events.TakeCostMeasurement;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.PreIntercept;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.entity.interceptors.InterceptorInformation;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.returntypes.InterceptionResult;
-import org.palladiosimulator.analyzer.slingshot.stateexploration.graph.ExploredStateBuilder;
+import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.graphstate.StateBuilder;
 import org.scaledl.usageevolution.UsageEvolution;
 
 /**
@@ -39,14 +39,14 @@ public class OffsetForUsageEvolutionBehaviour implements SimulationBehaviorExten
 	private final double startTime;
 
 	@Inject
-	public OffsetForUsageEvolutionBehaviour(final @Nullable ExploredStateBuilder stateBuilder,
+	public OffsetForUsageEvolutionBehaviour(final @Nullable StateBuilder stateBuilder,
 			@Nullable final UsageEvolution usageEvolutionModel) {
 
 		this.activated = stateBuilder != null && usageEvolutionModel != null
-				&& stateBuilder.getStartupInformation().startTime() > 0;
+				&& stateBuilder.getStartTime() > 0;
 
 				
-		this.startTime = this.activated ? stateBuilder.getStartupInformation().startTime() : 0;
+		this.startTime = this.activated ? stateBuilder.getStartTime() : 0;
 				
 	}
 

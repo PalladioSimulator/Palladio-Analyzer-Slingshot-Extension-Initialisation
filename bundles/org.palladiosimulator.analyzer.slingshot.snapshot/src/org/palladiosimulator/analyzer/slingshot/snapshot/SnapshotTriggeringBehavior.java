@@ -12,11 +12,11 @@ import org.palladiosimulator.analyzer.slingshot.core.extension.SimulationBehavio
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.PreIntercept;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.entity.interceptors.InterceptorInformation;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.returntypes.InterceptionResult;
+import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.graphstate.StateBuilder;
+import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.graphstate.ReasonToLeave;
+import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.providers.EventsToInitOnWrapper;
 import org.palladiosimulator.analyzer.slingshot.snapshot.api.Snapshot;
 import org.palladiosimulator.analyzer.slingshot.snapshot.events.SnapshotInitiated;
-import org.palladiosimulator.analyzer.slingshot.stateexploration.api.ReasonToLeave;
-import org.palladiosimulator.analyzer.slingshot.stateexploration.graph.ExploredStateBuilder;
-import org.palladiosimulator.analyzer.slingshot.stateexploration.providers.EventsToInitOnWrapper;
 import org.palladiosimulator.semanticspd.Configuration;
 import org.palladiosimulator.semanticspd.ElasticInfrastructureCfg;
 import org.palladiosimulator.semanticspd.ServiceGroupCfg;
@@ -41,7 +41,7 @@ public class SnapshotTriggeringBehavior implements SimulationBehaviorExtension {
 
 	private final List<ModelAdjustmentRequested> adjustmentEvents;
 
-	private final ExploredStateBuilder state;
+	private final StateBuilder state;
 	private final SimulationScheduling scheduling;
 
 	private final boolean activated;
@@ -49,7 +49,7 @@ public class SnapshotTriggeringBehavior implements SimulationBehaviorExtension {
 	private final Configuration config;
 
 	@Inject
-	public SnapshotTriggeringBehavior(final @Nullable ExploredStateBuilder state,
+	public SnapshotTriggeringBehavior(final @Nullable StateBuilder state,
 			final @Nullable EventsToInitOnWrapper eventsWapper, final SimulationScheduling scheduling,
 			final @Nullable Configuration config) {
 		this.state = state;
