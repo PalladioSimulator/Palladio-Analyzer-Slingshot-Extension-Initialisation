@@ -32,7 +32,7 @@ public class ResultState {
 
 	/**
 	 * 
-	 * @param pointInTime start time of this state
+	 * @param startTime start time of this state
 	 * @param measurementSets measurements taken during this state.
 	 * @param duration duration of this state.
 	 * @param reasonsToLeave reason for ending a simulation run and creating this state.
@@ -40,9 +40,9 @@ public class ResultState {
 	 * @param outgoingPolicies policies that happend at the end of this simulation run. empty, if none happend. 
 	 * @param utility utility of this state.
 	 */
-	public ResultState(final double pointInTime, final List<MeasurementSet> measurementSets, final double duration, final Set<ReasonToLeave> reasonsToLeave, final String parentId, final List<ScalingPolicy> outgoingPolicies, final Utility utility) {
+	public ResultState(final double startTime, final List<MeasurementSet> measurementSets, final double duration, final Set<ReasonToLeave> reasonsToLeave, final String parentId, final List<ScalingPolicy> outgoingPolicies, final Utility utility) {
 		this.parentId = parentId;
-		this.startTime = pointInTime;
+		this.startTime = startTime;
 		this.reasonsToLeave = reasonsToLeave;
 		
 		this.measurementSets = measurementSets;

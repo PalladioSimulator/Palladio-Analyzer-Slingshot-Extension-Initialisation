@@ -1,9 +1,9 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: Stateexploration
+Bundle-Name: Slingshot Initialisation
 Bundle-SymbolicName: org.palladiosimulator.analyzer.slingshot.initialisedsimulation;singleton:=true
 Bundle-Version: 1.0.0.qualifier
-Automatic-Module-Name: org.palladiosimulator.analyzer.slingshot.stateexploration
+Automatic-Module-Name: org.palladiosimulator.analyzer.slingshot.initialisedsimulation
 Bundle-ClassPath: lib/json-20240303.jar,
  .
 Bundle-RequiredExecutionEnvironment: JavaSE-17

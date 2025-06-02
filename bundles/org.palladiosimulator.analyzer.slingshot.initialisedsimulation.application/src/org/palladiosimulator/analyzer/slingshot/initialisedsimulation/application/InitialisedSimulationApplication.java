@@ -57,12 +57,12 @@ public class InitialisedSimulationApplication implements IApplication {
 		final Path experimentsLocation = parseCommandlineArguments(context, 1);
 
 
-		final Experiment experiment = getStateExplorationExperiment(experimentsLocation).orElseThrow(() -> new IllegalArgumentException(
-				"No Experiment with tool configuration of type StateExploration(Simulation)Configuration. Cannot start exploration."));
+		final Experiment experiment = getExperiment(experimentsLocation).orElseThrow(() -> new IllegalArgumentException(
+				"No Experiment with tool configuration of type SlingshotConfiguration. Cannot start simulation."));
 		
 		final InitialiseSimulationWorkflowConfiguration.LocationRecord locationRecord=  createLocationRecord(context);
 
-		launchStateExploration(experiment, locationRecord);
+		initialiseAndLaunchSimulation(experiment, locationRecord);
 		
 		return IApplication.EXIT_OK;
 	}
@@ -92,13 +92,13 @@ public class InitialisedSimulationApplication implements IApplication {
 	}
 
 	/**
-	 * Get an experiment with a {@code StateExplorationConfiguration}.
+	 * Get an experiment with a {@link SlingshotConfiguration}.
 	 *
 	 * @param modelLocation path the the *.experiments file
-	 * @return first experiment with a {@code StateExplorationConfiguration} or
+	 * @return first experiment with a {@link SlingshotConfiguration} or
 	 *         {@link Optional#empty()} if none exists.
 	 */
-	private Optional<Experiment> getStateExplorationExperiment(final IPath modelLocation) {
+	private Optional<Experiment> getExperiment(final IPath modelLocation) {
 
 		final List<Experiment> experiments = loadExperimentsFromFile(modelLocation);
 
@@ -112,7 +112,7 @@ public class InitialisedSimulationApplication implements IApplication {
 	 *
 	 * @param experiment
 	 */
-	private void launchStateExploration(final Experiment experiment, final InitialiseSimulationWorkflowConfiguration.LocationRecord locationRecord) {
+	private void initialiseAndLaunchSimulation(final Experiment experiment, final InitialiseSimulationWorkflowConfiguration.LocationRecord locationRecord) {
 
 		final Map<String, Object> configMap = createConfigMap(experiment, SINGLE_STATE_SIMULATION_ID);
 

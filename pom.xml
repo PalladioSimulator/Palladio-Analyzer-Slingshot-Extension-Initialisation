@@ -6,7 +6,7 @@
     <version>0.8.2</version>
   </parent>
   
-  <groupId>org.palladiosimulator.analyzer.slingshot.stateexploration</groupId>
+  <groupId>org.palladiosimulator.analyzer.slingshot.initialisedsimulation</groupId>
   <artifactId>parent</artifactId>
   <version>0.0.2-SNAPSHOT</version>
   <packaging>pom</packaging>

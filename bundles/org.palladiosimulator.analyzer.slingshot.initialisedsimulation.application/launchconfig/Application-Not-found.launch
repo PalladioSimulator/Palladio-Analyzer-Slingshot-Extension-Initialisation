@@ -10,13 +10,7 @@
     <booleanAttribute key="default" value="true"/>
     <booleanAttribute key="default_auto_start" value="true"/>
     <intAttribute key="default_start_level" value="4"/>
-    <setAttribute key="deselected_workspace_bundles">
-        <setEntry value="org.palladiosimulator.analyzer.slingshot.ui"/>
-        <setEntry value="org.palladiosimulator.spd.editor"/>
-        <setEntry value="org.palladiosimulator.spd.measuringpoint.edit"/>
-        <setEntry value="org.palladiosimulator.spd.measuringpoint.editor"/>
-        <setEntry value="org.palladiosimulator.spd.semantic.editor"/>
-    </setAttribute>
+    <setAttribute key="deselected_workspace_bundles"/>
     <booleanAttribute key="includeOptional" value="false"/>
     <booleanAttribute key="org.eclipse.jdt.launching.ATTR_ATTR_USE_ARGFILE" value="false"/>
     <booleanAttribute key="org.eclipse.jdt.launching.ATTR_SHOW_CODEDETAILS_IN_EXCEPTION_MESSAGES" value="true"/>
@@ -481,6 +475,8 @@
         <setEntry value="org.palladiosimulator.analyzer.slingshot.eventdriver.annotationprocessor@default:default"/>
         <setEntry value="org.palladiosimulator.analyzer.slingshot.eventdriver@default:default"/>
         <setEntry value="org.palladiosimulator.analyzer.slingshot.initialisedsimulation.application@default:default"/>
+        <setEntry value="org.palladiosimulator.analyzer.slingshot.initialisedsimulation.converter@default:default"/>
+        <setEntry value="org.palladiosimulator.analyzer.slingshot.initialisedsimulation.data@default:default"/>
         <setEntry value="org.palladiosimulator.analyzer.slingshot.initialisedsimulation@default:default"/>
         <setEntry value="org.palladiosimulator.analyzer.slingshot.monitor.data@default:default"/>
         <setEntry value="org.palladiosimulator.analyzer.slingshot.monitor.processingtype.aggregator@default:default"/>
@@ -490,20 +486,12 @@
         <setEntry value="org.palladiosimulator.analyzer.slingshot.snapshot.data@default:default"/>
         <setEntry value="org.palladiosimulator.analyzer.slingshot.snapshot.serialization@default:default"/>
         <setEntry value="org.palladiosimulator.analyzer.slingshot.snapshot@default:default"/>
-        <setEntry value="org.palladiosimulator.analyzer.slingshot.stateexploration.converter@default:default"/>
-        <setEntry value="org.palladiosimulator.analyzer.slingshot.stateexploration.data@default:default"/>
         <setEntry value="org.palladiosimulator.analyzer.slingshot.ui.events@default:default"/>
         <setEntry value="org.palladiosimulator.analyzer.slingshot.workflow.events@default:default"/>
         <setEntry value="org.palladiosimulator.analyzer.slingshot.workflow@default:default"/>
-        <setEntry value="org.palladiosimulator.experimentautomation.application.tooladapter.slingshot.model.edit@default:default"/>
-        <setEntry value="org.palladiosimulator.experimentautomation.application.tooladapter.slingshot.model.editor@default:default"/>
         <setEntry value="org.palladiosimulator.experimentautomation.application.tooladapter.slingshot.model@default:default"/>
-        <setEntry value="org.palladiosimulator.experimentautomation.edit@default:default"/>
-        <setEntry value="org.palladiosimulator.experimentautomation.editor@default:default"/>
         <setEntry value="org.palladiosimulator.experimentautomation@default:default"/>
-        <setEntry value="org.palladiosimulator.spd.edit@default:default"/>
         <setEntry value="org.palladiosimulator.spd.measuringpoint@default:default"/>
-        <setEntry value="org.palladiosimulator.spd.semantic.edit@default:default"/>
         <setEntry value="org.palladiosimulator.spd.semantic.transformations@default:default"/>
         <setEntry value="org.palladiosimulator.spd.semantic@default:default"/>
         <setEntry value="org.palladiosimulator.spd@default:default"/>

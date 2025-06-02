@@ -1,9 +1,9 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: StateexplorationConverter
+Bundle-Name: Converter
 Bundle-SymbolicName: org.palladiosimulator.analyzer.slingshot.initialisedsimulation.converter
 Bundle-Version: 1.0.0.qualifier
-Automatic-Module-Name: org.palladiosimulator.analyzer.slingshot.stateexploration.converter
+Automatic-Module-Name: org.palladiosimulator.analyzer.slingshot.initialisedsimulation.converter
 Bundle-RequiredExecutionEnvironment: JavaSE-17
 Export-Package: org.palladiosimulator.analyzer.slingshot.converter,
  org.palladiosimulator.analyzer.slingshot.converter.data

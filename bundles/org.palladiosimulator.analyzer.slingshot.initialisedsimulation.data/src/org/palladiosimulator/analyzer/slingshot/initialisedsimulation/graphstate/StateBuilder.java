@@ -135,7 +135,7 @@ public class StateBuilder {
 
 		final Utility utility = Utility.createUtility(startTime, startTime + duration, measurements, PCMResourcePartitionHelper.getSLORepository(partition).getServicelevelobjectives());
 			
-		return new ResultState(startTime + duration, measurements, duration, reasonsToLeave, parentId, policies, utility);
+		return new ResultState(startTime, measurements, duration, reasonsToLeave, parentId, policies, utility);
 	}
 	
 	
