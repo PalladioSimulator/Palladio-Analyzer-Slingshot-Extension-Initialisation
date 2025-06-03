@@ -70,17 +70,14 @@ public class UpdateSPDUtil {
 	 * @param previousStateDuration duration to subtract from {@code time}.
 	 */
 	private static  void updateValue(final ExpectedTime time, final double previousStateDuration) {
-		final double triggerTime = time.getValue();
-
 		final ScalingPolicy policy = (ScalingPolicy) time.eContainer().eContainer();
 
-		if (triggerTime < previousStateDuration) {
+		time.setValue(time.getValue() - previousStateDuration);
+		LOGGER.debug(String.format("Reduce Triggertime of Policy %s by %f to %f.", policy.getEntityName(),
+				previousStateDuration, time.getValue()));
+		if (time.getValue() <= 0.0) {
 			policy.setActive(false);
 			LOGGER.debug(String.format("Deactivate Policy %s as Triggertime is in the past.", policy.getEntityName()));
-		} else {
-			time.setValue(time.getValue() - previousStateDuration);
-			LOGGER.debug(String.format("Reduce Triggertime of Policy %s by %f to %f.", policy.getEntityName(),
-					previousStateDuration, time.getValue()));
 		}
 	}
 
