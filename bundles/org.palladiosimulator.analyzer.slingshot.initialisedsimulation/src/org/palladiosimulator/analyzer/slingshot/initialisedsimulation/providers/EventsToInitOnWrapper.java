@@ -4,8 +4,8 @@ import java.util.List;
 import java.util.Set;
 
 import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.ModelAdjustmentRequested;
-import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.SPDAdjustorStateInitialized;
 import org.palladiosimulator.analyzer.slingshot.common.events.DESEvent;
+import org.palladiosimulator.analyzer.slingshot.snapshot.entities.SPDAdjustorStateValues;
 
 /**
  * Wrapper for a the set of {@link DESEvent} to initialise the next simulation
@@ -25,7 +25,7 @@ public class EventsToInitOnWrapper {
 	 */
 	private final List<ModelAdjustmentRequested> adjustmentEvents;
 	
-	private final Set<SPDAdjustorStateInitialized> stateInitEvents;
+	private final Set<SPDAdjustorStateValues> stateInitEvents;
 	private final Set<DESEvent> otherEvents;
 
 	/**
@@ -35,7 +35,7 @@ public class EventsToInitOnWrapper {
 	 * @param stateInitEvents Values to initialise the states of the SPD interpreter.
 	 * @param otherEvents User and request events for the simulation run.
 	 */
-	public EventsToInitOnWrapper(final List<ModelAdjustmentRequested> adjustmentEvents, final Set<SPDAdjustorStateInitialized> stateInitEvents, Set<DESEvent> otherEvents) {
+	public EventsToInitOnWrapper(final List<ModelAdjustmentRequested> adjustmentEvents, final Set<SPDAdjustorStateValues> stateInitEvents, final Set<DESEvent> otherEvents) {
 		
 		this.adjustmentEvents = adjustmentEvents;
 		this.otherEvents = otherEvents;
@@ -46,7 +46,7 @@ public class EventsToInitOnWrapper {
 		return adjustmentEvents;
 	}
 
-	public Set<SPDAdjustorStateInitialized> getStateInitEvents() {
+	public Set<SPDAdjustorStateValues> getStateInitEvents() {
 		return stateInitEvents;
 	}
 

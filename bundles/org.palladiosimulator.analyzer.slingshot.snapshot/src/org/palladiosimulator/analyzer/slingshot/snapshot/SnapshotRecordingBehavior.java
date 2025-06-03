@@ -30,9 +30,9 @@ import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.providers.
 import org.palladiosimulator.analyzer.slingshot.snapshot.api.Camera;
 import org.palladiosimulator.analyzer.slingshot.snapshot.api.EventRecorder;
 import org.palladiosimulator.analyzer.slingshot.snapshot.api.Snapshot;
-import org.palladiosimulator.analyzer.slingshot.snapshot.entities.RecordedJob;
 import org.palladiosimulator.analyzer.slingshot.snapshot.entities.InMemoryRecorder;
 import org.palladiosimulator.analyzer.slingshot.snapshot.entities.PlainSnapshotCamera;
+import org.palladiosimulator.analyzer.slingshot.snapshot.entities.RecordedJob;
 import org.palladiosimulator.analyzer.slingshot.snapshot.events.SnapshotFinished;
 import org.palladiosimulator.analyzer.slingshot.snapshot.events.SnapshotInitiated;
 import org.palladiosimulator.analyzer.slingshot.snapshot.events.SnapshotTaken;
@@ -86,7 +86,7 @@ public class SnapshotRecordingBehavior implements SimulationBehaviorExtension {
 		this.recorder = new InMemoryRecorder();
 		//this.camera = new LessInvasiveInMemoryCamera(this.recorder, engine, set.get(), wrapper.getStateInitEvents().stream().map(e -> e.getStateValues()).toList());
 		//this.camera = new SerializingCamera(this.recorder, engine, set.get(), wrapper.getStateInitEvents().stream().map(e -> e.getStateValues()).toList());
-		this.camera = new PlainSnapshotCamera(this.recorder, engine, wrapper.getStateInitEvents().stream().map(e -> e.getStateValues()).toList());
+		this.camera = new PlainSnapshotCamera(this.recorder, engine, wrapper.getStateInitEvents());
 		
 		this.scheduling = scheduling;
 	}

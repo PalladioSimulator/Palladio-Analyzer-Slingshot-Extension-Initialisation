@@ -10,7 +10,8 @@ import javax.inject.Inject;
 
 import org.apache.log4j.Logger;
 import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.ModelAdjustmentRequested;
-import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.SPDAdjustorStateInitialized;
+import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.SPDAdjustorState;
+import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.SPDAdjustorStateRegistered;
 import org.palladiosimulator.analyzer.slingshot.common.annotations.Nullable;
 import org.palladiosimulator.analyzer.slingshot.common.events.AbstractEntityChangedEvent;
 import org.palladiosimulator.analyzer.slingshot.common.events.DESEvent;
@@ -29,7 +30,9 @@ import org.palladiosimulator.analyzer.slingshot.eventdriver.returntypes.Intercep
 import org.palladiosimulator.analyzer.slingshot.eventdriver.returntypes.Result;
 import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.providers.EventsToInitOnWrapper;
 import org.palladiosimulator.analyzer.slingshot.snapshot.configuration.SnapshotConfiguration;
+import org.palladiosimulator.analyzer.slingshot.snapshot.entities.SPDAdjustorStateValues;
 import org.palladiosimulator.analyzer.slingshot.snapshot.events.SnapshotInitiated;
+import org.palladiosimulator.spd.ScalingPolicy;
 
 /**
  *
@@ -55,9 +58,10 @@ import org.palladiosimulator.analyzer.slingshot.snapshot.events.SnapshotInitiate
  * @author Sophie Stieß
  *
  */
-@OnEvent(when = SimulationStarted.class, then = { AbstractEntityChangedEvent.class,
-		SPDAdjustorStateInitialized.class }, cardinality = EventCardinality.MANY)
+@OnEvent(when = SPDAdjustorStateRegistered.class, then = {})
+@OnEvent(when = SimulationStarted.class, then = { AbstractEntityChangedEvent.class }, cardinality = EventCardinality.MANY)
 @OnEvent(when = PreSimulationConfigurationStarted.class, then = SnapshotInitiated.class, cardinality = EventCardinality.SINGLE)
+
 public class SnapshotInitFromBehaviour implements SimulationBehaviorExtension {
 
 	private static final Logger LOGGER = Logger.getLogger(SnapshotInitFromBehaviour.class);
@@ -66,6 +70,8 @@ public class SnapshotInitFromBehaviour implements SimulationBehaviorExtension {
 
 	/* for displacing modelpassed events to the past */
 	private final Map<ModelPassedEvent<?>, Double> offsetMap;
+	
+	
 
 	private final EventsToInitOnWrapper wrapper;
 
@@ -119,9 +125,35 @@ public class SnapshotInitFromBehaviour implements SimulationBehaviorExtension {
 		this.initOffsetMap(eventsToInitOn);
 
 		eventsToInitOn.forEach(e -> scheduling.scheduleEvent(e));
-		wrapper.getStateInitEvents().forEach(e -> scheduling.scheduleEvent(e));
 	}
 
+	@Subscribe
+	public void onSPDAdjustorStateRegistered(final SPDAdjustorStateRegistered event) {
+		final SPDAdjustorState state = event.getEntity();
+		
+		for (final SPDAdjustorStateValues value : wrapper.getStateInitEvents()) {
+			if (value.scalingPolicyId().equals(state.getScalingPolicy().getId())) {
+				state.setCoolDownEnd(value.coolDownEnd());
+				state.setLatestAdjustmentAtSimulationTime(value.latestAdjustmentAtSimulationTime());
+				state.setNumberOfScalesInCooldown(value.numberOfScalesInCooldown());
+
+				while (state.numberOfScales() < value.numberScales()) {
+					state.incrementNumberScales();
+				}
+
+				// TargetGroupState must be updated only once, because it is shared.
+				for (int i = 0; i < value.enactedPolicies().size(); i++) {
+
+					final double enactmentTime = value.enactmentTimeOfPolicies().get(i);
+					final ScalingPolicy policy = value.enactedPolicies().get(i);
+
+					state.getTargetGroupState().addEnactedPolicy(enactmentTime, policy);
+				}
+			}
+		} 
+	}
+
+	
 	/**
 	 * Route a {@link SimulationStarted} event.
 	 * 

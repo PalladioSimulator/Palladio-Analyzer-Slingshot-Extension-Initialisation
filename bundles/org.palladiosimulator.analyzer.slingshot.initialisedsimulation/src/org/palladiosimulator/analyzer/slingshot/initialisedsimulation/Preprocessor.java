@@ -6,16 +6,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
 import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.ModelAdjustmentRequested;
-import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.SPDAdjustorStateInitialized;
-import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.SPDAdjustorStateValues;
 import org.palladiosimulator.analyzer.slingshot.common.utils.PCMResourcePartitionHelper;
 import org.palladiosimulator.analyzer.slingshot.common.utils.ResourceUtils;
 import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.providers.EventsToInitOnWrapper;
 import org.palladiosimulator.analyzer.slingshot.snapshot.api.Snapshot;
+import org.palladiosimulator.analyzer.slingshot.snapshot.entities.SPDAdjustorStateValues;
 import org.palladiosimulator.analyzer.workflow.blackboard.PCMResourceSetPartition;
 import org.palladiosimulator.spd.SPD;
 import org.palladiosimulator.spd.ScalingPolicy;
@@ -66,7 +64,7 @@ public class Preprocessor {
 	 * @return
 	 */
 	public EventsToInitOnWrapper createWrapper() {
-		final Set<SPDAdjustorStateInitialized> stateInitEvents = this.createUpdateStateInitEvents(snapshot);
+		final Set<SPDAdjustorStateValues> stateInitEvents = this.createUpdateStateInitEvents(snapshot);
 		final List<ModelAdjustmentRequested> initialAdjustments = this.createInitialModelAdjustmentRequested();
 		
 		return new EventsToInitOnWrapper(initialAdjustments, stateInitEvents, snapshot.getEvents());
@@ -85,14 +83,14 @@ public class Preprocessor {
 	 * @param snapshot
 	 * @return
 	 */
-	private Set<SPDAdjustorStateInitialized> createUpdateStateInitEvents(final Snapshot snapshot) {
-			final Collection<SPDAdjustorStateValues> initValues = new HashSet<>();
+	private Set<SPDAdjustorStateValues> createUpdateStateInitEvents(final Snapshot snapshot) {
+			final Set<SPDAdjustorStateValues> initValues = new HashSet<>();
 
 			for (final ScalingPolicy policy : policiesToProcess) {
 				initValues.addAll(updateInitValues(policy, snapshot.getSPDAdjustorStateValues()));
 			}
 			
-			return this.createStateInitEvents(initValues);
+			return initValues;
 		}
 
 	/**
@@ -205,17 +203,6 @@ public class Preprocessor {
 	private boolean isSimulationTimeTrigger(final ScalingTrigger trigger) {
 		return trigger instanceof final BaseTrigger base && base.getStimulus() instanceof SimulationTime
 				&& base.getExpectedValue() instanceof ExpectedTime;
-	}
-
-	/**
-	 * Create events for initialising the state inside the SPD Interpreter.
-	 * 
-	 * @param values values from previous simulation run.
-	 * @return Events to initialise the interpreter to the states from the previous
-	 *         run.
-	 */
-	private Set<SPDAdjustorStateInitialized> createStateInitEvents(final Collection<SPDAdjustorStateValues> values) {
-		return values.stream().map(value -> new SPDAdjustorStateInitialized(value)).collect(Collectors.toSet());
 	}
 
 }
