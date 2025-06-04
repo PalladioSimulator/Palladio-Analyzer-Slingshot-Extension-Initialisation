@@ -18,7 +18,7 @@ import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.eventcon
 import org.palladiosimulator.analyzer.slingshot.eventdriver.entity.interceptors.InterceptorInformation;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.returntypes.InterceptionResult;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.returntypes.Result;
-import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.providers.EventsToInitOnWrapper;
+import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.providers.InitWrapper;
 import org.palladiosimulator.analyzer.slingshot.snapshot.events.SnapshotInitiated;
 import org.palladiosimulator.analyzer.slingshot.snapshot.events.SnapshotTaken;
 
@@ -50,7 +50,7 @@ public class SnapshotCostMeasurementsBehaviour implements SimulationBehaviorExte
 	private boolean handleCosts = true;
 
 	@Inject
-	public SnapshotCostMeasurementsBehaviour(final @Nullable EventsToInitOnWrapper eventsWrapper) {
+	public SnapshotCostMeasurementsBehaviour(final @Nullable InitWrapper eventsWrapper) {
 		this.startWithAdaption = eventsWrapper != null && !eventsWrapper.getAdjustmentEvents().isEmpty();
 		this.activated = eventsWrapper != null;
 	}

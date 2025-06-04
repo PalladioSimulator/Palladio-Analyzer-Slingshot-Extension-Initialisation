@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.ModelAdjustmentRequested;
-import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.SPDAdjustorStateValues;
+import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.SPDAdjustorState;
 import org.palladiosimulator.analyzer.slingshot.common.events.DESEvent;
 import org.palladiosimulator.analyzer.slingshot.snapshot.api.Snapshot;
 
@@ -24,13 +24,13 @@ public final class PlainSnapshot implements Snapshot {
 	
 	private final Set<DESEvent> events;
 	private final List<ModelAdjustmentRequested> modelAdjustmentRequestedEvents;
-	private final Collection<SPDAdjustorStateValues> adjustorStateValues;
+	private final Collection<SPDAdjustorState> states;
 
-	public PlainSnapshot(final Set<DESEvent> events, final Collection<SPDAdjustorStateValues> stateValues) {
+	public PlainSnapshot(final Set<DESEvent> events, final Collection<SPDAdjustorState> states) {
 		this.modelAdjustmentRequestedEvents = events.stream().filter(ModelAdjustmentRequested.class::isInstance).map(ModelAdjustmentRequested.class::cast).toList();
 		this.events = new HashSet<>(events);
 		this.events.removeAll(this.modelAdjustmentRequestedEvents);
-		this.adjustorStateValues = stateValues;
+		this.states = states;
 	}
 
 
@@ -45,7 +45,7 @@ public final class PlainSnapshot implements Snapshot {
 	}
 
 	@Override
-	public Collection<SPDAdjustorStateValues> getSPDAdjustorStateValues() {
-		return Set.copyOf(this.adjustorStateValues);
+	public Collection<SPDAdjustorState> getSPDAdjustorStates() {
+		return Set.copyOf(this.states);
 	}
 }

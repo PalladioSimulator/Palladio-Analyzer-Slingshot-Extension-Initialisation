@@ -2,6 +2,7 @@ package org.palladiosimulator.analyzer.slingshot.snapshot;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -10,7 +11,8 @@ import javax.inject.Inject;
 
 import org.apache.log4j.Logger;
 import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.ModelAdjustmentRequested;
-import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.SPDAdjustorStateInitialized;
+import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.SPDAdjustorState;
+import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.SPDAdjustorStateRegistered;
 import org.palladiosimulator.analyzer.slingshot.common.annotations.Nullable;
 import org.palladiosimulator.analyzer.slingshot.common.events.AbstractEntityChangedEvent;
 import org.palladiosimulator.analyzer.slingshot.common.events.DESEvent;
@@ -27,7 +29,7 @@ import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.eventcon
 import org.palladiosimulator.analyzer.slingshot.eventdriver.entity.interceptors.InterceptorInformation;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.returntypes.InterceptionResult;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.returntypes.Result;
-import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.providers.EventsToInitOnWrapper;
+import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.providers.InitWrapper;
 import org.palladiosimulator.analyzer.slingshot.snapshot.configuration.SnapshotConfiguration;
 import org.palladiosimulator.analyzer.slingshot.snapshot.events.SnapshotInitiated;
 
@@ -55,9 +57,10 @@ import org.palladiosimulator.analyzer.slingshot.snapshot.events.SnapshotInitiate
  * @author Sophie Stieß
  *
  */
-@OnEvent(when = SimulationStarted.class, then = { AbstractEntityChangedEvent.class,
-		SPDAdjustorStateInitialized.class }, cardinality = EventCardinality.MANY)
+@OnEvent(when = SPDAdjustorStateRegistered.class, then = {})
+@OnEvent(when = SimulationStarted.class, then = { AbstractEntityChangedEvent.class }, cardinality = EventCardinality.MANY)
 @OnEvent(when = PreSimulationConfigurationStarted.class, then = SnapshotInitiated.class, cardinality = EventCardinality.SINGLE)
+
 public class SnapshotInitFromBehaviour implements SimulationBehaviorExtension {
 
 	private static final Logger LOGGER = Logger.getLogger(SnapshotInitFromBehaviour.class);
@@ -66,14 +69,16 @@ public class SnapshotInitFromBehaviour implements SimulationBehaviorExtension {
 
 	/* for displacing modelpassed events to the past */
 	private final Map<ModelPassedEvent<?>, Double> offsetMap;
+	
+	
 
-	private final EventsToInitOnWrapper wrapper;
+	private final InitWrapper wrapper;
 
 	private final SimulationScheduling scheduling;
 
 	@Inject
 	public SnapshotInitFromBehaviour(final @Nullable SnapshotConfiguration snapshotConfig,
-			final @Nullable EventsToInitOnWrapper eventsWrapper, final SimulationScheduling scheduling) {
+			final @Nullable InitWrapper eventsWrapper, final SimulationScheduling scheduling) {
 		this.snapshotConfig = snapshotConfig;
 		this.wrapper = eventsWrapper;
 		this.scheduling = scheduling;
@@ -119,9 +124,36 @@ public class SnapshotInitFromBehaviour implements SimulationBehaviorExtension {
 		this.initOffsetMap(eventsToInitOn);
 
 		eventsToInitOn.forEach(e -> scheduling.scheduleEvent(e));
-		wrapper.getStateInitEvents().forEach(e -> scheduling.scheduleEvent(e));
 	}
 
+	@Subscribe
+	public void onSPDAdjustorStateRegistered(final SPDAdjustorStateRegistered event) {
+		final SPDAdjustorState state = event.getEntity();
+		
+		final Optional<SPDAdjustorState> oldState = wrapper.getStates().stream()
+				.filter(v -> v.getScalingPolicy().equals(event.getEntity().getScalingPolicy())).findFirst();
+
+		if(oldState.isEmpty()) {
+			return;
+		}
+		
+		state.setCoolDownEnd(oldState.get().getCoolDownEnd());
+		state.setLatestAdjustmentAtSimulationTime(oldState.get().getLatestAdjustmentAtSimulationTime());
+		state.setNumberOfScalesInCooldown(oldState.get().getNumberOfScalesInCooldown());
+
+		while (state.numberOfScales() < oldState.get().numberOfScales()) {
+			state.incrementNumberScales();
+		}
+
+		if (state.getTargetGroupState().enactedPoliciesEmpty() || state.getTargetGroupState().getLastScalingPolicyEnactmentTime() <= oldState.get().getTargetGroupState()
+				.getLastScalingPolicyEnactmentTime()) {
+			state.getTargetGroupState().addEnactedPolicy(
+					oldState.get().getTargetGroupState().getLastScalingPolicyEnactmentTime(),
+					oldState.get().getTargetGroupState().getLastEnactedScalingPolicy());
+		}
+	}
+
+	
 	/**
 	 * Route a {@link SimulationStarted} event.
 	 * 

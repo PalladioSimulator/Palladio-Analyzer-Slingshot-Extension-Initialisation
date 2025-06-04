@@ -146,7 +146,6 @@ protected final static Set<TypeToken<?>> typeSetDESEvents = Set.of(TypeToken.get
 ////	SimulationStarted.class.getCanonicalName(), SimulationStarted.class);
 ////	SnapshotInitiated.class.getCanonicalName(), SnapshotInitiated.class);
 ////	SnapshotTaken.class.getCanonicalName(), SnapshotTaken.class);
-////	SPDAdjustorStateInitialized.class.getCanonicalName(), SPDAdjustorStateInitialized.class);
 ////	TakeCostMeasurement.class.getCanonicalName(), TakeCostMeasurement.class);
 ////	MonitorModelVisited.class.getCanonicalName(), MonitorModelVisited.class);
 ////	MeasurementSpecificationVisited.class.getCanonicalName(), MeasurementSpecificationVisited.class);

@@ -14,7 +14,7 @@ import org.palladiosimulator.analyzer.slingshot.eventdriver.entity.interceptors.
 import org.palladiosimulator.analyzer.slingshot.eventdriver.returntypes.InterceptionResult;
 import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.graphstate.StateBuilder;
 import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.graphstate.ReasonToLeave;
-import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.providers.EventsToInitOnWrapper;
+import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.providers.InitWrapper;
 import org.palladiosimulator.analyzer.slingshot.snapshot.api.Snapshot;
 import org.palladiosimulator.analyzer.slingshot.snapshot.events.SnapshotInitiated;
 import org.palladiosimulator.semanticspd.Configuration;
@@ -50,7 +50,7 @@ public class SnapshotTriggeringBehavior implements SimulationBehaviorExtension {
 
 	@Inject
 	public SnapshotTriggeringBehavior(final @Nullable StateBuilder state,
-			final @Nullable EventsToInitOnWrapper eventsWapper, final SimulationScheduling scheduling,
+			final @Nullable InitWrapper eventsWapper, final SimulationScheduling scheduling,
 			final @Nullable Configuration config) {
 		this.state = state;
 		this.scheduling = scheduling;

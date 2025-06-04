@@ -26,13 +26,13 @@ import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.eventcon
 import org.palladiosimulator.analyzer.slingshot.eventdriver.entity.interceptors.InterceptorInformation;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.returntypes.InterceptionResult;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.returntypes.Result;
-import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.providers.EventsToInitOnWrapper;
+import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.providers.InitWrapper;
 import org.palladiosimulator.analyzer.slingshot.snapshot.api.Camera;
 import org.palladiosimulator.analyzer.slingshot.snapshot.api.EventRecorder;
 import org.palladiosimulator.analyzer.slingshot.snapshot.api.Snapshot;
-import org.palladiosimulator.analyzer.slingshot.snapshot.entities.RecordedJob;
 import org.palladiosimulator.analyzer.slingshot.snapshot.entities.InMemoryRecorder;
 import org.palladiosimulator.analyzer.slingshot.snapshot.entities.PlainSnapshotCamera;
+import org.palladiosimulator.analyzer.slingshot.snapshot.entities.RecordedJob;
 import org.palladiosimulator.analyzer.slingshot.snapshot.events.SnapshotFinished;
 import org.palladiosimulator.analyzer.slingshot.snapshot.events.SnapshotInitiated;
 import org.palladiosimulator.analyzer.slingshot.snapshot.events.SnapshotTaken;
@@ -79,14 +79,12 @@ public class SnapshotRecordingBehavior implements SimulationBehaviorExtension {
 
 	@Inject
 	public SnapshotRecordingBehavior(final SimulationEngine engine, final Allocation allocation, final SimulationScheduling scheduling,
-			final PCMResourceSetPartitionProvider set, final EventsToInitOnWrapper wrapper) {
+			final PCMResourceSetPartitionProvider set, final InitWrapper wrapper) {
 		// can i somehow include this in the injection part?
 		// should work with this Model and the 'bind' instruction.
 
 		this.recorder = new InMemoryRecorder();
-		//this.camera = new LessInvasiveInMemoryCamera(this.recorder, engine, set.get(), wrapper.getStateInitEvents().stream().map(e -> e.getStateValues()).toList());
-		//this.camera = new SerializingCamera(this.recorder, engine, set.get(), wrapper.getStateInitEvents().stream().map(e -> e.getStateValues()).toList());
-		this.camera = new PlainSnapshotCamera(this.recorder, engine, wrapper.getStateInitEvents().stream().map(e -> e.getStateValues()).toList());
+		this.camera = new PlainSnapshotCamera(this.recorder, engine, wrapper.getStates());
 		
 		this.scheduling = scheduling;
 	}

@@ -19,7 +19,7 @@ import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.Subscrib
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.eventcontract.OnEvent;
 import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.graphstate.StateBuilder;
 import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.graphstate.ReasonToLeave;
-import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.providers.EventsToInitOnWrapper;
+import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.providers.InitWrapper;
 import org.palladiosimulator.analyzer.slingshot.snapshot.events.SnapshotInitiated;
 import org.palladiosimulator.semanticspd.CompetingConsumersGroupCfg;
 import org.palladiosimulator.semanticspd.Configuration;
@@ -65,7 +65,7 @@ public class SnapshotAbortionBehavior implements SimulationBehaviorExtension {
 
 	@Inject
 	public SnapshotAbortionBehavior(final @Nullable StateBuilder state,
-			final @Nullable EventsToInitOnWrapper eventsWapper, final SimulationScheduling scheduling,
+			final @Nullable InitWrapper eventsWapper, final SimulationScheduling scheduling,
 			@Nullable final Configuration config, @Nullable final SPD spd) {
 		this.state = state;
 		this.scheduling = scheduling;

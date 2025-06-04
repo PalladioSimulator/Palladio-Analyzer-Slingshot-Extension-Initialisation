@@ -24,7 +24,7 @@ public class AdditionalConfigurationModule extends AbstractSlingshotExtension{
 	protected void configure() {
 		bind(SnapshotConfiguration.class).toProvider(snapConfigProvider);
 		bind(StateBuilder.class).toProvider(defaultStateProvider);
-		bind(EventsToInitOnWrapper.class).toProvider(eventsToInitOnProvider);
+		bind(InitWrapper.class).toProvider(eventsToInitOnProvider);
 	}
 
 	@Override
