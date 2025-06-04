@@ -7,16 +7,16 @@ import javax.inject.Singleton;
  * Provides the event to init the next simulation run on.
  */
 @Singleton
-public class EventsToInitOnProvider implements Provider<EventsToInitOnWrapper> {
+public class EventsToInitOnProvider implements Provider<InitWrapper> {
 
-	private EventsToInitOnWrapper eventsToInitOn;
+	private InitWrapper eventsToInitOn;
 
-	public void set(final EventsToInitOnWrapper eventsToInitOn) {
+	public void set(final InitWrapper eventsToInitOn) {
 		this.eventsToInitOn = eventsToInitOn;
 	}
 
 	@Override
-	public EventsToInitOnWrapper get() {
+	public InitWrapper get() {
 		return eventsToInitOn;
 	}
 

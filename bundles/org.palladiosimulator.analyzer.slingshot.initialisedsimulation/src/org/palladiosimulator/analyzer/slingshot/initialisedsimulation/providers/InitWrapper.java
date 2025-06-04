@@ -4,11 +4,11 @@ import java.util.List;
 import java.util.Set;
 
 import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.ModelAdjustmentRequested;
+import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.SPDAdjustorState;
 import org.palladiosimulator.analyzer.slingshot.common.events.DESEvent;
-import org.palladiosimulator.analyzer.slingshot.snapshot.entities.SPDAdjustorStateValues;
 
 /**
- * Wrapper for a the set of {@link DESEvent} to initialise the next simulation
+ * Wrapper for a the set of {@link DESEvent} and some additional state information to initialise the next simulation
  * run.
  *
  * We use this wrapper, because creating an provider, that directly provides a
@@ -18,36 +18,36 @@ import org.palladiosimulator.analyzer.slingshot.snapshot.entities.SPDAdjustorSta
  * @author Sophie Stieß
  *
  */
-public class EventsToInitOnWrapper {
+public class InitWrapper {
 
 	/**
 	 * Adjustments to be applied at the beginning of the simulation run. Beware, the order is relevant. 
 	 */
 	private final List<ModelAdjustmentRequested> adjustmentEvents;
 	
-	private final Set<SPDAdjustorStateValues> stateInitEvents;
+	private final Set<SPDAdjustorState> states;
 	private final Set<DESEvent> otherEvents;
 
 	/**
 	 * Create a wrapper around the event to initialise a simulation run. 
 	 * 
 	 * @param adjustmentEvents Adjustments to be applied at the beginning of the simulation run.
-	 * @param stateInitEvents Values to initialise the states of the SPD interpreter.
+	 * @param states Values to initialise the states of the SPD interpreter.
 	 * @param otherEvents User and request events for the simulation run.
 	 */
-	public EventsToInitOnWrapper(final List<ModelAdjustmentRequested> adjustmentEvents, final Set<SPDAdjustorStateValues> stateInitEvents, final Set<DESEvent> otherEvents) {
+	public InitWrapper(final List<ModelAdjustmentRequested> adjustmentEvents, final Set<SPDAdjustorState> states, final Set<DESEvent> otherEvents) {
 		
 		this.adjustmentEvents = adjustmentEvents;
 		this.otherEvents = otherEvents;
-		this.stateInitEvents = stateInitEvents;
+		this.states = states;
 	}
 
 	public List<ModelAdjustmentRequested> getAdjustmentEvents() {
 		return adjustmentEvents;
 	}
 
-	public Set<SPDAdjustorStateValues> getStateInitEvents() {
-		return stateInitEvents;
+	public Set<SPDAdjustorState> getStates() {
+		return states;
 	}
 
 	public Set<DESEvent> getOtherEvents() {

@@ -1,7 +1,5 @@
 package org.palladiosimulator.analyzer.slingshot.initialisedsimulation;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -9,11 +7,12 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.ModelAdjustmentRequested;
+import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.SPDAdjustorState;
+import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.TargetGroupState;
 import org.palladiosimulator.analyzer.slingshot.common.utils.PCMResourcePartitionHelper;
 import org.palladiosimulator.analyzer.slingshot.common.utils.ResourceUtils;
-import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.providers.EventsToInitOnWrapper;
+import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.providers.InitWrapper;
 import org.palladiosimulator.analyzer.slingshot.snapshot.api.Snapshot;
-import org.palladiosimulator.analyzer.slingshot.snapshot.entities.SPDAdjustorStateValues;
 import org.palladiosimulator.analyzer.workflow.blackboard.PCMResourceSetPartition;
 import org.palladiosimulator.spd.SPD;
 import org.palladiosimulator.spd.ScalingPolicy;
@@ -63,11 +62,11 @@ public class Preprocessor {
 	 * 
 	 * @return
 	 */
-	public EventsToInitOnWrapper createWrapper() {
-		final Set<SPDAdjustorStateValues> stateInitEvents = this.createUpdateStateInitEvents(snapshot);
+	public InitWrapper createWrapper() {
+		final Set<SPDAdjustorState> states = this.collectStates(snapshot);
 		final List<ModelAdjustmentRequested> initialAdjustments = this.createInitialModelAdjustmentRequested();
 		
-		return new EventsToInitOnWrapper(initialAdjustments, stateInitEvents, snapshot.getEvents());
+		return new InitWrapper(initialAdjustments, states, snapshot.getEvents());
 	}
 	
 	/**
@@ -83,13 +82,24 @@ public class Preprocessor {
 	 * @param snapshot
 	 * @return
 	 */
-	private Set<SPDAdjustorStateValues> createUpdateStateInitEvents(final Snapshot snapshot) {
-			final Set<SPDAdjustorStateValues> initValues = new HashSet<>();
-
-			for (final ScalingPolicy policy : policiesToProcess) {
-				initValues.addAll(updateInitValues(policy, snapshot.getSPDAdjustorStateValues()));
+	private Set<SPDAdjustorState> collectStates(final Snapshot snapshot) {
+			final Set<SPDAdjustorState> initValues = new HashSet<>();
+		
+			// process exisitng states
+			for (final SPDAdjustorState oldState : snapshot.getSPDAdjustorStates()) {
+				if(policiesToProcess.contains(oldState.getScalingPolicy())) {
+					initValues.add(updateSPDStates(oldState));					
+				} else {
+					initValues.add(oldState);
+				}
 			}
 			
+			// add new states, if none exist.
+			for (final ScalingPolicy policy : policiesToProcess) {
+				if(snapshot.getSPDAdjustorStates().stream().filter(value -> value.getScalingPolicy().equals(policy)).findAny().isEmpty()) {
+					initValues.add(updateSPDStates(new SPDAdjustorState(policy, new TargetGroupState(policy.getTargetGroup()))));
+				}
+			}
 			return initValues;
 		}
 
@@ -109,85 +119,35 @@ public class Preprocessor {
 		spd.getScalingPolicies().stream().filter(p -> isSimulationTimeTrigger(p.getScalingTrigger()))
 				.filter(p -> ids.contains(p.getId())).forEach(p -> p.setActive(false));
 	}
-
+	
+	
 	/**
-	 *
-	 * Adapt initialisation values to represent the application of the reactive or
-	 * proactive reconfigurations.
-	 *
-	 * Reconfigurations at the beginning of the next simulation run are applied by
-	 * injecting the respective {@link ModelAdjustmentRequested} event. Thus the
-	 * adjustment request does not pass the trigger chain, and the policy
-	 * application is not represented in the state of the SPD adjustor.
-	 *
-	 * To mitigate this, this operation manually updates the counters and times in
-	 * the initialisation values. This is necessary for both proactive and reactive
-	 * reconfiguration, as the {@code DefaultState} always holds the state of the
-	 * adjustors prior to reconfiguration application.
-	 *
-	 * @param policy     policy to be applied at the beginning of the next
-	 *                   simulation run.
-	 * @param initValues values to initialise the {@code SPDAdjustorContext} on.
-	 * @return collection of update values.
+	 * 
+	 * @param policy
+	 * @param state
+	 * @return
 	 */
-	private Collection<SPDAdjustorStateValues> updateInitValues(final ScalingPolicy policy,
-			final Collection<SPDAdjustorStateValues> initValues) {
-
-		Collection<SPDAdjustorStateValues> rvals = new HashSet<>(initValues);
-
+	private SPDAdjustorState updateSPDStates(final SPDAdjustorState state) {
+		final ScalingPolicy policy = state.getScalingPolicy(); 
+		
+		final TargetGroupState tgs = state.getTargetGroupState();
+		
 		final Optional<CooldownConstraint> cooldownConstraint = policy.getPolicyConstraints().stream()
 				.filter(CooldownConstraint.class::isInstance).map(CooldownConstraint.class::cast).findAny();
-
-		int numberscales = 0;
-		double cooldownEnd = 0;
-		int numberscalesinCD = 0;
 		
-		List<ScalingPolicy> enactedPolicies = new ArrayList<>();
-		List<Double> enactmentTimeOfPolicies = new ArrayList<>();
-
-		final Optional<SPDAdjustorStateValues> policyMatch = initValues.stream()
-				.filter(v -> v.scalingPolicyId().equals(policy.getId())).findAny();
-		
-
-		final Optional<SPDAdjustorStateValues> targetgroupMatch = initValues.stream()
-				.filter(v -> v.scalingPolicy().getTargetGroup().getId().equals(policy.getTargetGroup().getId())).findAny();
-
-		if (policyMatch.isPresent()) {
-			numberscales = policyMatch.get().numberScales();
-			cooldownEnd = policyMatch.get().coolDownEnd();
-			numberscalesinCD = policyMatch.get().numberOfScalesInCooldown();
-
-			rvals.remove(policyMatch.get());
-		}
-
-		if (targetgroupMatch.isPresent()) {
-			enactedPolicies = new ArrayList<>(targetgroupMatch.get().enactedPolicies());
-			enactmentTimeOfPolicies = new ArrayList<>(targetgroupMatch.get().enactmentTimeOfPolicies());
-			
-			// for all init records that target the same target group, remove the target group updates.
-			rvals = new ArrayList<>(rvals.stream().map(val -> new SPDAdjustorStateValues(val.scalingPolicy(), val.latestAdjustmentAtSimulationTime(), val.numberScales(),
-					val.coolDownEnd(), val.numberOfScalesInCooldown(), List.of(), List.of())).toList());
-		}
-
 		if (cooldownConstraint.isPresent()) {
-			if (numberscalesinCD < cooldownConstraint.get().getMaxScalingOperations()) {
-				numberscalesinCD++;
+			if (state.getNumberOfScalesInCooldown() < cooldownConstraint.get().getMaxScalingOperations()) {
+				state.incrementNumberOfAdjustmentsInCooldown();
 			} else {
-				numberscalesinCD = 0;
-				cooldownEnd = cooldownConstraint.get().getCooldownTime();
+				state.setNumberOfScalesInCooldown(0);
+				state.setCoolDownEnd(cooldownConstraint.get().getCooldownTime());
 			}
 		}
+
+		state.setLatestAdjustmentAtSimulationTime(0.0);
+		tgs.addEnactedPolicy(0.0, policy);
 		
-		enactmentTimeOfPolicies.add(0.0);
-		enactedPolicies.add(policy);
-
-		// only the new/updated init record (i.e. the one for the most recent policy) holds the init values for the targetgroup. 
-		final SPDAdjustorStateValues newvalues = new SPDAdjustorStateValues(policy, 0.0, numberscales + 1,
-				cooldownEnd, numberscalesinCD, enactedPolicies, enactmentTimeOfPolicies); 
-
-		rvals.add(newvalues);
-
-		return rvals;
+		return state;
 	}
 
 	/**

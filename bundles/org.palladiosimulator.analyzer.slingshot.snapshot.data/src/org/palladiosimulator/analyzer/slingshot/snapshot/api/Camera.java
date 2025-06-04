@@ -16,6 +16,8 @@ import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.even
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobInitiated;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobProgressed;
 import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.ModelAdjustmentRequested;
+import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.SPDAdjustorState;
+import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.TargetGroupState;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFModelPassedElement;
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities.ThinkTime;
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.events.ClosedWorkloadUserInitiated;
@@ -25,16 +27,14 @@ import org.palladiosimulator.analyzer.slingshot.common.events.DESEvent;
 import org.palladiosimulator.analyzer.slingshot.common.utils.LambdaVisitor;
 import org.palladiosimulator.analyzer.slingshot.common.utils.events.ModelPassedEvent;
 import org.palladiosimulator.analyzer.slingshot.core.api.SimulationEngine;
-import org.palladiosimulator.analyzer.slingshot.snapshot.entities.RecordedJob;
-import org.palladiosimulator.analyzer.slingshot.snapshot.entities.SPDAdjustorStateValues;
 import org.palladiosimulator.analyzer.slingshot.snapshot.entities.InMemoryRecorder;
+import org.palladiosimulator.analyzer.slingshot.snapshot.entities.RecordedJob;
 import org.palladiosimulator.analyzer.slingshot.snapshot.events.SnapshotInitiated;
 import org.palladiosimulator.analyzer.slingshot.snapshot.events.SnapshotTaken;
 import org.palladiosimulator.pcm.core.CoreFactory;
 import org.palladiosimulator.pcm.core.PCMRandomVariable;
 import org.palladiosimulator.pcm.seff.StartAction;
 import org.palladiosimulator.pcm.usagemodel.Start;
-import org.palladiosimulator.spd.ScalingPolicy;
 
 import de.uka.ipd.sdq.scheduler.resources.active.AbstractActiveResource;
 
@@ -63,7 +63,7 @@ public abstract class Camera {
 	private final SimulationEngine engine;
 
 	protected final List<DESEvent> additionalEvents = new ArrayList<>();
-	private final Collection<SPDAdjustorStateValues> stateValues;
+	private final Collection<SPDAdjustorState> states;
 	
 	private final LambdaVisitor<DESEvent, DESEvent> adjustOffset;
 
@@ -71,13 +71,13 @@ public abstract class Camera {
 	 * 
 	 * @param record
 	 * @param engine
-	 * @param stateValues
+	 * @param states
 	 */
-	public Camera(final InMemoryRecorder record, final SimulationEngine engine, final Collection<SPDAdjustorStateValues> stateValues) {
+	public Camera(final InMemoryRecorder record, final SimulationEngine engine, final Collection<SPDAdjustorState> states) {
 		this.record = record;
 		this.engine = engine;
 
-		this.stateValues = stateValues;
+		this.states = states;
 		
 		this.adjustOffset = new LambdaVisitor<DESEvent, DESEvent>()
 				.on(UsageModelPassedElement.class).then(this::setOffset)
@@ -102,14 +102,14 @@ public abstract class Camera {
 	}
 	
 	/**
-	 * Adjust the times in all {@link SPDAdjustorStateValues}. 
+	 * Adjust the times in all {@link SPDAdjustorState}s. 
 	 * 
 	 * The times are adjusted with the current simulation time.
 	 * 
 	 * @return collection of state values with updated time
 	 */
-	protected Collection<SPDAdjustorStateValues> snapStateValues(){
-		return this.stateValues.stream().map(s -> this.copyAndOffset(s, engine.getSimulationInformation().currentSimulationTime())).toList();
+	protected Collection<SPDAdjustorState> snapStates(){
+		return this.states.stream().map(s -> this.copyAndOffset(s, engine.getSimulationInformation().currentSimulationTime())).toList();
 	}
 	
 	/**
@@ -120,22 +120,20 @@ public abstract class Camera {
 	 * the reference time is t = 10 s, then the adjusted values will be latest
 	 * adjustment at t = -5 s and cooldown end at t = 5 s.
 	 *
-	 * @param stateValues   values to be adjusted
+	 * @param states   values to be adjusted
 	 * @param referenceTime time to adjust to.
 	 * @return copy of state values with adjusted values.
 	 */
-	private SPDAdjustorStateValues copyAndOffset(final SPDAdjustorStateValues stateValues, final double referenceTime) {
-		final double latestAdjustmentAtSimulationTime = stateValues.latestAdjustmentAtSimulationTime() - referenceTime;
-		final int numberScales = stateValues.numberScales();
-		final double coolDownEnd = stateValues.coolDownEnd() > 0.0 ? stateValues.coolDownEnd() - referenceTime : 0.0;
-		final int numberOfScalesInCooldown = stateValues.numberOfScalesInCooldown();
-
-		final List<ScalingPolicy> enactedPolicies = new ArrayList<>(stateValues.enactedPolicies()); // unchanged
-		final List<Double> enactmentTimeOfPolicies = stateValues.enactmentTimeOfPolicies().stream()
-				.map(time -> time - referenceTime).toList();
-
-		return new SPDAdjustorStateValues(stateValues.scalingPolicy(), latestAdjustmentAtSimulationTime, numberScales,
-				coolDownEnd, numberOfScalesInCooldown, enactedPolicies, enactmentTimeOfPolicies);
+	private SPDAdjustorState copyAndOffset(final SPDAdjustorState states, final double referenceTime) {
+		final TargetGroupState tgs = states.getTargetGroupState();
+		tgs.addEnactedPolicy(tgs.getLastScalingPolicyEnactmentTime() - referenceTime, tgs.getLastEnactedScalingPolicy());
+		
+		states.setLatestAdjustmentAtSimulationTime(states.getLatestAdjustmentAtSimulationTime() - referenceTime);
+		
+		final double coolDownEnd = states.getCoolDownEnd() > 0.0 ? states.getCoolDownEnd() - referenceTime : 0.0;
+		states.setCoolDownEnd(coolDownEnd);
+		
+		return states;
 	}
 
 	/**

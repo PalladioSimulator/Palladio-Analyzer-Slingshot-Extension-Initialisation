@@ -7,11 +7,11 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.eclipse.emf.ecore.EObject;
+import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.SPDAdjustorState;
 import org.palladiosimulator.analyzer.slingshot.common.events.DESEvent;
 import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.serialisation.InitState;
 import org.palladiosimulator.analyzer.slingshot.snapshot.api.Snapshot;
 import org.palladiosimulator.analyzer.slingshot.snapshot.entities.PlainSnapshot;
-import org.palladiosimulator.analyzer.slingshot.snapshot.entities.SPDAdjustorStateValues;
 import org.palladiosimulator.analyzer.slingshot.snapshot.serialization.adapters.EObjectTypeAdapter;
 import org.palladiosimulator.analyzer.slingshot.snapshot.serialization.util.DESEventSerializer;
 import org.palladiosimulator.analyzer.workflow.blackboard.PCMResourceSetPartition;
@@ -40,7 +40,7 @@ public final class InitStateDeSerialization implements DeserializeParent<InitSta
 	protected static final Logger LOGGER = Logger.getLogger(InitStateDeSerialization.class);
 	
 	private final static String SNAPSHOT_FILEDNAME_EVENTS = "events";
-	private final static String SNAPSHOT_FILEDNAME_STATEVALUES = "statevalues";
+	private final static String SNAPSHOT_FILEDNAME_STATES = "statevalues";
 	
 	private final PCMResourceSetPartition partition;
 
@@ -93,15 +93,15 @@ public final class InitStateDeSerialization implements DeserializeParent<InitSta
 			if (json.isJsonObject()) {
 				final JsonObject jsonobj = json.getAsJsonObject();
 				final JsonElement jsonevents = jsonobj.get(SNAPSHOT_FILEDNAME_EVENTS);
-				final JsonElement jsonvalues = jsonobj.get(SNAPSHOT_FILEDNAME_STATEVALUES);
+				final JsonElement jsonvalues = jsonobj.get(SNAPSHOT_FILEDNAME_STATES);
 
-				final Type type = new TypeToken<Set<SPDAdjustorStateValues>>() {
+				final Type type = new TypeToken<Set<SPDAdjustorState>>() {
 				}.getType();
 
 				final Set<DESEvent> events = eventSerializer.deserializeFromJson(jsonevents);
-				final Set<SPDAdjustorStateValues> stateValues = context.deserialize(jsonvalues, type);
+				final Set<SPDAdjustorState> states = context.deserialize(jsonvalues, type);
 
-				return new PlainSnapshot(events, stateValues);
+				return new PlainSnapshot(events, states);
 			} else {
 				throw new JsonParseException("Expected an JSON object, but found " + json);
 			}
@@ -118,15 +118,15 @@ public final class InitStateDeSerialization implements DeserializeParent<InitSta
 		public JsonElement serialize(final Snapshot src, final Type typeOfSrc, final JsonSerializationContext context) {
 
 			final Set<DESEvent> events = src.getEvents();
-			final Collection<SPDAdjustorStateValues> stateValues = src.getSPDAdjustorStateValues();
+			final Collection<SPDAdjustorState> states = src.getSPDAdjustorStates();
 			
 			final JsonElement eventsJson = eventSerializer.serializeToJson(events);
-			final JsonElement stateValuesJson = context.serialize(stateValues);
+			final JsonElement statesJson = context.serialize(states);
 			
 			final JsonObject jsonobj = new JsonObject();
 			
 			jsonobj.add(SNAPSHOT_FILEDNAME_EVENTS, eventsJson);
-			jsonobj.add(SNAPSHOT_FILEDNAME_STATEVALUES, stateValuesJson);
+			jsonobj.add(SNAPSHOT_FILEDNAME_STATES, statesJson);
 			
 			return jsonobj;	
 		}

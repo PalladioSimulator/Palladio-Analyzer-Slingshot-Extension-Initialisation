@@ -15,7 +15,7 @@ import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.Subscrib
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.eventcontract.EventCardinality;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.eventcontract.OnEvent;
 import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.graphstate.ArchitectureConfigurationUtil;
-import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.providers.EventsToInitOnWrapper;
+import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.providers.InitWrapper;
 import org.palladiosimulator.edp2.models.measuringpoint.MeasuringPoint;
 import org.palladiosimulator.edp2.models.measuringpoint.MeasuringPointRepository;
 import org.palladiosimulator.monitorrepository.Monitor;
@@ -52,7 +52,7 @@ public class SnapshotInitialAdjustmentBehaviour implements SimulationBehaviorExt
 	private final MonitorRepository monitorrepo;
 
 	@Inject
-	public SnapshotInitialAdjustmentBehaviour(final @Nullable EventsToInitOnWrapper eventsWrapper,
+	public SnapshotInitialAdjustmentBehaviour(final @Nullable InitWrapper eventsWrapper,
 			final Allocation allocation, final @Nullable MonitorRepository monitorrepo) {
 		this.allocation = allocation;
 		this.monitorrepo = monitorrepo;

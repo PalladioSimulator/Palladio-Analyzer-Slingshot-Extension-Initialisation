@@ -2,6 +2,7 @@ package org.palladiosimulator.analyzer.slingshot.snapshot;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -28,11 +29,9 @@ import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.eventcon
 import org.palladiosimulator.analyzer.slingshot.eventdriver.entity.interceptors.InterceptorInformation;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.returntypes.InterceptionResult;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.returntypes.Result;
-import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.providers.EventsToInitOnWrapper;
+import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.providers.InitWrapper;
 import org.palladiosimulator.analyzer.slingshot.snapshot.configuration.SnapshotConfiguration;
-import org.palladiosimulator.analyzer.slingshot.snapshot.entities.SPDAdjustorStateValues;
 import org.palladiosimulator.analyzer.slingshot.snapshot.events.SnapshotInitiated;
-import org.palladiosimulator.spd.ScalingPolicy;
 
 /**
  *
@@ -73,13 +72,13 @@ public class SnapshotInitFromBehaviour implements SimulationBehaviorExtension {
 	
 	
 
-	private final EventsToInitOnWrapper wrapper;
+	private final InitWrapper wrapper;
 
 	private final SimulationScheduling scheduling;
 
 	@Inject
 	public SnapshotInitFromBehaviour(final @Nullable SnapshotConfiguration snapshotConfig,
-			final @Nullable EventsToInitOnWrapper eventsWrapper, final SimulationScheduling scheduling) {
+			final @Nullable InitWrapper eventsWrapper, final SimulationScheduling scheduling) {
 		this.snapshotConfig = snapshotConfig;
 		this.wrapper = eventsWrapper;
 		this.scheduling = scheduling;
@@ -131,26 +130,27 @@ public class SnapshotInitFromBehaviour implements SimulationBehaviorExtension {
 	public void onSPDAdjustorStateRegistered(final SPDAdjustorStateRegistered event) {
 		final SPDAdjustorState state = event.getEntity();
 		
-		for (final SPDAdjustorStateValues value : wrapper.getStateInitEvents()) {
-			if (value.scalingPolicyId().equals(state.getScalingPolicy().getId())) {
-				state.setCoolDownEnd(value.coolDownEnd());
-				state.setLatestAdjustmentAtSimulationTime(value.latestAdjustmentAtSimulationTime());
-				state.setNumberOfScalesInCooldown(value.numberOfScalesInCooldown());
+		final Optional<SPDAdjustorState> oldState = wrapper.getStates().stream()
+				.filter(v -> v.getScalingPolicy().equals(event.getEntity().getScalingPolicy())).findFirst();
 
-				while (state.numberOfScales() < value.numberScales()) {
-					state.incrementNumberScales();
-				}
+		if(oldState.isEmpty()) {
+			return;
+		}
+		
+		state.setCoolDownEnd(oldState.get().getCoolDownEnd());
+		state.setLatestAdjustmentAtSimulationTime(oldState.get().getLatestAdjustmentAtSimulationTime());
+		state.setNumberOfScalesInCooldown(oldState.get().getNumberOfScalesInCooldown());
 
-				// TargetGroupState must be updated only once, because it is shared.
-				for (int i = 0; i < value.enactedPolicies().size(); i++) {
+		while (state.numberOfScales() < oldState.get().numberOfScales()) {
+			state.incrementNumberScales();
+		}
 
-					final double enactmentTime = value.enactmentTimeOfPolicies().get(i);
-					final ScalingPolicy policy = value.enactedPolicies().get(i);
-
-					state.getTargetGroupState().addEnactedPolicy(enactmentTime, policy);
-				}
-			}
-		} 
+		if (state.getTargetGroupState().enactedPoliciesEmpty() || state.getTargetGroupState().getLastScalingPolicyEnactmentTime() <= oldState.get().getTargetGroupState()
+				.getLastScalingPolicyEnactmentTime()) {
+			state.getTargetGroupState().addEnactedPolicy(
+					oldState.get().getTargetGroupState().getLastScalingPolicyEnactmentTime(),
+					oldState.get().getTargetGroupState().getLastEnactedScalingPolicy());
+		}
 	}
 
 	

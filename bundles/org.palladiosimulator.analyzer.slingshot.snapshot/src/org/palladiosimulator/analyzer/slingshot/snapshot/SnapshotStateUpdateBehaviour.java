@@ -7,18 +7,18 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 import org.apache.log4j.Logger;
+import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.SPDAdjustorState;
 import org.palladiosimulator.analyzer.slingshot.common.annotations.Nullable;
 import org.palladiosimulator.analyzer.slingshot.core.events.SimulationFinished;
 import org.palladiosimulator.analyzer.slingshot.core.extension.SimulationBehaviorExtension;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.Subscribe;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.eventcontract.OnEvent;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.returntypes.Result;
-import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.graphstate.StateBuilder;
 import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.graphstate.ReasonToLeave;
+import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.graphstate.StateBuilder;
 import org.palladiosimulator.analyzer.slingshot.monitor.data.events.CalculatorRegistered;
 import org.palladiosimulator.analyzer.slingshot.snapshot.api.Snapshot;
 import org.palladiosimulator.analyzer.slingshot.snapshot.configuration.SnapshotConfiguration;
-import org.palladiosimulator.analyzer.slingshot.snapshot.entities.SPDAdjustorStateValues;
 import org.palladiosimulator.analyzer.slingshot.snapshot.events.SnapshotFinished;
 import org.palladiosimulator.edp2.impl.RepositoryManager;
 import org.palladiosimulator.edp2.models.ExperimentData.ExperimentGroup;
@@ -118,7 +118,7 @@ public class SnapshotStateUpdateBehaviour implements SimulationBehaviorExtension
 	 * 
 	 * Add the {@link Snapshot} object and the state duration to the builder.
 	 * 
-	 * Also add the {@link SPDAdjustorStateValues}s to the snapshot. 
+	 * Also add the {@link SPDAdjustorState}s to the snapshot. 
 	 * 
 	 * Once this operation was executed, the state builder is complete.
 	 *

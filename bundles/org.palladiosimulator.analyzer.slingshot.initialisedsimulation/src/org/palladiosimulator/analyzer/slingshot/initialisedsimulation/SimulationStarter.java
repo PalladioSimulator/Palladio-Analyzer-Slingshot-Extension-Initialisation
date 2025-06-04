@@ -11,7 +11,7 @@ import org.palladiosimulator.analyzer.slingshot.core.api.SimulationDriver;
 import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.graphstate.ArchitectureConfigurationUtil;
 import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.graphstate.StateBuilder;
 import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.providers.AdditionalConfigurationModule;
-import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.providers.EventsToInitOnWrapper;
+import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.providers.InitWrapper;
 import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.serialisation.InitState;
 import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.serialisation.OtherInitThings;
 import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.serialiser.InitStateDeSerialization;
@@ -57,7 +57,7 @@ public class SimulationStarter {
 		final URI resultFolder = URI.createFileURI(resultLocation.toString());
 		ArchitectureConfigurationUtil.copyToURI(initModels.getResourceSet(), resultFolder);
 		
-		final EventsToInitOnWrapper wrapper = new Preprocessor(this.initModels, initstate.getSnapshot(), otherInitThings.getIncomingPolicies()).createWrapper();
+		final InitWrapper wrapper = new Preprocessor(this.initModels, initstate.getSnapshot(), otherInitThings.getIncomingPolicies()).createWrapper();
 		final SnapshotConfiguration snaphshotConfig = new SnapshotConfiguration(initstate.getPointInTime() > 0.0, otherInitThings.getSensibility(), config.getSimuTime());			
 		this.stateBuilder  = new StateBuilder(initstate.getId(), initstate.getPointInTime(), this.initModels);
 		

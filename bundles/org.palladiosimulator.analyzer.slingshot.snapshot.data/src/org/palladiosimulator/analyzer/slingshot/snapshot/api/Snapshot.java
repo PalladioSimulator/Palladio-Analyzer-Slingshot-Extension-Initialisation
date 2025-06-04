@@ -5,8 +5,8 @@ import java.util.List;
 import java.util.Set;
 
 import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.ModelAdjustmentRequested;
+import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.SPDAdjustorState;
 import org.palladiosimulator.analyzer.slingshot.common.events.DESEvent;
-import org.palladiosimulator.analyzer.slingshot.snapshot.entities.SPDAdjustorStateValues;
 import org.palladiosimulator.analyzer.workflow.blackboard.PCMResourceSetPartition;
 
 /**
@@ -47,5 +47,5 @@ public interface Snapshot {
 	 * 
 	 * @return state of the {@code SPDAdjustorState} at the end of this state.
 	 */
-	public Collection<SPDAdjustorStateValues> getSPDAdjustorStateValues();
+	public Collection<SPDAdjustorState> getSPDAdjustorStates();
 }
