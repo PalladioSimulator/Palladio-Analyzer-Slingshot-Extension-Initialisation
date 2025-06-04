@@ -16,6 +16,7 @@ public class SnapshotModule extends AbstractSlingshotExtension {
 		
 		install(SnapshotTriggeringBehavior.class);
 		install(SnapshotSLOTriggeringBehavior.class);
+		install(SnapshotSLOAbortionBehavior.class);
 		install(SnapshotAbortionBehavior.class);
 		install(PreventPreemptiveSimulationFinished.class);
 	}
