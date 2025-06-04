@@ -91,7 +91,6 @@ Notably, this extensions Application builds upon ExperimentAutomation, thus an e
     "startTime":0.0,
     "duration":110.24138783074197,
     "reasonsToLeave":["reactiveReconfiguration"],
-    "slos":[...],
     "utility":{
       "totalUtility":23.243757568282582,
       "data":[...],
@@ -123,9 +122,9 @@ A complete set of PCM and JSON files can be found in [EspresssoAccountingMinimal
   * Arguments:
     ```
     -application org.palladiosimulator.analyzer.slingshot.initialisedsimulation.application.InitialisedSimulationApplication \
-    /path/to/example/EspresssoAccountingMinimalExample/output/espresso. experiments \
+    /path/to/example/EspresssoAccountingMinimalExample/output/espresso.experiments \
     /path/to/example/EspresssoAccountingMinimalExample/output/snapshot.json \
-    /path/to/example/EspresssoAccountingMinimalExample/input/applyPolicyConfig. json \
+    /path/to/example/EspresssoAccountingMinimalExample/input/applyPolicyConfig.json \
     /path/to/example/EspresssoAccountingMinimalExample/output2
     ```
 
