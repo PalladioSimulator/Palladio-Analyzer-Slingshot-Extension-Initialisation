@@ -129,13 +129,16 @@ public class StateBuilder {
 		Preconditions.checkState(experimentSetting != null,
 				"Cannot build state, because experiment settings were not yet set.");
 
-		
 		final List<ScalingPolicy> policies = snapshot.getModelAdjustmentRequestedEvent().stream().map(e -> e.getScalingPolicy()).toList();
 		final List<MeasurementSet> measurements = new MeasurementConverter(0.0, duration).visitExperiementSetting(experimentSetting);
 
-		final Utility utility = Utility.createUtility(startTime, startTime + duration, measurements, PCMResourcePartitionHelper.getSLORepository(partition).getServicelevelobjectives());
-			
-		return new ResultState(startTime, measurements, duration, reasonsToLeave, parentId, policies, utility);
+		if (PCMResourcePartitionHelper.hasSLORepository(partition)) {
+			final Utility utility = Utility.createUtility(startTime, startTime + duration, measurements,
+					PCMResourcePartitionHelper.getSLORepository(partition).getServicelevelobjectives());
+			return new ResultState(startTime, measurements, duration, reasonsToLeave, parentId, policies, utility);
+		} else {
+			return new ResultState(startTime, measurements, duration, reasonsToLeave, parentId, policies, null);
+		}
 	}
 	
 	

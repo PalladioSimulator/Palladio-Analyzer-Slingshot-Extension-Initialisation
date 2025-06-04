@@ -57,17 +57,29 @@ public class SnapshotSLOAbortionBehavior implements SimulationBehaviorExtension 
 	private final Map<MeasurementSpecification, Predicate<Double>> map = new HashMap<>();
 
 
+	/**
+	 * Create new behaviour for aborting simulation runs based on the SLOs.
+	 * 
+	 * @param stateBuilder for propagating the reason to leave
+	 * @param blackboard
+	 * @param config
+	 */
 	@Inject
-	public SnapshotSLOAbortionBehavior(final @Nullable StateBuilder state,
+	public SnapshotSLOAbortionBehavior(final @Nullable StateBuilder stateBuilder,
 			final @Nullable MDSDBlackboard blackboard, final @Nullable SnapshotConfiguration config) {
 		
-		this.sloRepo = PCMResourcePartitionHelper.getSLORepository((PCMResourceSetPartition)
-				blackboard.getPartition(ConstantsContainer.DEFAULT_PCM_INSTANCE_PARTITION_ID));
-
-		this.activated = state != null && sloRepo != null && config != null
+		if (PCMResourcePartitionHelper.hasSLORepository((PCMResourceSetPartition)
+				blackboard.getPartition(ConstantsContainer.DEFAULT_PCM_INSTANCE_PARTITION_ID))) {
+			this.sloRepo = PCMResourcePartitionHelper.getSLORepository((PCMResourceSetPartition)
+					blackboard.getPartition(ConstantsContainer.DEFAULT_PCM_INSTANCE_PARTITION_ID));
+		} else {
+			this.sloRepo = null;
+		}
+		
+		this.activated = stateBuilder != null && sloRepo != null && config != null
 				&& !sloRepo.getServicelevelobjectives().isEmpty();
 
-		this.state = state;
+		this.state = stateBuilder;
 		
 		if (activated) {
 			this.parseSLOS();

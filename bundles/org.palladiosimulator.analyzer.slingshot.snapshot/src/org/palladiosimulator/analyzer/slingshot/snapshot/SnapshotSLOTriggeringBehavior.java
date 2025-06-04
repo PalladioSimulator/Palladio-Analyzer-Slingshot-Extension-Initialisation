@@ -19,8 +19,8 @@ import org.palladiosimulator.analyzer.slingshot.core.extension.SimulationBehavio
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.Subscribe;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.eventcontract.OnEvent;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.returntypes.Result;
-import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.graphstate.StateBuilder;
 import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.graphstate.ReasonToLeave;
+import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.graphstate.StateBuilder;
 import org.palladiosimulator.analyzer.slingshot.monitor.data.events.MeasurementUpdated;
 import org.palladiosimulator.analyzer.slingshot.snapshot.configuration.SnapshotConfiguration;
 import org.palladiosimulator.analyzer.slingshot.snapshot.events.SnapshotInitiated;
@@ -73,11 +73,16 @@ public class SnapshotSLOTriggeringBehavior implements SimulationBehaviorExtensio
 			final @Nullable MDSDBlackboard blackboard, final @Nullable SnapshotConfiguration config,
 			final @Nullable Configuration semanticSpd) {
 		
-		this.sloRepo = PCMResourcePartitionHelper.getSLORepository((PCMResourceSetPartition)
-				blackboard.getPartition(ConstantsContainer.DEFAULT_PCM_INSTANCE_PARTITION_ID));
+		if (PCMResourcePartitionHelper.hasSLORepository((PCMResourceSetPartition)
+				blackboard.getPartition(ConstantsContainer.DEFAULT_PCM_INSTANCE_PARTITION_ID))) {
+			this.sloRepo = PCMResourcePartitionHelper.getSLORepository((PCMResourceSetPartition)
+					blackboard.getPartition(ConstantsContainer.DEFAULT_PCM_INSTANCE_PARTITION_ID));
+		} else {
+			this.sloRepo = null;
+		}
 
-		this.activated = state != null && sloRepo != null && config != null
-				&& !sloRepo.getServicelevelobjectives().isEmpty() && semanticSpd != null;
+		this.activated = state != null && sloRepo != null && config != null && semanticSpd != null
+				&& !sloRepo.getServicelevelobjectives().isEmpty();
 
 		this.state = state;
 		this.semanticSpd = semanticSpd; // maybe optional?

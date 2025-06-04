@@ -17,8 +17,8 @@ import org.palladiosimulator.analyzer.slingshot.core.api.SimulationScheduling;
 import org.palladiosimulator.analyzer.slingshot.core.extension.SimulationBehaviorExtension;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.Subscribe;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.eventcontract.OnEvent;
-import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.graphstate.StateBuilder;
 import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.graphstate.ReasonToLeave;
+import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.graphstate.StateBuilder;
 import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.providers.InitWrapper;
 import org.palladiosimulator.analyzer.slingshot.snapshot.events.SnapshotInitiated;
 import org.palladiosimulator.semanticspd.CompetingConsumersGroupCfg;
@@ -139,7 +139,7 @@ public class SnapshotAbortionBehavior implements SimulationBehaviorExtension {
 				}
 			}
 			state.addReasonToLeave(ReasonToLeave.aborted);
-			scheduling.scheduleEvent(new SnapshotInitiated(0));
+			scheduling.scheduleEvent(new SnapshotInitiated(0.0));
 			LOGGER.debug("Abort");
 		}
 	}

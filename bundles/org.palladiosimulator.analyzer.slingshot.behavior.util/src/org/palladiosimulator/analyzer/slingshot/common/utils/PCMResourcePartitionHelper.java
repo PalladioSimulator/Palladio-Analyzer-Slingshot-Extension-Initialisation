@@ -97,4 +97,54 @@ public final class PCMResourcePartitionHelper {
 		}
 		return (ServiceLevelObjectiveRepository) slos.get(0);
 	}
+	
+	/**
+	 * Check whether the given partition contains a {@link MonitorRepository} instance.
+	 * 
+	 * @param partition partition to access
+	 * @return true, iff the partition contains the model.
+	 */
+	public static boolean hasMonitorRepository(final PCMResourceSetPartition partition) {
+		return partition.getElement(MonitorRepositoryPackage.eINSTANCE.getMonitorRepository()).size() != 0;
+	}
+
+	/**
+	 * Check whether the given partition contains a {@link MeasuringPointRepository} instance.
+	 * 
+	 * @param partition partition to access
+	 * @return true, iff the partition contains the model.
+	 */
+	public static boolean hasMeasuringPointRepository(final PCMResourceSetPartition partition) {
+		return partition.getElement(MeasuringpointPackage.eINSTANCE.getMeasuringPointRepository()).size() != 0;
+	}
+
+	/**
+	 * Check whether the given partition contains a {@link SPD} instance.
+	 * 
+	 * @param partition partition to access
+	 * @return true, iff the partition contains the model.
+	 */
+	public static boolean hasSPD(final PCMResourceSetPartition partition) {
+		return partition.getElement(SpdPackage.eINSTANCE.getSPD()).size() != 0;
+	}
+	
+	/**
+	 * Check whether the given partition contains a {@link Configuration} instance.
+	 * 
+	 * @param partition partition to access
+	 * @return true, iff the partition contains the model.
+	 */
+	public static boolean hasSemanticSPD(final PCMResourceSetPartition partition) {
+		return partition.getElement(SemanticspdPackage.eINSTANCE.getConfiguration()).size() != 0;
+	}
+
+	/**
+	 * Check whether the given partition contains a  {@link ServiceLevelObjectiveRepository} instance.
+	 * 
+	 * @param partition partition to access
+	 * @return true, iff the partition contains the model.
+	 */
+	public static boolean hasSLORepository(final PCMResourceSetPartition partition) {
+		return partition.getElement(ServicelevelObjectivePackage.eINSTANCE.getServiceLevelObjectiveRepository()).size() != 0;
+	}
 }

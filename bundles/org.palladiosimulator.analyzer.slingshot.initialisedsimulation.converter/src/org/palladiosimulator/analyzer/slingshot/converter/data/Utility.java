@@ -54,6 +54,11 @@ public class Utility {
 			final MeasurementSet ms = measurements.stream()
 					.filter(x -> x.getSpecificationId().equals(slo.getMeasurementSpecification().getId())).findFirst()
 					.orElse(null);
+			
+			// TODO filter out cost here, we dont want them as SLOs. 
+			if (ms.getMetricDescriptionId().equals(MetricDescriptionConstants.COST_OF_RESOURCE_CONTAINERS.getId())) {
+				continue;
+			}
 
 			if (ms != null) {
 				// Is this correct?
@@ -68,7 +73,7 @@ public class Utility {
 
 		for (final var ms : measurements) {
 			if (ms.getMetricDescriptionId().equals(MetricDescriptionConstants.COST_OF_RESOURCE_CONTAINERS.getId())) {
-				utility.addDataInstance(ms.getMonitorName(), ms.getElements(), Utility.UtilityType.COST);
+				utility.addDataInstance(ms.getMonitorId(), ms.getElements(), Utility.UtilityType.COST); // monitor name WHY? 
 			}
 		}
 
@@ -140,6 +145,10 @@ public class Utility {
 
 		final List<List<Measurement<Double>>> sloIntervals = computeIntervals(min, max, slo);
 		final List<List<Measurement<Double>>> costIntervals = computeIntervals(min, max, costs);
+		
+		if (costIntervals.isEmpty()) {
+			throw new IllegalArgumentException("Cannot create Utility, because there are no Cost Measurements.");
+		}
 
 		// ensure that the length of all list is equal
 		if (sloIntervals.stream().map(x -> {
