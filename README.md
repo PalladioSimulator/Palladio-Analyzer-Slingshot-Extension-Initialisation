@@ -156,9 +156,11 @@ Pay attention to also import the SPD meta model and the SPD interpreter extensio
   * import the bundle `org.palladiosimulator.experimentautomation` into the workspace of your development Eclipse instance.
   We only need the models, thus we only need this bundle. 
 
-## Running shit
-**Requires: Models and JSON files**
+## Running an initialised Slingshot simulation run
+Both approaches require **Models and JSON files**.
 
+### From within the development Eclipse instance
+* **Requires: all bundles described above imported into the workspace**
 + Create an *OSGi Framework* Run Configuration.
   * Or use this one `org.palladiosimulator.analyzer.slingshot.stateexploration.application/launchconfig/headless-exploration-export.launch` 
     * **Beware:** you still need to fix the *Program arguments* (see below)
@@ -174,7 +176,10 @@ Pay attention to also import the SPD meta model and the SPD interpreter extensio
   * (Optional) add to *VM arguments*: `-Dlog4j.configuration=file:///path/to/log4j.properties`
   * Run it.
 
-* Installing the Initialisation Extension to an exisiting Palladio Bench and starting the Bench from Commandline: 
+
+### From Commandline
+* **Requires: PalladioBench with Initialisation Extension is already installed**
+* Execute
   ```
   ./PalladioBench -data /path/to/workspace/ \
   -application org.palladiosimulator.analyzer.slingshot.initialisedsimulation.application.InitialisedSimulationApplication \
