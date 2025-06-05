@@ -159,7 +159,7 @@ Pay attention to also import the SPD meta model and the SPD interpreter extensio
 ## Running an initialised Slingshot simulation run
 Both approaches require **Models and JSON files**.
 
-### From within the development Eclipse instance
+### Run from within the development Eclipse instance
 * **Requires: all bundles described above imported into the workspace**
 + Create an *OSGi Framework* Run Configuration.
   * Or use this one `org.palladiosimulator.analyzer.slingshot.stateexploration.application/launchconfig/headless-exploration-export.launch` 
@@ -177,7 +177,7 @@ Both approaches require **Models and JSON files**.
   * Run it.
 
 
-### From Commandline
+### Run from Commandline
 * **Requires: PalladioBench with Initialisation Extension is already installed**
 * Execute
   ```
