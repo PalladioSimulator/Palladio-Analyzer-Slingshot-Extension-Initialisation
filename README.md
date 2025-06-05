@@ -189,3 +189,42 @@ Both approaches require **Models and JSON files**.
   /path/to/output/folder \
   -vmargs -Xmx4G -Dlog4j.configuration=file:///path/to/log4j.properties
   ```
+
+
+## Manual Export and Installation
+
+**Requires: all bundles described above imported into the workspace**
+
+### Export Feature
+1. open development eclipse instance with all bundles described above imported and a correctly set target platform. 
+2. export the initialisation extension as feature:
+    * `export` $\rightarrow$ `Deployable Features`
+    * select `org.palladiosimulator.analyzer.slingshot.initialisedsimulation.feature (1.0.0.qualifier)` $\rightarrow$ `finish`
+    * This is a all-in-one feature that just includes *everything* without any structure at all. Enjoy with caution.  
+
+### Import Feature
+1. install a fresh PalladioBench (https://updatesite.palladio-simulator.com/palladio-bench-product/releases/latest/) and open it.
+6. install the feature exported in step **Export Feature** (see above):
+    * `Help` $\rightarrow$ `Install New Software` $\rightarrow$ `Add...`
+    * In the pop-up click `Local...` and choose the folder with the manually exported feature.
+    * untick `Group items by category`. A Plug in  named `Initialised Simulation` becomes visible. Select it and finish installation. 
+7. close the PalladioBench
+8. Checks successful installation: 
+    * Run PalladioBench from CLI with `--console` to get an OSGi console.
+    * Execute `lb` to list installed Plugins. 
+    * Search for `Initialised Simulation Application`. If it is there, and the state is `Starting` every thing is fine.
+
+### Create a Palladio Bench for running in the Docker Container.
+**Requires: the Docker Container will be a Linux system. I do not know whether the following approach works with anything other but a Linux systems.**
+
+1. Get a Linux system, either an actual machine or a VM (i did the latter) and set it up to run a PalladioBench, e.g. by installing a fitting java version.
+2. Install a fresh PalladioBench (https://updatesite.palladio-simulator.com/palladio-bench-product/releases/latest/) and open it.
+3. Import Slingshot core, and load the target platform. 
+   This step is necessary for loading some global dependencies, i guess. In fact, i only know, that the following steps failed for me, if i did not set the targetplatform upfront.
+4. execute the **Import Feature** (see above) steps on the Linux system.
+5. open `PalladioBench.ini` and remove the following lines: 
+   ```
+   -perspective 
+   org.palladiosimulator.pcmbench.perspectives.palladio
+   ```
+6. copy the entire Palladio Bench folder to the Docker container.
