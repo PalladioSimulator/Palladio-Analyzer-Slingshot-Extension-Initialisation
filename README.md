@@ -139,13 +139,13 @@ Pay attention to also import the SPD meta model and the SPD interpreter extensio
   ```
   git clone git@github.com:PalladioSimulator/Palladio-Analyzer-Slingshot-Extension-Initialisation.git
   ```
-
-
-### Currently: separated branches, while changes are not yet merged. 
-* in (already cloned) repository *Palladio-Analyzer-Slingshot* switch to branch `stateexplorationRequirements`
-* in (already cloned) repository *Palladio-Analyzer-Slingshot-Extension-PCM-Core* switch to branch `stateexplorationRequirements`
-*Palladio-Analyzer-Slingshot-Extension-SPD-Interpreter* switch to branch `stateexplorationRequirements`
-* all other Slingshot repositories (`Cost`, `Monitoring`) remain on `master`. 
+* in (already cloned) repository *Palladio-Analyzer-Slingshot-Extension-SPD-Interpreter* switch branch 
+  ```
+  git checkout stateexplorationRequirements
+  ```
+  * this is necessary, because the SPD interpreter extension is stateful but has no hook to initialise its state from the outside. 
+    on this exploration specific branch (the name is legacy) we added a possibility to initialise the state to an arbitrary value. 
+    this change was not accepted into the slingshot master, because it does not adhere to the current design of the slingshot event cycle.   
 
 + Import Experiment-Automation bundles. 
   * clone repository [Palladio-Addons-ExperimentAutomation](https://github.com/PalladioSimulator/Palladio-Addons-ExperimentAutomation) and switch to branch `slingshot-impl`:
