@@ -63,7 +63,7 @@ The results include the updated PCM instances, the measurements and additional i
 * The PCM instances are expected in their usual XML-format, no changes at all. 
 Notably, this extensions Application builds upon ExperimentAutomation, thus an experiment model must be provided. 
 
-* The JSON file for the snapshot must adhere/adheres to the format of this example:
+* The JSON file for the snapshot uses the file-extension `.snapshot` and must adhere/adheres to the format of this example:
   ```
   {
     "id":"id-of-the-state-this-snapshot-was-taken-for",
@@ -75,7 +75,7 @@ Notably, this extensions Application builds upon ExperimentAutomation, thus an e
   }
   ```
 
-* The JSON file for the other information must adhere to the format of this example:
+* The JSON file for the other information uses the file-extension `.config` and must adhere to the format of this example:
   ```
   {
     "sensibility": 0.0,
@@ -108,25 +108,19 @@ A complete set of PCM and JSON files can be found in [EspresssoAccountingMinimal
 
 * The folder `output` contains the PCM copies and JSONs created after initialising a simulation on an empty snapshot and apply no policies at the beginning.
   * Beware, the  PCM files should be identical to the ones in the parent folder. 
-  * Arguments:
-    ```
-    -application org.palladiosimulator.analyzer.slingshot.initialisedsimulation.application.InitialisedSimulationApplication \
-    /path/to/example/EspresssoAccountingMinimalExample/espresso.experiments \
-    /path/to/example/EspresssoAccountingMinimalExample/input/snapshot.json \
-    /path/to/example/EspresssoAccountingMinimalExample/input/config.json \
-    /path/to/example/EspresssoAccountingMinimalExample/output
-    ```
+  * Files and folders used as arguments:
+    * model files: those in `EspresssoAccountingMinimalExample`
+    * snapshot file: `EspresssoAccountingMinimalExample/input/snapshot.json`
+    * config file: `EspresssoAccountingMinimalExample/input/config.json`
+    * output folder: `EspresssoAccountingMinimalExample/output`
 
 * The folder `output2` contains the PCM copies and JSONs created after initialising a simulation on the snapshot from the previous run (`output`) and apply a policies at the beginning. 
   * Beware, the  PCM files should now differ from the ones in the `output` folder, as the applied policy was a scale out.  
-  * Arguments:
-    ```
-    -application org.palladiosimulator.analyzer.slingshot.initialisedsimulation.application.InitialisedSimulationApplication \
-    /path/to/example/EspresssoAccountingMinimalExample/output/espresso.experiments \
-    /path/to/example/EspresssoAccountingMinimalExample/output/snapshot.json \
-    /path/to/example/EspresssoAccountingMinimalExample/input/applyPolicyConfig.json \
-    /path/to/example/EspresssoAccountingMinimalExample/output2
-    ```
+  * Files and folders used as arguments:
+    * model files: those in `EspresssoAccountingMinimalExample/output`
+    * snapshot file: `EspresssoAccountingMinimalExample/output/snapshot.json`
+    * config file: `EspresssoAccountingMinimalExample/input/applyPolicyConfig.json`
+    * output folder: `EspresssoAccountingMinimalExample/output2`
 
 ## Dev Set up
 
@@ -171,7 +165,8 @@ Both approaches require **Models and JSON files**.
   * Click *Add Required Bundles*, to add dependencies
   * Click *Validate Bundles*, just to be on the safe side.
   * Go to tab *Arguments*
-  * Add to *Program arguments*: `-application org.palladiosimulator.analyzer.slingshot.initialisedsimulation.application.InitialisedSimulationApplication /path/to/experiments/file.experiments /path/to/snapshot/file.json /path/to/config/file.json /path/to/output/folder`
+  * Add `-application org.palladiosimulator.analyzer.slingshot.initialisedsimulation.application.InitialisedSimulationApplication` to *Program arguments*
+  * Append further application arguments to *Program arguments*, details see below.
   * Remove from *VM arguments*: `-Declipse.ignoreApp=true`
   * (Optional) add to *VM arguments*: `-Dlog4j.configuration=file:///path/to/log4j.properties`
   * Run it.
@@ -179,16 +174,46 @@ Both approaches require **Models and JSON files**.
 
 ### Run from Commandline
 * **Requires: PalladioBench with Initialisation Extension is already installed**
-* Execute
+* execute
   ```
   ./PalladioBench -data /path/to/workspace/ \
   -application org.palladiosimulator.analyzer.slingshot.initialisedsimulation.application.InitialisedSimulationApplication \
-  /path/to/experiments/file.experiments \
-  /path/to/snapshot/file.json \
-  /path/to/config/file.json \
-  /path/to/output/folder \
+  [application arguments as detailed below]
   -vmargs -Xmx4G -Dlog4j.configuration=file:///path/to/log4j.properties
   ```
+### Specifying Application Arguments
+
+#### General Arguments:
+* `-id` (*Optional*): Will be used as id for the resulting state of the simulation run. If none is specified, a random id will be used. 
+* `-output` (*Mandatory*): Destination for saving the results.
+* `-input`: Source for loading the snapshot-, config-, and experiments-file, if no other information about their location is provided.
+If snapshot-, config-, and experiments-file are specified with the specific options (see below), this option is *optional*. 
+For this option, the application matches the files by file extension, i.e. `.snapshot` for the snapshot-file, `.config` for the config file, and `.experiments` for the experiments-file. 
+Each extension must appear at at max once in the source folder, or else the application cannot identify the file to be used.
+
+
+#### Specific Arguments:
+These options take precedence over the `-input` option. 
+E.g. if both the `-input` and the `-snapshot` options are specified, the application loads the snapshot from location specified by the latter. 
+Also these options have no preconditions on the file extensions.
+* `-snapshot`: Location of the snapshot-file. 
+* `-experiments`: Location of the experiments-file. 
+* `-config`: Location of the config-file.
+
+#### Complete Examples (for CLI execution)
+```
+./PalladioBench -data /path/to/workspace/ \
+-application org.palladiosimulator.analyzer.slingshot.initialisedsimulation.application.InitialisedSimulationApplication \
+-id some-string-id \
+-output /absolute/path/to/output/directory \
+-input /absolute/path/to/input/directory \
+-config /absolut/path/to/config.json \
+-vmargs -Xmx4G -Dlog4j.configuration=file:///path/to/log4j.properties
+```
+* `/absolute/path/to/input/directory` must contains exactly one `.snapshot`-file and exactly one `.experiments`-file.
+* `/absolute/path/to/input/directory` may also contain `.config`-files, but they are ignored in favor of the file specified by `-config`.
+* The experiments- and snapshot-file may contain reference to PCM instances as absolute or relative paths. 
+The user must ensure, that the PCM instances are at the expected locations, otherwise application will fail.  
 
 
 ## Manual Export and Installation
