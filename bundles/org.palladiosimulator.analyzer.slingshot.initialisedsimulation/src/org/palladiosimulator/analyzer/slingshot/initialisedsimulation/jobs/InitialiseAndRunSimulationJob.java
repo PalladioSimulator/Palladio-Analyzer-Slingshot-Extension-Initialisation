@@ -56,7 +56,7 @@ public class InitialiseAndRunSimulationJob implements IBlackboardInteractingJob<
 		// this.configuration.getlaunchConfigParams() --> access to all the params.
 
 		final SimulationStarter explorer = new SimulationStarter(this.configuration.getSimuComConfig(), monitor,
-				this.blackboard, this.configuration.getSnapshotFile(), this.configuration.getOtherConfigsFile(), this.configuration.getResultsFolder());
+				this.blackboard, this.configuration.getSnapshotFile(), this.configuration.getOtherConfigsFile(), this.configuration.getResultsFolder(), this.configuration.getNextStateId());
 		explorer.simulateSingleState(this.configuration.getResultsFolder());
 
 		monitor.worked(1);

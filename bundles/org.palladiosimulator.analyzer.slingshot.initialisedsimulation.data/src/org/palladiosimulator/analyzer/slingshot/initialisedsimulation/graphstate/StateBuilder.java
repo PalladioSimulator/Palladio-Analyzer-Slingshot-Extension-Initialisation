@@ -3,7 +3,6 @@ package org.palladiosimulator.analyzer.slingshot.initialisedsimulation.graphstat
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
 import org.palladiosimulator.analyzer.slingshot.common.utils.PCMResourcePartitionHelper;
 import org.palladiosimulator.analyzer.slingshot.converter.MeasurementConverter;
@@ -36,7 +35,7 @@ public class StateBuilder {
 	private final double startTime;
 	private final String parentId;
 
-	private final String id = UUID.randomUUID().toString();
+	private final String id;
 
 	/* filled at the end of a simulation run */
 	private final Set<ReasonToLeave> reasonsToLeave = new HashSet<>();
@@ -58,10 +57,11 @@ public class StateBuilder {
 	 * @param startTime start time of the executed simulation run.
 	 * @param partition partition with all the PCM resources. 
 	 */
-	public StateBuilder(final String parentId, final double startTime, final PCMResourceSetPartition partition) {
+	public StateBuilder(final String parentId, final double startTime, final PCMResourceSetPartition partition, final String id) {
 		this.startTime = startTime;
 		this.parentId = parentId;
 		this.partition = partition;
+		this.id = id;
 	}
 
 	public String getParentId() {

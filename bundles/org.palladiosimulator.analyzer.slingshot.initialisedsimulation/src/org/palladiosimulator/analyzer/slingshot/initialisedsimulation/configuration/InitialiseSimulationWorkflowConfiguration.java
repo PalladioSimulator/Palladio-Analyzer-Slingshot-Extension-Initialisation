@@ -1,6 +1,5 @@
 package org.palladiosimulator.analyzer.slingshot.initialisedsimulation.configuration;
 
-
 import java.nio.file.Path;
 import java.util.Map;
 
@@ -9,29 +8,48 @@ import org.palladiosimulator.analyzer.slingshot.workflow.events.PCMWorkflowConfi
 
 import de.uka.ipd.sdq.simucomframework.SimuComConfig;
 
-public class InitialiseSimulationWorkflowConfiguration extends ExplorationWorkflowConfiguration implements PCMWorkflowConfiguration, SimulationConfiguration {
+public class InitialiseSimulationWorkflowConfiguration extends ExplorationWorkflowConfiguration
+		implements PCMWorkflowConfiguration, SimulationConfiguration {
 
-	private final LocationRecord record;
+	private final Path snapshotFile;
+	private final Path otherConfigsFile;
+	private final Path resultsFolder;
 	
-
-	// i guesss i could also put all those paths into the launchConfigParams. 
-	public InitialiseSimulationWorkflowConfiguration(final SimuComConfig configuration, final Map<String, Object> launchConfigurationParams, final LocationRecord record) {
+	private final String nextStateId;
+	
+	/**
+	 * Create a new Workflowconfiguration for running an initialised Slingshot simulation.
+	 * 
+	 * @param configuration
+	 * @param launchConfigurationParams
+	 * @param snapshotFile
+	 * @param otherConfigsFile
+	 * @param resultsFolder
+	 * @param nextStateId
+	 */
+	public InitialiseSimulationWorkflowConfiguration(final SimuComConfig configuration,
+			final Map<String, Object> launchConfigurationParams, final Path snapshotFile, final Path otherConfigsFile,
+			final Path resultsFolder, final String nextStateId) {
 		super(configuration, launchConfigurationParams);
-		this.record = record;
+		this.snapshotFile = snapshotFile;
+		this.otherConfigsFile = otherConfigsFile;
+		this.resultsFolder = resultsFolder;
+		this.nextStateId = nextStateId;
 	}
 
 	public Path getSnapshotFile() {
-		return this.record.snapshotFile;
+		return this.snapshotFile;
 	}
-	
+
 	public Path getResultsFolder() {
-		return this.record.resultsFolder;
+		return this.resultsFolder;
+	}
+
+	public Path getOtherConfigsFile() {
+		return this.otherConfigsFile;
 	}
 	
-	public Path getOtherConfigsFile() {
-		return this.record.otherConfigsFile;
+	public String getNextStateId() {
+		return this.nextStateId;
 	}
-
-	public record LocationRecord(Path snapshotFile, Path otherConfigsFile, Path resultsFolder) {}
 }
-
