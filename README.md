@@ -164,7 +164,7 @@ Both approaches require **Models and JSON files**.
   * Click *Validate Bundles*, just to be on the safe side.
   * Go to tab *Arguments*
   * Add `-application org.palladiosimulator.analyzer.slingshot.initialisedsimulation.application.InitialisedSimulationApplication` to *Program arguments*
-  * Append further application arguments to *Program arguments*, details see [section on specifying application arguments](###Specifying-Application-Arguments).
+  * Append further application arguments to *Program arguments*, details see [section on specifying application arguments](#Specifying-Application-Arguments).
   * Remove from *VM arguments*: `-Declipse.ignoreApp=true`
   * (Optional) add to *VM arguments*: `-Dlog4j.configuration=file:///path/to/log4j.properties`
   * Run it.
