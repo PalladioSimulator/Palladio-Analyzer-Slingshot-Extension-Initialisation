@@ -183,16 +183,16 @@ Both approaches require **Models and JSON files**.
 
 #### General Arguments:
 * `-id` (*Optional*): Will be used as id for the resulting state of the simulation run. If none is specified, a random id will be used. 
-* `-output` (*Mandatory*): Destination for saving the results.
+* `-output` (*Mandatory*): Destination folder for saving the results.
 * `-input`: Source for loading the snapshot-, config-, and experiments-file, if no other information about their location is provided.
 If snapshot-, config-, and experiments-file are specified with the specific options (see below), this option is *optional*. 
 For this option, the application matches the files by file extension, i.e. `.snapshot` for the snapshot-file, `.config` for the config file, and `.experiments` for the experiments-file. 
-Each extension must appear at at max once in the source folder, or else the application cannot identify the file to be used.
+Each extension must appear at max once in the input folder, or else the application cannot identify the file to be used.
 
 
 #### Specific Arguments:
 These options take precedence over the `-input` option. 
-E.g. if both the `-input` and the `-snapshot` options are specified, the application loads the snapshot from location specified by the latter. 
+E.g. if both the `-input` and the `-snapshot` options are specified, the application loads the snapshot from the location specified by the latter. 
 Also these options have no preconditions on the file extensions.
 * `-snapshot`: Location of the snapshot-file. 
 * `-experiments`: Location of the experiments-file. 
@@ -208,10 +208,10 @@ Also these options have no preconditions on the file extensions.
 -config /absolut/path/to/config.json \
 -vmargs -Xmx4G -Dlog4j.configuration=file:///path/to/log4j.properties
 ```
-* `/absolute/path/to/input/directory` must contains exactly one `.snapshot`-file and exactly one `.experiments`-file.
+* `/absolute/path/to/input/directory` must contains exactly one `.snapshot`-file and exactly one `.experiments`-file, because no other location is specified.
 * `/absolute/path/to/input/directory` may also contain `.config`-files, but they are ignored in favor of the file specified by `-config`.
 * The experiments- and snapshot-file may contain reference to PCM instances as absolute or relative paths. 
-The user must ensure, that the PCM instances are at the expected locations, otherwise application will fail.  
+The user must ensure, that the PCM instances are at the expected locations, otherwise the application will fail.  
 
 
 ## Manual Export and Installation
