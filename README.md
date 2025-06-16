@@ -12,8 +12,6 @@ The over all goals of this extension, are (1) to stop and restart a simulation a
 
 For stopping and restarting, the extensions saves/loads snapshots to/from a JSON file.
 For applying scaling policies, the extension accepts an JSON with a list of scaling policy ids as input. 
-For further detail, see section TODO below.  
-
 
 For the sake of simplification, the following explanation reduces the entire machination to three components.
 These components are `application`,  `initialisation`, `simulator` and `snapshotBehaviour`. 
@@ -166,7 +164,7 @@ Both approaches require **Models and JSON files**.
   * Click *Validate Bundles*, just to be on the safe side.
   * Go to tab *Arguments*
   * Add `-application org.palladiosimulator.analyzer.slingshot.initialisedsimulation.application.InitialisedSimulationApplication` to *Program arguments*
-  * Append further application arguments to *Program arguments*, details see below.
+  * Append further application arguments to *Program arguments*, details see [section on specifying application arguments](###Specifying-Application-Arguments).
   * Remove from *VM arguments*: `-Declipse.ignoreApp=true`
   * (Optional) add to *VM arguments*: `-Dlog4j.configuration=file:///path/to/log4j.properties`
   * Run it.
@@ -178,7 +176,7 @@ Both approaches require **Models and JSON files**.
   ```
   ./PalladioBench -data /path/to/workspace/ \
   -application org.palladiosimulator.analyzer.slingshot.initialisedsimulation.application.InitialisedSimulationApplication \
-  [application arguments as detailed below]
+  [application arguments]
   -vmargs -Xmx4G -Dlog4j.configuration=file:///path/to/log4j.properties
   ```
 ### Specifying Application Arguments
