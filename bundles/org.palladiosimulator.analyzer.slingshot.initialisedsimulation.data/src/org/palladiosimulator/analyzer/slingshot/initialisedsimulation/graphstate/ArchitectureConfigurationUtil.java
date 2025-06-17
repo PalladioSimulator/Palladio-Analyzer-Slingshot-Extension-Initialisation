@@ -105,7 +105,7 @@ public class ArchitectureConfigurationUtil {
 	/**
 	 * Save all whitelisted resources in the given set to their respective URI.
 	 *
-	 * @param set
+	 * @param set models to save
 	 */
 	public static void saveWhitelisted(final ResourceSet set) {
 		final List<Resource> whitelisted = getWhitelistedResources(set);
@@ -121,21 +121,19 @@ public class ArchitectureConfigurationUtil {
 	 * destination Folder and writes them to file.
 	 * 
 	 * First, this operation resolves all references within the models and ensures
-	 * that cost-stereotyes are loaded before the copy. However, this operation
-	 * cannot resolve external references to model element, e.g. inside the
-	 * snapshot. It is upon the caller to enure, that those are resolved upfront.
+	 * that cost-stereotyes are loaded before the copy.
 	 * 
 	 * Then this operation updates the URIs of all models in the given set and
 	 * creates the copy by saving them to file. The URI is not reset to the original
 	 * value and remains changed.
 	 * 
-	 * @param set               set containing the models
-	 * @param destinationFolder folder to copy the models to.
+	 * @param set         set containing the models
+	 * @param destination folder to copy the models to.
 	 */
-	public static void copyToURI(final ResourceSet set, final URI destinationFolder) {
-		String cleanLocation = destinationFolder.toString();
+	public static void copyToURI(final ResourceSet set, final URI destination) {
+		String cleanLocation = destination.toString();
 
-		if (destinationFolder.hasTrailingPathSeparator()) {
+		if (destination.hasTrailingPathSeparator()) {
 			cleanLocation = cleanLocation.substring(0, cleanLocation.length() - 1);
 		}
 

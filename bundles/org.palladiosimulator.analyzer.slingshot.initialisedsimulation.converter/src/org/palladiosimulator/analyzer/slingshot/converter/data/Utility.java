@@ -29,8 +29,8 @@ public class Utility {
 	private double totalUtility;
 	private final List<UtilityData> data = new ArrayList<>();
 
-	private final List<List<Measurement<Double>>> slo = new ArrayList<>();
-	private final List<List<Measurement<Double>>> costs = new ArrayList<>();
+	private final transient List<List<Measurement<Double>>> slo = new ArrayList<>();
+	private final transient List<List<Measurement<Double>>> costs = new ArrayList<>();
 
 	public void addDataInstance(final String id, final List<Measurement<Number>> measurements, final UtilityType type) {
 		data.add(new UtilityData(id,

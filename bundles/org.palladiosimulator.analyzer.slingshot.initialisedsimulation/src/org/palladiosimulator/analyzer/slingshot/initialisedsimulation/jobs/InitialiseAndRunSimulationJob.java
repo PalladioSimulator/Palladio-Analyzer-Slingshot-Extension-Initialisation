@@ -52,16 +52,12 @@ public class InitialiseAndRunSimulationJob implements IBlackboardInteractingJob<
 		monitor.beginTask("Start Simulation", 3);
 
 		monitor.subTask("Initialize driver");
-
-		// this.configuration.getlaunchConfigParams() --> access to all the params.
-
 		final SimulationStarter explorer = new SimulationStarter(this.configuration.getSimuComConfig(), monitor,
-				this.blackboard, this.configuration.getSnapshotFile(), this.configuration.getOtherConfigsFile(), this.configuration.getResultsFolder(), this.configuration.getNextStateId());
-		explorer.simulateSingleState(this.configuration.getResultsFolder());
-
+				this.blackboard, this.configuration.getLocations(), this.configuration.getNextStateId());
 		monitor.worked(1);
 
 		monitor.subTask("Start simulation");
+		explorer.simulateSingleState(this.configuration.getLocations());
 		monitor.worked(1);
 
 		monitor.subTask("Restore");

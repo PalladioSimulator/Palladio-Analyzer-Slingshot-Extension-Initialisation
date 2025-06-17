@@ -1,6 +1,7 @@
 package org.palladiosimulator.analyzer.slingshot.initialisedsimulation.application;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -13,15 +14,14 @@ import java.util.function.Predicate;
 
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.NullProgressMonitor;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
-import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.configuration.ExplorationWorkflowConfiguration;
 import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.configuration.InitialiseSimulationWorkflowConfiguration;
+import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.configuration.Locations;
 import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.jobs.InitialiseSimulationRootJob;
 import org.palladiosimulator.experimentautomation.application.ExperimentApplication;
 import org.palladiosimulator.experimentautomation.application.tooladapter.abstractsimulation.AbstractSimulationConfigFactory;
@@ -62,7 +62,7 @@ public class InitialisedSimulationApplication implements IApplication {
 	public Object start(final IApplicationContext context) throws Exception {
 		final Arguments arguments = newParseCLI(context);
 
-		final Experiment experiment = getExperiment(arguments.experimePath)
+		final Experiment experiment = getExperiment(arguments.experimentPath)
 				.orElseThrow(() -> new IllegalArgumentException(
 						"No Experiment with tool configuration of type SlingshotConfiguration. Cannot start simulation."));
 
@@ -96,19 +96,20 @@ public class InitialisedSimulationApplication implements IApplication {
 
 	/**
 	 *
-	 * Create and execute a workflow for preparing and running a state exploration.
+	 * Create and execute a workflow for preparing and running an initialised simulation.
 	 *
-	 * @param experiment
+	 * @param experiment information about the simulation to run
+	 * @param args already parsed application arguments
 	 */
-	private void initialiseAndLaunchSimulation(final Experiment experiment, final Arguments arguments) {
+	private void initialiseAndLaunchSimulation(final Experiment experiment, final Arguments args) {
 
 		final Map<String, Object> configMap = createConfigMap(experiment, SINGLE_STATE_SIMULATION_ID);
 
 		final SimuComConfig simuComconfig = new SimuComConfig(configMap, false);
+		
+		final Locations locations = new Locations(args.snapshotFile, args.otherConfigsFile, args.resultFolder, args.snapshotOutputFile, args.stateOutputFile);
 
-		final InitialiseSimulationWorkflowConfiguration config = new InitialiseSimulationWorkflowConfiguration(
-				simuComconfig, configMap, arguments.snapshotFile, arguments.otherConfigsFile, arguments.resultFolder,
-				arguments.id.orElse(UUID.randomUUID().toString()));
+		final InitialiseSimulationWorkflowConfiguration config = new InitialiseSimulationWorkflowConfiguration(simuComconfig, locations, args.id);
 
 		this.setModelFilesInConfig(experiment, config);
 
@@ -130,9 +131,9 @@ public class InitialisedSimulationApplication implements IApplication {
 	 * model as defined in the {@link ExplorationWorkflowConfiguration}.
 	 *
 	 * @param models initial models, as defined in the experiments file.
-	 * @param config configuration to start the exploration on.
+	 * @param config configuration to start the simulation on.
 	 */
-	private void setModelFilesInConfig(final Experiment experiment, final ExplorationWorkflowConfiguration config) {
+	private void setModelFilesInConfig(final Experiment experiment, final InitialiseSimulationWorkflowConfiguration config) {
 		final InitialModel models = experiment.getInitialModel();
 
 		this.consumeModelLocation(models.getAllocation(), s -> config.setAllocationFiles(List.of(s)));
@@ -237,13 +238,16 @@ public class InitialisedSimulationApplication implements IApplication {
 			final Map<String, String> mappedArgs = createArgumentsMap(args);
 			final List<File> files = parseInputFiles(mappedArgs);
 
-			this.id = mappedArgs.containsKey(ID) ? Optional.of(mappedArgs.get(ID)) : Optional.empty();
+			this.id = mappedArgs.containsKey(ID) ? mappedArgs.get(ID) : UUID.randomUUID().toString();
 
 			this.otherConfigsFile = parseSingleArg(mappedArgs, files, CONFIG, CONFIG_SFX).toPath();
 			this.snapshotFile = parseSingleArg(mappedArgs, files, SNAPSHOT, SNAPSHOT_SFX).toPath();
-			this.experimePath = new Path(parseSingleArg(mappedArgs, files, EXPERIMENTS, EXPERIMENTS_SFX).toString());
+			this.experimentPath = new org.eclipse.core.runtime.Path(parseSingleArg(mappedArgs, files, EXPERIMENTS, EXPERIMENTS_SFX).toString());
 
 			this.resultFolder = parseOutputFolder(mappedArgs).toPath();
+			
+			this.snapshotOutputFile = parseSnapshotOutputArg(mappedArgs);
+			this.stateOutputFile = parseStateOutputArg(mappedArgs);
 		}
 
 		/**
@@ -253,7 +257,7 @@ public class InitialisedSimulationApplication implements IApplication {
 		 */
 		private File parseOutputFolder(final Map<String, String> mappedArgs) {
 			if (mappedArgs.containsKey(OUTPUT)) {
-				final File file = new Path(mappedArgs.get(OUTPUT)).toFile();
+				final File file = new File(mappedArgs.get(OUTPUT));
 				if (file.isAbsolute()) {
 					if (file.exists() && !file.isDirectory()) {
 						throw new IllegalArgumentException(
@@ -314,7 +318,7 @@ public class InitialisedSimulationApplication implements IApplication {
 		 */
 		private Map<String, String> createArgumentsMap(final List<String> args) {
 			final Predicate<String> isValidThing = (final String s) -> s.equals(ID) || s.equals(OUTPUT)
-					|| s.equals(INPUT) || s.equals(SNAPSHOT) || s.equals(EXPERIMENTS) || s.equals(CONFIG);
+					|| s.equals(INPUT) || s.equals(SNAPSHOT) || s.equals(EXPERIMENTS) || s.equals(CONFIG) || s.equals(SNAPSHOT_OUTPUT) || s.equals(STATE_OUTPUT);
 
 			final Map<String, String> mappedArgs = new HashMap<>();
 			for (int i = 0; i < args.size(); i = i + 2) {
@@ -345,9 +349,8 @@ public class InitialisedSimulationApplication implements IApplication {
 		private File parseSingleArg(final Map<String, String> mappedArgs, final List<File> files, final String option,
 				final String sfx) {
 			if (mappedArgs.containsKey(option)) {
-				final Path path = new Path(mappedArgs.get(option));
-				if (path.isAbsolute()) {
-					final File file = path.toFile();
+				final File file = new File(mappedArgs.get(option));
+				if (file.isAbsolute()) {
 					if (file.exists() && file.isFile()) {
 						return file;
 					} else {
@@ -358,7 +361,7 @@ public class InitialisedSimulationApplication implements IApplication {
 					}
 				} else {
 					throw new IllegalArgumentException("When using the " + option + " option, the path to the " + sfx
-							+ "-file must be absolute. However, the given path is \"" + path.toString() + "\".");
+							+ "-file must be absolute. However, the given path is \"" + file.toString() + "\".");
 				}
 			} else if(!mappedArgs.containsKey(INPUT)) {
 				throw new IllegalArgumentException("Missing" + sfx +"-file. Either use the " + option + " option to specify the absolute path of the file to be used, or use the " + INPUT+ " option to specify an input folder that contains a " + sfx + "-file.");
@@ -373,12 +376,48 @@ public class InitialisedSimulationApplication implements IApplication {
 				}
 			}
 		}
+		
+		/**
+		 * 
+		 * @param mappedArgs
+		 * @param output
+		 * @param option
+		 * @return
+		 */
+		private Path parseSnapshotOutputArg(final Map<String, String> mappedArgs) {
+			if (mappedArgs.containsKey(SNAPSHOT_OUTPUT)) {
+				return fromMapped(mappedArgs.get(SNAPSHOT_OUTPUT));
+			} else {
+				final Path resolved = resultFolder.resolve(this.snapshotFile.getFileName());
+				return resolved;
+			}
+		}
+		
+		private Path parseStateOutputArg(final Map<String, String> mappedArgs) {
+			if (mappedArgs.containsKey(STATE_OUTPUT)) {
+				return fromMapped(mappedArgs.get(STATE_OUTPUT));
+			} else {
+				return resultFolder.resolve(this.id + STATE_SFX);
+			}
+		}
 
-		private final java.nio.file.Path snapshotFile;
-		private final java.nio.file.Path otherConfigsFile;
-		private final java.nio.file.Path resultFolder;
-		private final Path experimePath;
-		private final Optional<String> id;
+		private Path fromMapped(final String location) {
+			final Path path = new File(location).toPath();
+			if (path.isAbsolute()) {
+				return path.toFile().toPath();
+			} else {
+				return resultFolder.resolve(location);
+			}
+		}
+
+		private final Path snapshotFile;
+		private final Path otherConfigsFile;
+		private final Path resultFolder;
+		private final org.eclipse.core.runtime.Path experimentPath;
+		private final String id;
+		
+		private final Path snapshotOutputFile;
+		private final Path stateOutputFile;
 
 		private static final String ID = "-id";
 
@@ -388,9 +427,13 @@ public class InitialisedSimulationApplication implements IApplication {
 		private static final String SNAPSHOT = "-snapshot";
 		private static final String EXPERIMENTS = "-experiments";
 		private static final String CONFIG = "-config";
+		
+		private static final String SNAPSHOT_OUTPUT = "-outputSnapshot";
+		private static final String STATE_OUTPUT = "-outputState";
 
 		private static final String SNAPSHOT_SFX = ".snapshot";
 		private static final String EXPERIMENTS_SFX = ".experiments";
 		private static final String CONFIG_SFX = ".config";
+		private static final String STATE_SFX = ".state";
 	}
 }

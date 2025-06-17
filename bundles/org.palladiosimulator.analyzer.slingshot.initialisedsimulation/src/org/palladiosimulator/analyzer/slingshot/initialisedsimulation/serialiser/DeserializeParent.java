@@ -1,7 +1,6 @@
 package org.palladiosimulator.analyzer.slingshot.initialisedsimulation.serialiser;
 
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -16,7 +15,7 @@ public interface DeserializeParent<T>{
 	public T deserialize(final Path path);
 		
 	default String read(final File file) {
-		try (final FileReader reader = new FileReader(file)) {
+		try {
 			return Files.readString(file.toPath());
 		} catch (final IOException e) {
 			e.printStackTrace();
