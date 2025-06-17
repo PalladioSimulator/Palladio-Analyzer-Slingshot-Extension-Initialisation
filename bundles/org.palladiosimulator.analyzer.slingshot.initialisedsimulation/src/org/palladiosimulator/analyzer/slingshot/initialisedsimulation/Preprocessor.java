@@ -22,6 +22,8 @@ import org.palladiosimulator.spd.triggers.ScalingTrigger;
 import org.palladiosimulator.spd.triggers.expectations.ExpectedTime;
 import org.palladiosimulator.spd.triggers.stimuli.SimulationTime;
 
+import com.google.common.base.Preconditions;
+
 /**
  *
  * The preprocessor creates the {@link SimulationInitConfiguration} for the next
@@ -44,6 +46,10 @@ public class Preprocessor {
 	private final Snapshot snapshot;
 	
 	public Preprocessor(final PCMResourceSetPartition partition, final Snapshot snapshot, final List<ScalingPolicy> policiesToProcess) {
+		Preconditions.checkNotNull(partition);
+		Preconditions.checkNotNull(snapshot);
+		Preconditions.checkNotNull(policiesToProcess);
+		
 		this.spd = PCMResourcePartitionHelper.getSPD(partition);
 		this.snapshot = snapshot;
 		this.policiesToProcess = policiesToProcess;

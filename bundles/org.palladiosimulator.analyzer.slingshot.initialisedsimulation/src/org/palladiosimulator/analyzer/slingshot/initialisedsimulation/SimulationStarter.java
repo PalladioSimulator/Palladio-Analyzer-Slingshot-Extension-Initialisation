@@ -45,13 +45,12 @@ public class SimulationStarter {
 	final StateBuilder stateBuilder;
 
 	public SimulationStarter(final SimuComConfig config, final IProgressMonitor monitor, 
-			final MDSDBlackboard blackboard, final Path initStateLocation, final Path otherLocation, final Path resultLocation) {
+			final MDSDBlackboard blackboard, final Path initStateLocation, final Path otherLocation, final Path resultLocation, final String nextStateId) {
 		super();
 		this.initModels = (PCMResourceSetPartition) blackboard.getPartition(ConstantsContainer.DEFAULT_PCM_INSTANCE_PARTITION_ID);
-		
 	
 		final InitState initstate = getInitState(initStateLocation);
-		final OtherInitThings otherInitThings = getOthers(otherLocation);
+		final OtherInitThings otherInitThings = getOthers(otherLocation); // i'd prefer this to throw some error.... 
 		
 		// copy onyl after loading the snapshot, because of the model references. 
 		final URI resultFolder = URI.createFileURI(resultLocation.toString());
@@ -59,7 +58,7 @@ public class SimulationStarter {
 		
 		final InitWrapper wrapper = new Preprocessor(this.initModels, initstate.getSnapshot(), otherInitThings.getIncomingPolicies()).createWrapper();
 		final SnapshotConfiguration snaphshotConfig = new SnapshotConfiguration(initstate.getPointInTime() > 0.0, otherInitThings.getSensibility(), config.getSimuTime());			
-		this.stateBuilder  = new StateBuilder(initstate.getId(), initstate.getPointInTime(), this.initModels);
+		this.stateBuilder  = new StateBuilder(initstate.getId(), initstate.getPointInTime(), this.initModels, nextStateId);
 		
 		AdditionalConfigurationModule.snapConfigProvider.set(snaphshotConfig);
 		AdditionalConfigurationModule.eventsToInitOnProvider.set(wrapper);
