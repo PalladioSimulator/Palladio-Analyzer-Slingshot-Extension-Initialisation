@@ -1,6 +1,7 @@
 package org.palladiosimulator.analyzer.slingshot.initialisedsimulation.application;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -13,7 +14,6 @@ import java.util.function.Predicate;
 
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.NullProgressMonitor;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
@@ -96,9 +96,10 @@ public class InitialisedSimulationApplication implements IApplication {
 
 	/**
 	 *
-	 * Create and execute a workflow for preparing and running a state exploration.
+	 * Create and execute a workflow for preparing and running an initialised simulation.
 	 *
-	 * @param experiment
+	 * @param experiment information about the simulation to run
+	 * @param args already parsed application arguments
 	 */
 	private void initialiseAndLaunchSimulation(final Experiment experiment, final Arguments args) {
 
@@ -241,7 +242,7 @@ public class InitialisedSimulationApplication implements IApplication {
 
 			this.otherConfigsFile = parseSingleArg(mappedArgs, files, CONFIG, CONFIG_SFX).toPath();
 			this.snapshotFile = parseSingleArg(mappedArgs, files, SNAPSHOT, SNAPSHOT_SFX).toPath();
-			this.experimentPath = new Path(parseSingleArg(mappedArgs, files, EXPERIMENTS, EXPERIMENTS_SFX).toString());
+			this.experimentPath = new org.eclipse.core.runtime.Path(parseSingleArg(mappedArgs, files, EXPERIMENTS, EXPERIMENTS_SFX).toString());
 
 			this.resultFolder = parseOutputFolder(mappedArgs).toPath();
 			
@@ -256,7 +257,7 @@ public class InitialisedSimulationApplication implements IApplication {
 		 */
 		private File parseOutputFolder(final Map<String, String> mappedArgs) {
 			if (mappedArgs.containsKey(OUTPUT)) {
-				final File file = new Path(mappedArgs.get(OUTPUT)).toFile();
+				final File file = new File(mappedArgs.get(OUTPUT));
 				if (file.isAbsolute()) {
 					if (file.exists() && !file.isDirectory()) {
 						throw new IllegalArgumentException(
@@ -348,9 +349,8 @@ public class InitialisedSimulationApplication implements IApplication {
 		private File parseSingleArg(final Map<String, String> mappedArgs, final List<File> files, final String option,
 				final String sfx) {
 			if (mappedArgs.containsKey(option)) {
-				final Path path = new Path(mappedArgs.get(option));
-				if (path.isAbsolute()) {
-					final File file = path.toFile();
+				final File file = new File(mappedArgs.get(option));
+				if (file.isAbsolute()) {
 					if (file.exists() && file.isFile()) {
 						return file;
 					} else {
@@ -361,7 +361,7 @@ public class InitialisedSimulationApplication implements IApplication {
 					}
 				} else {
 					throw new IllegalArgumentException("When using the " + option + " option, the path to the " + sfx
-							+ "-file must be absolute. However, the given path is \"" + path.toString() + "\".");
+							+ "-file must be absolute. However, the given path is \"" + file.toString() + "\".");
 				}
 			} else if(!mappedArgs.containsKey(INPUT)) {
 				throw new IllegalArgumentException("Missing" + sfx +"-file. Either use the " + option + " option to specify the absolute path of the file to be used, or use the " + INPUT+ " option to specify an input folder that contains a " + sfx + "-file.");
@@ -384,16 +384,16 @@ public class InitialisedSimulationApplication implements IApplication {
 		 * @param option
 		 * @return
 		 */
-		private java.nio.file.Path parseSnapshotOutputArg(final Map<String, String> mappedArgs) {
+		private Path parseSnapshotOutputArg(final Map<String, String> mappedArgs) {
 			if (mappedArgs.containsKey(SNAPSHOT_OUTPUT)) {
 				return fromMapped(mappedArgs.get(SNAPSHOT_OUTPUT));
 			} else {
-				final java.nio.file.Path resolved = resultFolder.resolve(this.snapshotFile.getFileName());
+				final Path resolved = resultFolder.resolve(this.snapshotFile.getFileName());
 				return resolved;
 			}
 		}
 		
-		private java.nio.file.Path parseStateOutputArg(final Map<String, String> mappedArgs) {
+		private Path parseStateOutputArg(final Map<String, String> mappedArgs) {
 			if (mappedArgs.containsKey(STATE_OUTPUT)) {
 				return fromMapped(mappedArgs.get(STATE_OUTPUT));
 			} else {
@@ -401,8 +401,8 @@ public class InitialisedSimulationApplication implements IApplication {
 			}
 		}
 
-		private java.nio.file.Path fromMapped(final String location) {
-			final Path path = new Path(location);
+		private Path fromMapped(final String location) {
+			final Path path = new File(location).toPath();
 			if (path.isAbsolute()) {
 				return path.toFile().toPath();
 			} else {
@@ -410,14 +410,14 @@ public class InitialisedSimulationApplication implements IApplication {
 			}
 		}
 
-		private final java.nio.file.Path snapshotFile;
-		private final java.nio.file.Path otherConfigsFile;
-		private final java.nio.file.Path resultFolder;
-		private final Path experimentPath;
+		private final Path snapshotFile;
+		private final Path otherConfigsFile;
+		private final Path resultFolder;
+		private final org.eclipse.core.runtime.Path experimentPath;
 		private final String id;
 		
-		private final java.nio.file.Path snapshotOutputFile;
-		private final java.nio.file.Path stateOutputFile;
+		private final Path snapshotOutputFile;
+		private final Path stateOutputFile;
 
 		private static final String ID = "-id";
 
