@@ -8,6 +8,7 @@ import org.eclipse.emf.common.util.URI;
 import org.palladiosimulator.analyzer.slingshot.common.utils.PCMResourcePartitionHelper;
 import org.palladiosimulator.analyzer.slingshot.core.Slingshot;
 import org.palladiosimulator.analyzer.slingshot.core.api.SimulationDriver;
+import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.configuration.Locations;
 import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.graphstate.ArchitectureConfigurationUtil;
 import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.graphstate.StateBuilder;
 import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.providers.AdditionalConfigurationModule;
@@ -31,16 +32,12 @@ import de.uka.ipd.sdq.workflow.mdsd.blackboard.MDSDBlackboard;
  *
  */
 public class SimulationStarter {
-
 	private static final Logger LOGGER = Logger.getLogger(SimulationStarter.class.getName());
-
-	private static final String resultFile = "state.state";
-	private static final String snapshotFile = "snapshot.snapshot";
 
 	private final PCMResourceSetPartition initModels;
 
-	final SimulationDriver driver;
-	final StateBuilder stateBuilder;
+	private final SimulationDriver driver;
+	private final StateBuilder stateBuilder;
 
 	/**
 	 * Create a new {@link SimulationStarter} and already initiate the simulation driver.
@@ -53,18 +50,17 @@ public class SimulationStarter {
 	 * @param resultLocation
 	 */
 	public SimulationStarter(final SimuComConfig config, final IProgressMonitor monitor,
-			final MDSDBlackboard blackboard, final Path initStateLocation, final Path otherLocation,
-			final Path resultLocation, final String nextStateId) {
+			final MDSDBlackboard blackboard, final Locations locations, final String nextStateId) {
 		super();
 		this.initModels = (PCMResourceSetPartition) blackboard
 				.getPartition(ConstantsContainer.DEFAULT_PCM_INSTANCE_PARTITION_ID);
 
 		// copy BEFORE loading the snapshot, because of the cost stereotype resolution
-		final URI resultFolder = URI.createFileURI(resultLocation.toString());
+		final URI resultFolder = URI.createFileURI(locations.output().toString());
 		ArchitectureConfigurationUtil.copyToURI(initModels.getResourceSet(), resultFolder);
 
-		final InitState initstate = getInitState(initStateLocation);
-		final OtherInitThings otherInitThings = getOthers(otherLocation);
+		final InitState initstate = getInitState(locations.snapshotIn());
+		final OtherInitThings otherInitThings = getOthers(locations.configsIn());
 
 		final InitWrapper wrapper = new Preprocessor(this.initModels, initstate.getSnapshot(),
 				otherInitThings.getIncomingPolicies()).createWrapper();
@@ -110,16 +106,13 @@ public class SimulationStarter {
 	 * 
 	 * @param resultLocation location to save the state and snapshot to.
 	 */
-	public void simulateSingleState(final Path resultLocation) {
+	public void simulateSingleState(final Locations locations) {
 		LOGGER.info("********** DefaultGraphExplorer.explore() **********");
 
 		driver.start();
 		UpdateSPDUtil.reduceTriggerTime(PCMResourcePartitionHelper.getSPD(initModels), stateBuilder.getDuration());
 
-		final Path snapPath = Path.of(resultLocation.toString(), snapshotFile);
-		(new InitStateDeSerialization(this.initModels)).serialize(stateBuilder.buildInitState(), snapPath);
-
-		final Path resultPath = Path.of(resultLocation.toString(), resultFile);
-		(new ResultStateSerialization()).serialize(stateBuilder.buildResultState(), resultPath);
+		(new InitStateDeSerialization(this.initModels)).serialize(stateBuilder.buildInitState(), locations.snapshotOut());
+		(new ResultStateSerialization()).serialize(stateBuilder.buildResultState(), locations.stateOut());
 	}
 }

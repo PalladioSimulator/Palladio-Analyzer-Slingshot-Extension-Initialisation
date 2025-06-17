@@ -190,15 +190,40 @@ For this option, the application matches the files by file extension, i.e. `.sna
 Each extension must appear at max once in the input folder, or else the application cannot identify the file to be used.
 
 
-#### Specific Arguments:
-These options take precedence over the `-input` option. 
-E.g. if both the `-input` and the `-snapshot` options are specified, the application loads the snapshot from the location specified by the latter. 
-Also these options have no preconditions on the file extensions.
+#### Specific Input Arguments:
+These options take precedence over the `-input` option, e.g., if both the `-input` and the `-snapshot` options are specified, the application loads the snapshot from the location specified by the latter. 
+They have no preconditions on the file extensions, but require the locations to be absolut paths.
 * `-snapshot`: Location of the snapshot-file. 
 * `-experiments`: Location of the experiments-file. 
 * `-config`: Location of the config-file.
 
-#### Complete Examples (for CLI execution)
+#### Specific Output Arguments:
+Theses options are optional. 
+They cannot replace the `-output` option.
+They accept locations as absolute or relative paths.
+Relative paths are resolved against the path specified with the `-output` option.
+* `-outputSnapshot`: Location of the snapshot-file created after the simulation run. 
+Defaults to `/path/to/output/filename-of-input-snapshot`.
+* `-outputState`: Location of the state-file created after the simulation run. 
+Defaults to `/path/to/output/id-of-state.state`.
+
+
+
+#### Least amount of arguments Example (for CLI execution)
+```
+./PalladioBench -data /path/to/workspace/ \
+-application org.palladiosimulator.analyzer.slingshot.initialisedsimulation.application.InitialisedSimulationApplication \
+-output /absolute/path/to/output/directory \
+-input /absolute/path/to/input/directory \
+-vmargs -Xmx4G -Dlog4j.configuration=file:///path/to/log4j.properties
+```
+* `/absolute/path/to/input/directory` must contains exactly one `.snapshot`-file, exactly one `.experiments`-file and  exactly one `.config`-file.
+* The id of the new state will be an random generated UUID.
+* All results will be saved to `/absolute/path/to/output/directory`, using their default filenames.
+* The experiments- and snapshot-file may contain reference to PCM instances as absolute or relative paths. 
+The user must ensure, that the PCM instances are at the expected locations, otherwise the application will fail.  
+
+#### More elaborate Example (for CLI execution)
 ```
 ./PalladioBench -data /path/to/workspace/ \
 -application org.palladiosimulator.analyzer.slingshot.initialisedsimulation.application.InitialisedSimulationApplication \
@@ -206,13 +231,13 @@ Also these options have no preconditions on the file extensions.
 -output /absolute/path/to/output/directory \
 -input /absolute/path/to/input/directory \
 -config /absolut/path/to/config.json \
+-outputSnapshot snapshot/foo.json
 -vmargs -Xmx4G -Dlog4j.configuration=file:///path/to/log4j.properties
 ```
 * `/absolute/path/to/input/directory` must contains exactly one `.snapshot`-file and exactly one `.experiments`-file, because no other location is specified.
 * `/absolute/path/to/input/directory` may also contain `.config`-files, but they are ignored in favor of the file specified by `-config`.
-* The experiments- and snapshot-file may contain reference to PCM instances as absolute or relative paths. 
-The user must ensure, that the PCM instances are at the expected locations, otherwise the application will fail.  
-
+* The given location for the result snapshot is relative, the snapshot will be saved to `/absolute/path/to/output/directory/snapshot/foo.json`.
+* No location for the result state is given, it will be saved to `/absolute/path/to/output/directory/some-string-id.state`.
 
 ## Manual Export and Installation
 
