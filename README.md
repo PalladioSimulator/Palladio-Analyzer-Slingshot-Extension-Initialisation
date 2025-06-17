@@ -81,7 +81,7 @@ Notably, this extensions Application builds upon ExperimentAutomation, thus an e
   }
   ```
 
-* The JSON file for the results information adheres to the format of this example:
+* The JSON file for the results uses the file-extension `.state` and adheres to the format of this example:
   ```
   {
     "parentId":"id-of-the-state-this-snapshot-was-taken-for",
@@ -91,9 +91,18 @@ Notably, this extensions Application builds upon ExperimentAutomation, thus an e
     "reasonsToLeave":["reactiveReconfiguration"],
     "utility":{
       "totalUtility":23.243757568282582,
-      "data":[...],
-      "slo":[],
-      "costs":[]
+      "data":[
+        {
+          "id":"_BGErMNV-EeSaPsLvWUqTbQ",
+          "utility":152.0801793323635,
+          "type":"SLO"
+        },
+        {
+          "id":"_7QlDoXTYEe-c5L9OU_UA0Q",
+          "utility":112.0,
+          "type":"COST"
+        }
+      ]
     },
     "outgoingPolicyIds":["_xlJ0UnQhEe-xS75-6HAwnQ"],
     "measurementSets":[...]
@@ -276,3 +285,5 @@ The user must ensure, that the PCM instances are at the expected locations, othe
    org.palladiosimulator.pcmbench.perspectives.palladio
    ```
 6. copy the entire Palladio Bench folder to the Docker container.
+
+## Development Pitfall (partially out of context)
