@@ -8,14 +8,15 @@ import org.apache.log4j.Logger;
 import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.ModelAdjustmentRequested;
 import org.palladiosimulator.analyzer.slingshot.common.annotations.Nullable;
 import org.palladiosimulator.analyzer.slingshot.core.api.SimulationScheduling;
-import org.palladiosimulator.analyzer.slingshot.core.extension.SimulationBehaviorExtension;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.PreIntercept;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.entity.interceptors.InterceptorInformation;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.returntypes.InterceptionResult;
 import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.graphstate.ReasonToLeave;
 import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.graphstate.StateBuilder;
 import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.providers.InitWrapper;
+import org.palladiosimulator.analyzer.slingshot.snapshot.api.ConfigurableSnapshotExtension;
 import org.palladiosimulator.analyzer.slingshot.snapshot.api.Snapshot;
+import org.palladiosimulator.analyzer.slingshot.snapshot.configuration.SnapshotConfiguration;
 import org.palladiosimulator.analyzer.slingshot.snapshot.events.SnapshotInitiated;
 import org.palladiosimulator.semanticspd.Configuration;
 import org.palladiosimulator.semanticspd.ElasticInfrastructureCfg;
@@ -32,11 +33,12 @@ import org.palladiosimulator.spd.targets.TargetGroup;
  * triggered, but before it gets applied.
  *
  * Drops reconfigurations under certain circumstances. 
+ * To deactivate the dropping, add {@code "doDrop" : false} to the configuration paratmeters.
  *
  * @author Sophie Stieß
  *
  */
-public class SnapshotTriggeringBehavior implements SimulationBehaviorExtension {
+public class SnapshotTriggeringBehavior extends ConfigurableSnapshotExtension {
 	private static final Logger LOGGER = Logger.getLogger(SnapshotTriggeringBehavior.class);
 
 	private final List<ModelAdjustmentRequested> adjustmentEvents;
@@ -47,21 +49,29 @@ public class SnapshotTriggeringBehavior implements SimulationBehaviorExtension {
 	private final boolean activated;
 
 	private final Configuration config;
+	
+	private final boolean doDrop;
+	private final static String DO_DROP = "doDrop";
 
 	@Inject
 	public SnapshotTriggeringBehavior(final @Nullable StateBuilder state,
 			final @Nullable InitWrapper eventsWapper, final SimulationScheduling scheduling,
-			final @Nullable Configuration config) {
+			final @Nullable Configuration semanticSpd, final @Nullable SnapshotConfiguration config) {
+		
+		super(config);
+		
 		this.state = state;
 		this.scheduling = scheduling;
 		this.adjustmentEvents = eventsWapper == null ? null : eventsWapper.getAdjustmentEvents();
-		this.config = config;
+		this.config = semanticSpd;
 
+		this.doDrop = this.toggle.hasParameter(DO_DROP, Boolean.class) ? this.toggle.getParameter(DO_DROP) : true; 
+		
 		this.activated = state != null && eventsWapper != null;
 	}
 
 	@Override
-	public boolean isActive() {
+	public boolean getActivated() {
 		return this.activated;
 	}
 
@@ -118,7 +128,7 @@ public class SnapshotTriggeringBehavior implements SimulationBehaviorExtension {
 	 * @return true iff the policy shall be dropped, false otherwise.
 	 */
 	private boolean isDrop(final ScalingPolicy policy) {
-		if (policy.getAdjustmentType() instanceof final StepAdjustment adjustment && adjustment.getStepValue() < 0) {
+		if (this.doDrop && policy.getAdjustmentType() instanceof final StepAdjustment adjustment && adjustment.getStepValue() < 0) {
 			// Scale in!
 			final TargetGroup tg = policy.getTargetGroup();
 			if (tg instanceof final ElasticInfrastructure ei) {

@@ -64,8 +64,7 @@ public class SimulationStarter {
 
 		final InitWrapper wrapper = new Preprocessor(this.initModels, initstate.getSnapshot(),
 				otherInitThings.getIncomingPolicies()).createWrapper();
-		final SnapshotConfiguration snaphshotConfig = new SnapshotConfiguration(initstate.getPointInTime() > 0.0,
-				otherInitThings.getSensibility(), config.getSimuTime());
+		final SnapshotConfiguration snaphshotConfig = new SnapshotConfiguration(initstate.getPointInTime() > 0.0, config.getSimuTime(), otherInitThings.getConfigurationParameters());
 		this.stateBuilder  = new StateBuilder(initstate.getId(), initstate.getPointInTime(), this.initModels, nextStateId);
 		AdditionalConfigurationModule.snapConfigProvider.set(snaphshotConfig);
 		AdditionalConfigurationModule.eventsToInitOnProvider.set(wrapper);

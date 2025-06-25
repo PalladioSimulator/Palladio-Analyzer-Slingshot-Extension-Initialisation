@@ -1,7 +1,10 @@
 package org.palladiosimulator.analyzer.slingshot.initialisedsimulation.serialisation;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import org.palladiosimulator.analyzer.slingshot.snapshot.configuration.SnapshotBehaviourConfigurationParameters;
 import org.palladiosimulator.spd.ScalingPolicy;
 
 /**
@@ -12,26 +15,27 @@ import org.palladiosimulator.spd.ScalingPolicy;
  */
 public class OtherInitThings {
 	
-	private final double sensibility; 
-	private final List<ScalingPolicy> incomingPolicies;
+	private final List<ScalingPolicy> incomingPolicies; 
+	private final Map<String, SnapshotBehaviourConfigurationParameters> parameters;
+
 
 	/**
 	 * 
 	 * @param sensibility for configuring the snapshot mechanism.
 	 * @param incomingPolicies policy to be injected at the beginning of the simulation.
 	 */
-	public OtherInitThings(final double sensibility, final List<ScalingPolicy> incomingPolicies) {
+	public OtherInitThings(final List<ScalingPolicy> incomingPolicies, final Map<String, SnapshotBehaviourConfigurationParameters> parameters) {
 		super();
-		this.sensibility = sensibility;
 		this.incomingPolicies = incomingPolicies;
+		this.parameters = parameters;
 	}
-
+	
 	/**
 	 * 
-	 * @return sensibility for configuring the snapshot mechanism.
+	 * @return
 	 */
-	public double getSensibility() {
-		return sensibility;
+	public Map<String, SnapshotBehaviourConfigurationParameters> getConfigurationParameters() {
+		return this.parameters != null ? this.parameters : new HashMap<>();
 	}
 
 	/**
@@ -39,6 +43,6 @@ public class OtherInitThings {
 	 * @return policy to be injected at the beginning of the simulation.
 	 */
 	public List<ScalingPolicy> getIncomingPolicies() {
-		return incomingPolicies;
+		return this.incomingPolicies != null ? this.incomingPolicies : List.of();
 	}
 }

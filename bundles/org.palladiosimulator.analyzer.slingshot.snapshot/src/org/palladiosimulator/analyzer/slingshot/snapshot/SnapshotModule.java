@@ -11,6 +11,7 @@ public class SnapshotModule extends AbstractSlingshotExtension {
 		install(SnapshotCostMeasurementsBehaviour.class);
 		install(SnapshotStateUpdateBehaviour.class);
 		install(OffsetForUsageEvolutionBehaviour.class);
+		install(PreventPreemptiveSimulationFinished.class);
 		
 		install(SnapshotRecordingBehavior.class);
 		
@@ -18,6 +19,5 @@ public class SnapshotModule extends AbstractSlingshotExtension {
 		install(SnapshotSLOTriggeringBehavior.class);
 		install(SnapshotSLOAbortionBehavior.class);
 		install(SnapshotAbortionBehavior.class);
-		install(PreventPreemptiveSimulationFinished.class);
 	}
 }

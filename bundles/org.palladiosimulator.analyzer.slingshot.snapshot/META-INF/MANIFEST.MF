@@ -35,4 +35,3 @@ Require-Bundle: org.apache.log4j,
  com.google.gson,
  org.scaledl.usageevolution,
  de.uka.ipd.sdq.workflow.mdsd.blackboard
-Export-Package: org.palladiosimulator.analyzer.slingshot.snapshot

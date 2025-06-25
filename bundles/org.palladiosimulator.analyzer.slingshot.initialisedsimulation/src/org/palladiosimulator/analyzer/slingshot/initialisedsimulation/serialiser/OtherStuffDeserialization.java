@@ -3,11 +3,13 @@ package org.palladiosimulator.analyzer.slingshot.initialisedsimulation.serialise
 import java.lang.reflect.Type;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.apache.log4j.Logger;
 import org.palladiosimulator.analyzer.slingshot.common.utils.PCMResourcePartitionHelper;
 import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.serialisation.OtherInitThings;
+import org.palladiosimulator.analyzer.slingshot.snapshot.configuration.SnapshotBehaviourConfigurationParameters;
 import org.palladiosimulator.analyzer.workflow.blackboard.PCMResourceSetPartition;
 import org.palladiosimulator.spd.SPD;
 import org.palladiosimulator.spd.ScalingPolicy;
@@ -17,7 +19,9 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+import com.google.gson.reflect.TypeToken;
 
 /**
  * 
@@ -45,6 +49,7 @@ public final class OtherStuffDeserialization implements DeserializeParent<OtherI
 		
 		return new GsonBuilder()
 				.registerTypeAdapter(ScalingPolicy.class, new ScalingPolicyDeserializer())
+				.registerTypeAdapter(SnapshotBehaviourConfigurationParameters.class, new ConfigurationParameterDeserializer())
 				.create();
 	}
 	
@@ -81,6 +86,31 @@ public final class OtherStuffDeserialization implements DeserializeParent<OtherI
 
 			throw new JsonParseException(String
 					.format("Cannot deserialise json \"%s\", expected policy id but found none.", json.toString()));
+		}
+	}
+	
+	/**
+	 * 
+	 * @author Sophie Stieß
+	 *
+	 */
+	private class ConfigurationParameterDeserializer implements JsonDeserializer<SnapshotBehaviourConfigurationParameters> {
+		@Override
+		public SnapshotBehaviourConfigurationParameters deserialize(final JsonElement json, final Type typeOfT,
+				final JsonDeserializationContext context) throws JsonParseException {
+			if (json.isJsonObject()) {
+				final Gson delegate = new GsonBuilder().create();
+				final JsonObject obj = json.getAsJsonObject();
+
+				final Type type = new TypeToken<Map<String, Object>>() {
+				}.getType();
+				final Map<String, Object> map = delegate.fromJson(obj, type);
+
+				return new SnapshotBehaviourConfigurationParameters(map);
+			} else {
+				throw new JsonParseException(String
+					.format("Cannot deserialise json, expected json object but found \"%s\".", json.toString()));
+			}
 		}
 	}
 }

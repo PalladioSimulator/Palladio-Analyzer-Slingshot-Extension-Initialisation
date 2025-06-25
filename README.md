@@ -6,7 +6,7 @@ It does not hook into the graphical user interface of Palladio and is intended t
 
 This extension was created for the MENTOR DFG project.  
 
-## General Explanation about how it works.
+## General Explanation
 
 The over all goals of this extension, are (1) to stop and restart a simulation at an arbitrary point in time and (2) to apply scaling policies at the beginning of a simulation run.
 
@@ -285,5 +285,94 @@ The user must ensure, that the PCM instances are at the expected locations, othe
    org.palladiosimulator.pcmbench.perspectives.palladio
    ```
 6. copy the entire Palladio Bench folder to the Docker container.
+
+## Advanced Configuration: Deactivate Snapshot-related Behaviour Extensions.
+
+The `snapshotBehaviour` component (c.f. [Section General Explanation](#General-Explanation)) consists of multiple separate behaviour extension classes. 
+For technical details on Slingshot's behaviour read the [Simulator's Documentation](https://www.palladio-simulator.com/Palladio-Documentation-Slingshot/slingshot-simulator/).
+
+Currently (June '25), `snapshotBehaviour` contributes 11 behaviour extensions. 
+Each extension takes care of a distinct aspect of the initialisation and snapshotting mechanism. 
+Some extensions accept additional configurations, including deactivation.
+To do additional configurations, the `.config` file must be extended.
+
+The following sections describe the configurable extensions, and the required additions to the `.config` file.
+
+### Non-essential behaviour extensions
+Currently (June '25), the following behaviour extension are configurable:
+
+* `SnapshotTriggeringBehavior` 
+  - Triggers a snapshot if any policies' trigger fired. 
+  - As an additional feature, this behaviour drops (i.e. does not trigger a snapshot) scale ins adjustments on minimal architecture configurations. 
+    To deactivate this feature, add `"doDrop" : false` to the `.config` file. 
+* `SnapshotSLOTriggeringBehavior`
+  - Triggers a snapshot if a measurement is close to an SLO threshold.
+  - The "closeness" is configurable. 
+    By adding the parameter `"sensitivity" : 0` to the `.config` file, snapshots are triggered only, if measurements are greater or equal to the threshold.
+    This is also the default behaviour. 
+    By increasing the sensibility value, snapshots are triggered earlier. 
+    The maximum sensibility is `"sensitivity" : 1`. 
+* `SnapshotSLOAbortionBehavior`
+* `SnapshotAbortionBehavior`
+
+### Extending the `.config` file
+
+To further configure the configurable extension, add a field `parameters`, that maps the configurable extensions to a map of configuration values. 
+
+Example for configuring the behaviour extension `SnapshotSLOTriggeringBehavior`:
+
+```
+{
+"incomingPolicies": [],    
+"parameters" : {
+    "SnapshotSLOTriggeringBehavior" : { "active" : true, "sensitivity" : 0.5 }
+  }
+}
+```
+
+* By default, the configuration parameters and behaviour extension are associated by name. 
+  Thus, `"SnapshotSLOTriggeringBehavior"` identifies the following map as configuration parameters for that very class.
+  For deviating identification names, check the classes documentation. 
+* All configurable extensions can be deactivated by adding the "*active*" parameter and setting the value to `false`.
+  By default, all configurable extensions are activated.
+  Thus explicitly activating an extension, as done in this example is not necessary, but maybe helpful for understandability.
+* The `SnapshotSLOTriggeringBehavior` accepts an additional parameter "*sensitivity*" that must be a double value in [0,1]. 
+  Each behaviour extension defines different additional parameters, check the documentation of the classes, to learn about the available configuration parameter.
+
+Another Example:
+```
+{
+  "incomingPolicies": [],    
+  "parameters" : {
+    "SnapshotTriggeringBehavior" : { "active" : true, "doDrop" : false},
+    "SnapshotSLOTriggeringBehavior" : { "active" : false, "sensitivity" : 0},
+    "SnapshotSLOAbortionBehavior" : { "active" : false},
+    "SnapshotAbortionBehavior" : { "active" : false}
+  }
+}
+```
+* Deactivate all configurable behaviours, except for `SnapshotTriggeringBehavior`.
+* The parameter `"sensitivity"` has no effect, because the respective extension is already deactivated.
+* Do not drop any thing, when triggering snapshots with `SnapshotTriggeringBehavior`
+
+### Adding your own configurable behaviour extension
+
+All configurable behaviour extension should extend the abstract class `ConfigurableSnapshotExtension`.
+The class already implements the interface `SimulationBehaviorExtension`. 
+For further information confer the JavaDoc.
+
+### 
+
+```
+{
+"incomingPolicies": [],    
+"parameters" : {
+    "SnapshotTriggeringBehavior" : { "active" : false},
+    "SnapshotSLOTriggeringBehavior" : { "active" : false},
+    "SnapshotSLOAbortionBehavior" : { "active" : false},
+    "SnapshotAbortionBehavior" : { "active" : false}
+  }
+}
+```
 
 ## Development Pitfall (partially out of context)

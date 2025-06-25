@@ -11,13 +11,13 @@ import javax.measure.quantity.Quantity;
 import org.apache.log4j.Logger;
 import org.palladiosimulator.analyzer.slingshot.common.annotations.Nullable;
 import org.palladiosimulator.analyzer.slingshot.common.utils.PCMResourcePartitionHelper;
-import org.palladiosimulator.analyzer.slingshot.core.extension.SimulationBehaviorExtension;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.Subscribe;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.eventcontract.OnEvent;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.returntypes.Result;
 import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.graphstate.ReasonToLeave;
 import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.graphstate.StateBuilder;
 import org.palladiosimulator.analyzer.slingshot.monitor.data.events.MeasurementUpdated;
+import org.palladiosimulator.analyzer.slingshot.snapshot.api.ConfigurableSnapshotExtension;
 import org.palladiosimulator.analyzer.slingshot.snapshot.configuration.SnapshotConfiguration;
 import org.palladiosimulator.analyzer.slingshot.snapshot.events.SnapshotInitiated;
 import org.palladiosimulator.analyzer.workflow.ConstantsContainer;
@@ -46,7 +46,7 @@ import de.uka.ipd.sdq.workflow.mdsd.blackboard.MDSDBlackboard;
  *
  */
 @OnEvent(when = MeasurementUpdated.class, then = SnapshotInitiated.class)
-public class SnapshotSLOAbortionBehavior implements SimulationBehaviorExtension {
+public class SnapshotSLOAbortionBehavior extends ConfigurableSnapshotExtension {
 	private static final Logger LOGGER = Logger.getLogger(SnapshotSLOAbortionBehavior.class);
 
 	private final StateBuilder state;
@@ -67,6 +67,8 @@ public class SnapshotSLOAbortionBehavior implements SimulationBehaviorExtension 
 	@Inject
 	public SnapshotSLOAbortionBehavior(final @Nullable StateBuilder stateBuilder,
 			final @Nullable MDSDBlackboard blackboard, final @Nullable SnapshotConfiguration config) {
+		
+		super(config);
 		
 		if (PCMResourcePartitionHelper.hasSLORepository((PCMResourceSetPartition)
 				blackboard.getPartition(ConstantsContainer.DEFAULT_PCM_INSTANCE_PARTITION_ID))) {
@@ -111,7 +113,7 @@ public class SnapshotSLOAbortionBehavior implements SimulationBehaviorExtension 
 	}
 	
 	@Override
-	public boolean isActive() {
+	public boolean getActivated() {
 		return this.activated && !map.isEmpty();
 	}
 

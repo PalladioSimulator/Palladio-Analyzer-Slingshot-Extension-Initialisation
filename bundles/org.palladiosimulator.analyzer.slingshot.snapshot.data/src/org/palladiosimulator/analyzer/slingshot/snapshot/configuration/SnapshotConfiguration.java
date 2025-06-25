@@ -1,5 +1,7 @@
 package org.palladiosimulator.analyzer.slingshot.snapshot.configuration;
 
+import java.util.Map;
+
 /**
  *
  * i'm probably putting this at the wrong places, put i need to place it somewhere.
@@ -22,21 +24,22 @@ package org.palladiosimulator.analyzer.slingshot.snapshot.configuration;
 public final class SnapshotConfiguration {
 
 	private final double minDuration;
-	private final double sensitivity;
 	private final boolean startFromSnapshot;
+	
+	private final Map<String, SnapshotBehaviourConfigurationParameters> parameters;
 
-	public SnapshotConfiguration(final boolean startFromSnapshot, final double sensitivity, final double minDuration) {
+	public SnapshotConfiguration(final boolean startFromSnapshot, final double minDuration, final Map<String, SnapshotBehaviourConfigurationParameters> parameters) {
 		this.startFromSnapshot = startFromSnapshot;
-		this.sensitivity = sensitivity;
 		this.minDuration = minDuration;
+		this.parameters = parameters;
 	}
 
 	public double getMinDuration() {
 		return this.minDuration;
 	}
 
-	public double getSensitivity() {
-		return this.sensitivity;
+	public Map<String, SnapshotBehaviourConfigurationParameters> getConfigurationParameters() {
+		return this.parameters;
 	}
 
 	public boolean isStartFromSnapshot() {

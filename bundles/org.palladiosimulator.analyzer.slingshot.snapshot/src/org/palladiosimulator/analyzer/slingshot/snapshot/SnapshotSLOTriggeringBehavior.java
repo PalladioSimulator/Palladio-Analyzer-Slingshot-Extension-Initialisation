@@ -15,13 +15,13 @@ import org.apache.log4j.Logger;
 import org.eclipse.emf.common.util.EList;
 import org.palladiosimulator.analyzer.slingshot.common.annotations.Nullable;
 import org.palladiosimulator.analyzer.slingshot.common.utils.PCMResourcePartitionHelper;
-import org.palladiosimulator.analyzer.slingshot.core.extension.SimulationBehaviorExtension;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.Subscribe;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.eventcontract.OnEvent;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.returntypes.Result;
 import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.graphstate.ReasonToLeave;
 import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.graphstate.StateBuilder;
 import org.palladiosimulator.analyzer.slingshot.monitor.data.events.MeasurementUpdated;
+import org.palladiosimulator.analyzer.slingshot.snapshot.api.ConfigurableSnapshotExtension;
 import org.palladiosimulator.analyzer.slingshot.snapshot.configuration.SnapshotConfiguration;
 import org.palladiosimulator.analyzer.slingshot.snapshot.events.SnapshotInitiated;
 import org.palladiosimulator.analyzer.workflow.ConstantsContainer;
@@ -53,78 +53,97 @@ import de.uka.ipd.sdq.workflow.mdsd.blackboard.MDSDBlackboard;
  *
  */
 @OnEvent(when = MeasurementUpdated.class, then = SnapshotInitiated.class)
-public class SnapshotSLOTriggeringBehavior implements SimulationBehaviorExtension {
+public class SnapshotSLOTriggeringBehavior extends ConfigurableSnapshotExtension {
 	private static final Logger LOGGER = Logger.getLogger(SnapshotSLOTriggeringBehavior.class);
+	
+	private final static String SENSITIVITY = "sensitivity";
 
 	private final StateBuilder state;
-	private final ServiceLevelObjectiveRepository sloRepo;
 	private final Configuration semanticSpd;
 
 	private final boolean activated;
 
 	/* Calculate mapping to save time later on (probably) */
 	private final Map<MeasurementSpecification, Set<ValueRange>> mp2range;
-
-	private final double sensitivity;
+	
 	private final double minDuration;
 
 	@Inject
 	public SnapshotSLOTriggeringBehavior(final @Nullable StateBuilder state,
-			final @Nullable MDSDBlackboard blackboard, final @Nullable SnapshotConfiguration config,
-			final @Nullable Configuration semanticSpd) {
+			final @Nullable MDSDBlackboard blackboard,
+			final @Nullable Configuration semanticSpd,
+			final @Nullable SnapshotConfiguration config) {
 		
-		if (PCMResourcePartitionHelper.hasSLORepository((PCMResourceSetPartition)
-				blackboard.getPartition(ConstantsContainer.DEFAULT_PCM_INSTANCE_PARTITION_ID))) {
-			this.sloRepo = PCMResourcePartitionHelper.getSLORepository((PCMResourceSetPartition)
-					blackboard.getPartition(ConstantsContainer.DEFAULT_PCM_INSTANCE_PARTITION_ID));
+		super(config);
+		
+		if (state != null || semanticSpd != null || blackboard != null) {
+			this.state = state;
+			this.semanticSpd = semanticSpd; 	
+			this.mp2range = this.initMeasuringPoint2RangeMap(blackboard);
+			this.minDuration = config.getMinDuration();
+
+			this.activated = super.isActive();
 		} else {
-			this.sloRepo = null;
-		}
-
-		this.activated = state != null && sloRepo != null && config != null && semanticSpd != null
-				&& !sloRepo.getServicelevelobjectives().isEmpty();
-
-		this.state = state;
-		this.semanticSpd = semanticSpd; // maybe optional?
-
-		this.minDuration = activated ? config.getMinDuration() : 0;
-		this.sensitivity = activated ? config.getSensitivity() : 0;
-
-		this.mp2range = new HashMap<>();
-
-		if (activated) {
-			for (final ServiceLevelObjective slo : sloRepo.getServicelevelobjectives()) {
-
-				if (slo.getLowerThreshold() == null && slo.getUpperThreshold() == null) {
-					LOGGER.debug(
-							String.format("No thresholds for %s [%s], will be ignored", slo.getName(), slo.getId()));
-					continue;
-				}
-				if (slo.getLowerThreshold() != null && slo.getUpperThreshold() == null) {
-					LOGGER.debug(String.format("No upper threshold for %s [%s], will be ignored", slo.getName(),
-							slo.getId()));
-					continue;
-				}
-
-				final MeasurementSpecification mp = slo.getMeasurementSpecification();
-				if (!mp2range.containsKey(mp)) {
-					mp2range.put(mp, new HashSet<>());
-				}
-				if (slo.getLowerThreshold() == null) {
-					mp2range.get(mp).add(new SingleEndedRange(
-							(Measure<Object, Quantity>) slo.getUpperThreshold().getThresholdLimit(), sensitivity));
-				} else {
-					mp2range.get(mp).add(new DoubleEndedRange(
-							(Measure<Object, Quantity>) slo.getUpperThreshold().getThresholdLimit(),
-							(Measure<Object, Quantity>) slo.getLowerThreshold().getThresholdLimit(), sensitivity));
-				}
-			}
+			this.activated = false;
+			this.state = null;
+			this.semanticSpd = null;
+			this.mp2range = null;
+			this.minDuration = -1;
+			
+			LOGGER.warn(String.format("Extension %s is deactivated because a required parameter is null.", this.getClass().getSimpleName()));
 		}
 	}
-
+	
 	@Override
-	public boolean isActive() {
+	public boolean getActivated() {
 		return this.activated;
+	}
+
+	/**
+	 * 
+	 * Create a map with pairs of {@link MeasurementSpecification} and {@link ValueRange}.
+	 * 
+	 * @param blackboard blackboard to provide access to the SLOs.
+	 * @return A map of ({@link MeasurementSpecification}, {@link ValueRange}) pairs, or an empty map, if the SLO repository is missing or empty.
+	 */
+	private Map<MeasurementSpecification, Set<ValueRange>> initMeasuringPoint2RangeMap(final MDSDBlackboard blackboard) {
+		final Map<MeasurementSpecification, Set<ValueRange>> map = new HashMap<>();
+		
+		if (!PCMResourcePartitionHelper.hasSLORepository((PCMResourceSetPartition)
+				blackboard.getPartition(ConstantsContainer.DEFAULT_PCM_INSTANCE_PARTITION_ID))) {
+			return map;
+		}
+		
+		final ServiceLevelObjectiveRepository sloRepo = PCMResourcePartitionHelper.getSLORepository((PCMResourceSetPartition)
+				blackboard.getPartition(ConstantsContainer.DEFAULT_PCM_INSTANCE_PARTITION_ID));
+		final double sensitivity = toggle.hasParameter(SENSITIVITY, Double.class) ? toggle.getParameter(SENSITIVITY) : 0.0;
+		
+		for (final ServiceLevelObjective slo : sloRepo.getServicelevelobjectives()) {
+			if (slo.getLowerThreshold() == null && slo.getUpperThreshold() == null) {
+				LOGGER.debug(
+						String.format("No thresholds for %s [%s], will be ignored", slo.getName(), slo.getId()));
+				continue;
+			}
+			if (slo.getLowerThreshold() != null && slo.getUpperThreshold() == null) {
+				LOGGER.debug(String.format("No upper threshold for %s [%s], will be ignored", slo.getName(),
+						slo.getId()));
+				continue;
+			}
+
+			final MeasurementSpecification mp = slo.getMeasurementSpecification();
+			if (!map.containsKey(mp)) {
+				map.put(mp, new HashSet<>());
+			}
+			if (slo.getLowerThreshold() == null) {
+				map.get(mp).add(new SingleEndedRange(
+						(Measure<Object, Quantity>) slo.getUpperThreshold().getThresholdLimit(), sensitivity));
+			} else {
+				map.get(mp).add(new DoubleEndedRange(
+						(Measure<Object, Quantity>) slo.getUpperThreshold().getThresholdLimit(),
+						(Measure<Object, Quantity>) slo.getLowerThreshold().getThresholdLimit(), sensitivity));
+			}
+		}
+		return map;
 	}
 
 	@Subscribe

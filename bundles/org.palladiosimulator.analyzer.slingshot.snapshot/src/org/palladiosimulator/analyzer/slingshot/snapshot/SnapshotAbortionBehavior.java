@@ -14,12 +14,13 @@ import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.ModelAdjustmen
 import org.palladiosimulator.analyzer.slingshot.common.annotations.Nullable;
 import org.palladiosimulator.analyzer.slingshot.common.events.modelchanges.ModelAdjusted;
 import org.palladiosimulator.analyzer.slingshot.core.api.SimulationScheduling;
-import org.palladiosimulator.analyzer.slingshot.core.extension.SimulationBehaviorExtension;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.Subscribe;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.eventcontract.OnEvent;
 import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.graphstate.ReasonToLeave;
 import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.graphstate.StateBuilder;
 import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.providers.InitWrapper;
+import org.palladiosimulator.analyzer.slingshot.snapshot.api.ConfigurableSnapshotExtension;
+import org.palladiosimulator.analyzer.slingshot.snapshot.configuration.SnapshotConfiguration;
 import org.palladiosimulator.analyzer.slingshot.snapshot.events.SnapshotInitiated;
 import org.palladiosimulator.semanticspd.CompetingConsumersGroupCfg;
 import org.palladiosimulator.semanticspd.Configuration;
@@ -47,7 +48,7 @@ import org.palladiosimulator.spd.targets.TargetGroup;
  *
  */
 @OnEvent(when = ModelAdjusted.class, then = {})
-public class SnapshotAbortionBehavior implements SimulationBehaviorExtension {
+public class SnapshotAbortionBehavior extends ConfigurableSnapshotExtension {
 	private static final Logger LOGGER = Logger.getLogger(SnapshotAbortionBehavior.class);
 
 	private final List<ModelAdjustmentRequested> adjustmentEvents;
@@ -66,16 +67,19 @@ public class SnapshotAbortionBehavior implements SimulationBehaviorExtension {
 	@Inject
 	public SnapshotAbortionBehavior(final @Nullable StateBuilder state,
 			final @Nullable InitWrapper eventsWapper, final SimulationScheduling scheduling,
-			@Nullable final Configuration config, @Nullable final SPD spd) {
+			@Nullable final Configuration semanticSpd, @Nullable final SPD spd, @Nullable final SnapshotConfiguration snapConfig) {
+		
+		super(snapConfig);
+		
 		this.state = state;
 		this.scheduling = scheduling;
 		this.adjustmentEvents = eventsWapper == null ? null : eventsWapper.getAdjustmentEvents();
 
-		this.config = config;
+		this.config = semanticSpd;
 
 		this.tg2size = new HashMap<>();
 
-		if (spd != null && config != null) {
+		if (spd != null && semanticSpd != null) {
 
 			/*
 			 * [S3] Consider only target group configs with a matching target group. This is
@@ -86,7 +90,7 @@ public class SnapshotAbortionBehavior implements SimulationBehaviorExtension {
 			final Set<EObject> targetGroups = spd.getTargetGroups().stream().map(tg -> getUnitOf(tg))
 					.collect(Collectors.toSet());
 
-			for (final TargetGroupCfg tgcfg : config.getTargetCfgs()) {
+			for (final TargetGroupCfg tgcfg : semanticSpd.getTargetCfgs()) {
 				if (targetGroups.contains(getUnitOf(tgcfg))) {
 					tg2size.put(tgcfg, getSizeOf(tgcfg));
 				}
@@ -97,7 +101,7 @@ public class SnapshotAbortionBehavior implements SimulationBehaviorExtension {
 	}
 
 	@Override
-	public boolean isActive() {
+	public boolean getActivated() {
 		return this.activated;
 	}
 
