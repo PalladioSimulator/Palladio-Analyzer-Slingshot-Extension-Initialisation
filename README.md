@@ -317,7 +317,13 @@ Currently (June '25), the following behaviour extension are configurable:
 
 ### Extending the `.config` file
 
-To further configure the configurable extension, add a field `parameters`, that maps the configurable extensions to a map of configuration values. 
+To further configure the configurable extension, add a field `parameters`, that associates a configurable extensions with a map of configuration parameters nd values. 
+By default configurable behaviour extension are identified by class name.
+Deviating identification names should be documented and must be looked up in the JavaDoc.
+
+All configurable extension accept the parameter `"active"` for deactivating the extension. 
+Unless specified otherwise, all extensions are active. 
+Additional available parameters per extension must be looked up in the JavaDoc. 
 
 Example for configuring the behaviour extension `SnapshotSLOTriggeringBehavior`:
 
@@ -330,12 +336,11 @@ Example for configuring the behaviour extension `SnapshotSLOTriggeringBehavior`:
 }
 ```
 
-* By default, the configuration parameters and behaviour extension are associated by name. 
-  Thus, `"SnapshotSLOTriggeringBehavior"` identifies the following map as configuration parameters for that very class.
-  For deviating identification names, check the classes documentation. 
+*  
+  The key `"SnapshotSLOTriggeringBehavior"` identifies the following map as configuration parameters for the class with that very name.
 * All configurable extensions can be deactivated by adding the "*active*" parameter and setting the value to `false`.
   By default, all configurable extensions are activated.
-  Thus explicitly activating an extension, as done in this example is not necessary, but maybe helpful for understandability.
+  Thus explicitly activating an extension, as done in this example, is not necessary, but may be helpful for understandability.
 * The `SnapshotSLOTriggeringBehavior` accepts an additional parameter "*sensitivity*" that must be a double value in [0,1]. 
   Each behaviour extension defines different additional parameters, check the documentation of the classes, to learn about the available configuration parameter.
 
@@ -353,7 +358,7 @@ Another Example:
 ```
 * Deactivate all configurable behaviours, except for `SnapshotTriggeringBehavior`.
 * The parameter `"sensitivity"` has no effect, because the respective extension is already deactivated.
-* Do not drop any thing, when triggering snapshots with `SnapshotTriggeringBehavior`
+* Do not drop anything, when triggering snapshots with `SnapshotTriggeringBehavior`
 
 ### Adding your own configurable behaviour extension
 
@@ -361,18 +366,5 @@ All configurable behaviour extension should extend the abstract class `Configura
 The class already implements the interface `SimulationBehaviorExtension`. 
 For further information confer the JavaDoc.
 
-### 
-
-```
-{
-"incomingPolicies": [],    
-"parameters" : {
-    "SnapshotTriggeringBehavior" : { "active" : false},
-    "SnapshotSLOTriggeringBehavior" : { "active" : false},
-    "SnapshotSLOAbortionBehavior" : { "active" : false},
-    "SnapshotAbortionBehavior" : { "active" : false}
-  }
-}
-```
 
 ## Development Pitfall (partially out of context)
