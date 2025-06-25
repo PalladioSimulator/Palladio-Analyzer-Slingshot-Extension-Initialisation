@@ -118,6 +118,10 @@ public class SnapshotSLOTriggeringBehavior extends ConfigurableSnapshotExtension
 				blackboard.getPartition(ConstantsContainer.DEFAULT_PCM_INSTANCE_PARTITION_ID));
 		final double sensitivity = toggle.hasParameter(SENSITIVITY, Double.class) ? toggle.getParameter(SENSITIVITY) : 0.0;
 		
+		if (sensitivity < 0 || sensitivity > 1) {
+			throw new IllegalArgumentException("Parameter \"sensitivity\" must be in [0,1] but is " + sensitivity + ".");
+		}
+		
 		for (final ServiceLevelObjective slo : sloRepo.getServicelevelobjectives()) {
 			if (slo.getLowerThreshold() == null && slo.getUpperThreshold() == null) {
 				LOGGER.debug(
