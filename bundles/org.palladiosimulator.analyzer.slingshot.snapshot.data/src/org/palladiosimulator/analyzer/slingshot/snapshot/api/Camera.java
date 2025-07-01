@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import org.apache.log4j.Logger;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.jobs.Job;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.AbstractJobEvent;
+import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobAborted;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobFinished;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobInitiated;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobProgressed;
@@ -23,6 +24,7 @@ import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities.Thi
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.events.ClosedWorkloadUserInitiated;
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.events.InterArrivalUserInitiated;
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.events.UsageModelPassedElement;
+import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.events.UserAborted;
 import org.palladiosimulator.analyzer.slingshot.common.events.DESEvent;
 import org.palladiosimulator.analyzer.slingshot.common.utils.LambdaVisitor;
 import org.palladiosimulator.analyzer.slingshot.common.utils.events.ModelPassedEvent;
@@ -52,19 +54,19 @@ import de.uka.ipd.sdq.scheduler.resources.active.AbstractActiveResource;
 public abstract class Camera {
 
 	protected static final Logger LOGGER = Logger.getLogger(Camera.class);
-	
+
 	/** Beware: keep in sync with original */
 	private static final String FAKE = "fakeID";
 
-	/** Access to past events, that must go into the snapshot.*/
+	/** Access to past events, that must go into the snapshot. */
 	private final InMemoryRecorder record;
 
-	/** Access to future events, that must go into the snapshot.*/
+	/** Access to future events, that must go into the snapshot. */
 	private final SimulationEngine engine;
 
 	protected final List<DESEvent> additionalEvents = new ArrayList<>();
 	private final Collection<SPDAdjustorState> states;
-	
+
 	private final LambdaVisitor<DESEvent, DESEvent> adjustOffset;
 
 	/**
@@ -73,12 +75,13 @@ public abstract class Camera {
 	 * @param engine
 	 * @param states
 	 */
-	public Camera(final InMemoryRecorder record, final SimulationEngine engine, final Collection<SPDAdjustorState> states) {
+	public Camera(final InMemoryRecorder record, final SimulationEngine engine,
+			final Collection<SPDAdjustorState> states) {
 		this.record = record;
 		this.engine = engine;
 
 		this.states = states;
-		
+
 		this.adjustOffset = new LambdaVisitor<DESEvent, DESEvent>()
 				.on(UsageModelPassedElement.class).then(this::setOffset)
 				.on(SEFFModelPassedElement.class).then(this::setOffset)
@@ -86,12 +89,12 @@ public abstract class Camera {
 				.on(InterArrivalUserInitiated.class).then(this::reduceDelay)
 				.on(DESEvent.class).then(e -> e);
 	}
-	
+
 	/**
 	 * ..and this is like releasing the shutter.
 	 */
 	public abstract Snapshot takeSnapshot();
-	
+
 	/**
 	 * include some more events.
 	 * 
@@ -100,18 +103,19 @@ public abstract class Camera {
 	public void addEvent(final DESEvent event) {
 		additionalEvents.add(event);
 	}
-	
+
 	/**
-	 * Adjust the times in all {@link SPDAdjustorState}s. 
+	 * Adjust the times in all {@link SPDAdjustorState}s.
 	 * 
 	 * The times are adjusted with the current simulation time.
 	 * 
 	 * @return collection of state values with updated time
 	 */
-	protected Collection<SPDAdjustorState> snapStates(){
-		return this.states.stream().map(s -> this.copyAndOffset(s, engine.getSimulationInformation().currentSimulationTime())).toList();
+	protected Collection<SPDAdjustorState> snapStates() {
+		return this.states.stream()
+				.map(s -> this.copyAndOffset(s, engine.getSimulationInformation().currentSimulationTime())).toList();
 	}
-	
+
 	/**
 	 * Adjust the time of the latest adjustment and the time of the cooldown to the
 	 * reference time. Also creates a copy.
@@ -120,19 +124,20 @@ public abstract class Camera {
 	 * the reference time is t = 10 s, then the adjusted values will be latest
 	 * adjustment at t = -5 s and cooldown end at t = 5 s.
 	 *
-	 * @param states   values to be adjusted
+	 * @param states        values to be adjusted
 	 * @param referenceTime time to adjust to.
 	 * @return copy of state values with adjusted values.
 	 */
 	private SPDAdjustorState copyAndOffset(final SPDAdjustorState states, final double referenceTime) {
 		final TargetGroupState tgs = states.getTargetGroupState();
-		tgs.addEnactedPolicy(tgs.getLastScalingPolicyEnactmentTime() - referenceTime, tgs.getLastEnactedScalingPolicy());
-		
+		tgs.addEnactedPolicy(tgs.getLastScalingPolicyEnactmentTime() - referenceTime,
+				tgs.getLastEnactedScalingPolicy());
+
 		states.setLatestAdjustmentAtSimulationTime(states.getLatestAdjustmentAtSimulationTime() - referenceTime);
-		
+
 		final double coolDownEnd = states.getCoolDownEnd() > 0.0 ? states.getCoolDownEnd() - referenceTime : 0.0;
 		states.setCoolDownEnd(coolDownEnd);
-		
+
 		return states;
 	}
 
@@ -150,20 +155,20 @@ public abstract class Camera {
 	 */
 	protected List<ModelAdjustmentRequested> getScheduledReconfigurations() {
 		final List<ModelAdjustmentRequested> events = new ArrayList<>();
-	
+
 		/* Scheduled ModelAdjustmentRequested */
 		engine.getScheduledEvents().stream().filter(ModelAdjustmentRequested.class::isInstance)
 				.map(ModelAdjustmentRequested.class::cast).forEach(events::add);
-	
+
 		/* ModelAdjustmentRequested already processed into SnapshotInitiated events */
 		engine.getScheduledEvents().stream().filter(SnapshotInitiated.class::isInstance)
 				.map(SnapshotInitiated.class::cast).filter(e -> e.getTriggeringEvent().isPresent())
 				.forEach(e -> events.add(e.getTriggeringEvent().get()));
-	
+
 		/* ModelAdjustmentRequested already processed into SnapshotTaken events */
 		engine.getScheduledEvents().stream().filter(SnapshotTaken.class::isInstance).map(SnapshotTaken.class::cast)
 				.filter(e -> e.getTriggeringEvent().isPresent()).forEach(e -> events.add(e.getTriggeringEvent().get()));
-	
+
 		return events;
 	}
 
@@ -171,15 +176,15 @@ public abstract class Camera {
 	 * Denormalizes the demand of the open jobs and creates {@link JobInitiated}
 	 * events to reinsert them to their respective Processor Sharing Resource.
 	 *
-	 * C.f. {@link SerializingCamera#createInitEventsForFCFS(Set, Set)} for details on the
-	 * demand denormalized.
+	 * C.f. {@link SerializingCamera#createInitEventsForFCFS(Set, Set)} for details
+	 * on the demand denormalized.
 	 * 
 	 * @param jobrecords
 	 * @return
 	 */
 	protected Set<JobInitiated> createInitEventsForProcSharing(final Set<RecordedJob> jobrecords) {
 		final Set<JobInitiated> rval = new HashSet<>();
-	
+
 		for (final RecordedJob jobRecord : jobrecords) {
 			// do the Proc Sharing Math
 			final double ratio = jobRecord.getNormalizedDemand() == 0 ? 0
@@ -187,7 +192,7 @@ public abstract class Camera {
 			final double reducedRequested = jobRecord.getRequestedDemand() * ratio;
 			jobRecord.getJob().updateDemand(reducedRequested);
 			rval.add(new JobInitiated(jobRecord.getJob()));
-	
+
 		}
 		return rval;
 	}
@@ -210,12 +215,13 @@ public abstract class Camera {
 	 *                       snapshot
 	 * @return events to reinsert all open jobs to their respective FCFS Resource
 	 */
-	protected Set<JobInitiated> createInitEventsForFCFS(final Set<RecordedJob> jobrecords, final Set<AbstractJobEvent> fcfsProgressed) {
+	protected Set<JobInitiated> createInitEventsForFCFS(final Set<RecordedJob> jobrecords,
+			final Set<AbstractJobEvent> fcfsProgressed) {
 		final Set<JobInitiated> rval = new HashSet<>();
-	
+
 		final Map<Job, AbstractJobEvent> progressedJobs = new HashMap<>();
 		fcfsProgressed.stream().forEach(event -> progressedJobs.put(event.getEntity(), event));
-	
+
 		for (final RecordedJob record : jobrecords) {
 			if (record.getNormalizedDemand() == 0) { // For Linking Jobs.
 				if (record.getJob().getDemand() != 0) {
@@ -246,28 +252,27 @@ public abstract class Camera {
 	protected void log(final Set<DESEvent> evt) {
 		LOGGER.info("DEMANDS");
 		evt.stream().filter(e -> (e instanceof JobInitiated)).map(e -> (JobInitiated) e)
-		.forEach(e -> LOGGER.info(e.getEntity().getDemand()));
+				.forEach(e -> LOGGER.info(e.getEntity().getDemand()));
 		LOGGER.info("TIMES");
 		evt.stream().filter(e -> (e instanceof UsageModelPassedElement<?>)).map(e -> (UsageModelPassedElement<?>) e)
-		.forEach(e -> LOGGER.info(e.time()));
+				.forEach(e -> LOGGER.info(e.time()));
 		LOGGER.info("CWUI");
 		evt.stream().filter(e -> (e instanceof ClosedWorkloadUserInitiated)).map(e -> (ClosedWorkloadUserInitiated) e)
-		.forEach(e -> LOGGER.info(e.delay() + " " + e.time()));
+				.forEach(e -> LOGGER.info(e.delay() + " " + e.time()));
 	}
 
 	protected DESEvent setOffset(final UsageModelPassedElement<?> event) {
 		final double simulationTime = engine.getSimulationInformation().currentSimulationTime();
 		if (event.getModelElement() instanceof Start && event.time() <= simulationTime) {
 			setOffset(event.time(), simulationTime, event);
-	
+
 		}
 		return event;
 	}
 
-	
 	protected DESEvent setOffset(final SEFFModelPassedElement<?> event) {
-		final double simulationTime =  engine.getSimulationInformation().currentSimulationTime();
-		if (event.getModelElement() instanceof StartAction && event.time() <= simulationTime) {	
+		final double simulationTime = engine.getSimulationInformation().currentSimulationTime();
+		if (event.getModelElement() instanceof StartAction && event.time() <= simulationTime) {
 			setOffset(event.time(), simulationTime, event);
 		}
 		return event;
@@ -284,13 +289,13 @@ public abstract class Camera {
 	 */
 	protected DESEvent reduceThinktime(final ClosedWorkloadUserInitiated event) {
 		final double simulationTime = engine.getSimulationInformation().currentSimulationTime();
-		
+
 		final double remainingthinktime = event.time() - simulationTime;
-	
+
 		final CoreFactory coreFactory = CoreFactory.eINSTANCE;
 		final PCMRandomVariable var = coreFactory.createPCMRandomVariable();
 		var.setSpecification(String.valueOf(remainingthinktime));
-  
+
 		final ThinkTime newThinktime = new ThinkTime(var);
 		return new ClosedWorkloadUserInitiated(event.getEntity(), newThinktime);
 	}
@@ -320,7 +325,7 @@ public abstract class Camera {
 	 *
 	 * @param eventTime      publication point in time from previous simulation run
 	 * @param simulationTime current time of the simulation
-	 * @param event    the event to be modified
+	 * @param event          the event to be modified
 	 */
 	private void setOffset(final double eventTime, final double simulationTime, final ModelPassedEvent<?> event) {
 		if (eventTime < 0) {
@@ -339,31 +344,61 @@ public abstract class Camera {
 	 */
 	protected Set<DESEvent> collectAndOffsetEvents() {
 		final Set<DESEvent> relevantEvents = engine.getScheduledEvents();
-	
+
+		this.handleFELAbortions(relevantEvents);
+
 		// get events to recreate state of queues
 		final Set<RecordedJob> fcfsRecords = record.getFCFSJobRecords();
 		final Set<RecordedJob> procsharingRecords = record.getProcSharingJobRecords();
-	
+
 		final Set<AbstractJobEvent> progressedFcfs = relevantEvents.stream()
 				.filter(e -> (e instanceof JobProgressed) || (e instanceof JobFinished)).map(e -> (AbstractJobEvent) e)
 				.collect(Collectors.toSet());
-	
+
 		relevantEvents.addAll(this.createInitEventsForFCFS(fcfsRecords, progressedFcfs));
 		relevantEvents.addAll(this.createInitEventsForProcSharing(procsharingRecords));
-	
+
 		relevantEvents.addAll(record.getRecordedCalculators());
-	
+
 		relevantEvents.removeIf(e -> this.isFake(e));
-		
+
 		final Set<DESEvent> offsettedEvents = relevantEvents.stream().map(adjustOffset).collect(Collectors.toSet());
 		return offsettedEvents;
+	}
+
+	/**
+	 * Call the abortion handling of the recorder for all abortion events from the
+	 * FEL.
+	 * 
+	 * This is necessary, because the simulation engine (may) deliver events that
+	 * happen at the same point in time in arbitrary order, thus if an abortion
+	 * event is published at the same point in time as the {@link SnapshotTaken}
+	 * event, we must explicitly remove the aborted jobs and open calculators from
+	 * the record.
+	 * 
+	 * Otherwise, we include superfluous content in the snapshot, that might remain
+	 * there forever, as we do not include abortion events in the snapshot, or even
+	 * cause problems on (de-)serialiazation because the event's entities refer to
+	 * missing model elements.
+	 * 
+	 * Note: [S3] i did not manage to create this scenario manually, thus this is
+	 * untested.
+	 * 
+	 * @param felEvents events from the FEL
+	 */
+	private void handleFELAbortions(final Set<DESEvent> felEvents) {
+		felEvents.stream().filter(e -> (e instanceof JobAborted) && !this.isFake(e)).map(e -> (JobAborted) e)
+				.forEach(e -> record.removeJobRecord(e));
+		felEvents.stream().filter(e -> (e instanceof UserAborted) && !this.isFake(e)).map(e -> (UserAborted) e)
+				.forEach(e -> record.removeOpenCalculators(e));
 	}
 
 	/**
 	 * Check whether the given event was injected to trigger a state update only.
 	 * 
 	 * @param event
-	 * @return true, if the event was injected for triggering a state update, false if it occured "naturally"
+	 * @return true, if the event was injected for triggering a state update, false
+	 *         if it occured "naturally"
 	 */
 	private boolean isFake(final DESEvent event) {
 		if (event instanceof final AbstractJobEvent jobEvent) {
