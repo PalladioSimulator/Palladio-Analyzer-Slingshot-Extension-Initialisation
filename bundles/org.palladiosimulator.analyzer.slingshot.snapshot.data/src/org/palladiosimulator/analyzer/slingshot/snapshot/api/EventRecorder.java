@@ -5,8 +5,8 @@ import java.util.Set;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.AbstractJobEvent;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobInitiated;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFModelPassedElement;
+import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities.User;
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.events.UsageModelPassedElement;
-import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.events.UserAborted;
 import org.palladiosimulator.analyzer.slingshot.common.utils.events.ModelPassedEvent;
 import org.palladiosimulator.analyzer.slingshot.snapshot.entities.RecordedJob;
 import org.palladiosimulator.pcm.seff.StartAction;
@@ -99,7 +99,7 @@ public interface EventRecorder {
 	 *
 	 * @param event event that indicates abortion of a user.
 	 */
-	public void removeOpenCalculators(final UserAborted event);
+	public void removeOpenCalculators(final User user);
 	
 	/**
 	 * Create and store record for the job entity in the given event.

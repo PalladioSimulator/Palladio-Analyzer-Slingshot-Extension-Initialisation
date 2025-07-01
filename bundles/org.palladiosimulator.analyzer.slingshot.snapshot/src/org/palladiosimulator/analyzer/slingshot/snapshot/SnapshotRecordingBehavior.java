@@ -126,7 +126,7 @@ public class SnapshotRecordingBehavior implements SimulationBehaviorExtension {
 
 	@Subscribe
 	public void removeAbortedCalculators(final UserAborted event) {
-		this.recorder.removeOpenCalculators(event);
+		this.recorder.removeOpenCalculators(event.getEntity().getUser());
 	}
 	
 	/**

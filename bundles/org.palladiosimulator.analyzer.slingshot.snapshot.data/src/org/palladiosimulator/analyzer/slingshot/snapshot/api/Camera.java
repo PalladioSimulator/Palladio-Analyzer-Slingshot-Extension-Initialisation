@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
+import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.jobs.ActiveJob;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.jobs.Job;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.AbstractJobEvent;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobAborted;
@@ -19,8 +20,10 @@ import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.even
 import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.ModelAdjustmentRequested;
 import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.SPDAdjustorState;
 import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.TargetGroupState;
+import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.ResourceDemandRequestAborted;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFModelPassedElement;
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities.ThinkTime;
+import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities.User;
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.events.ClosedWorkloadUserInitiated;
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.events.InterArrivalUserInitiated;
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.events.UsageModelPassedElement;
@@ -346,6 +349,7 @@ public abstract class Camera {
 		final Set<DESEvent> relevantEvents = engine.getScheduledEvents();
 
 		this.handleFELAbortions(relevantEvents);
+		relevantEvents.removeIf(e -> this.isAbortion(e));
 
 		// get events to recreate state of queues
 		final Set<RecordedJob> fcfsRecords = record.getFCFSJobRecords();
@@ -387,10 +391,18 @@ public abstract class Camera {
 	 * @param felEvents events from the FEL
 	 */
 	private void handleFELAbortions(final Set<DESEvent> felEvents) {
-		felEvents.stream().filter(e -> (e instanceof JobAborted) && !this.isFake(e)).map(e -> (JobAborted) e)
-				.forEach(e -> record.removeJobRecord(e));
+		final List<JobAborted> abortions = felEvents.stream().filter(e -> (e instanceof JobAborted) && !this.isFake(e)).map(e -> (JobAborted) e).toList();
+		
+		abortions.stream().forEach(e -> record.removeJobRecord(e));
+
+		final List<User> users = abortions.stream().filter(e -> e.getEntity() instanceof ActiveJob).map(e -> (ActiveJob) e.getEntity()).map(e -> e.getRequest().getSeffInterpretationContext().getRequestProcessingContext().getUser()).toList();
+		users.stream().forEach(e -> record.removeOpenCalculators(e));
+		
 		felEvents.stream().filter(e -> (e instanceof UserAborted) && !this.isFake(e)).map(e -> (UserAborted) e)
-				.forEach(e -> record.removeOpenCalculators(e));
+				.forEach(e -> record.removeOpenCalculators(e.getEntity().getUser()));
+		
+		felEvents.stream().filter(e -> (e instanceof ResourceDemandRequestAborted) && !this.isFake(e)).map(e -> (ResourceDemandRequestAborted) e)
+				.forEach(e -> record.removeOpenCalculators(e.getEntity().getUser()));
 	}
 
 	/**
@@ -406,5 +418,18 @@ public abstract class Camera {
 		} else {
 			return false;
 		}
+	}
+	
+	/**
+	 * Check whether the given event is part of the abortion handling.
+	 * 
+	 * As of now, {@link JobAborted}, {@link ResourceDemandRequestAborted} and {@link UserAborted} are events for abortion handling. 
+	 * 
+	 * @param event
+	 * @return true, if the evens is any event of the abortion handling.
+	 */
+	private boolean isAbortion(final DESEvent event) {
+		return JobAborted.class.isInstance(event) || ResourceDemandRequestAborted.class.isInstance(event) ||  UserAborted.class.isInstance(event);
+		
 	}
 }
