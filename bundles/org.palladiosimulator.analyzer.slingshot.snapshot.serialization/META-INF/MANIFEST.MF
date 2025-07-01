@@ -28,4 +28,5 @@ Require-Bundle: com.google.gson,
  org.palladiosimulator.analyzer.slingshot.cost,
  org.palladiosimulator.analyzer.slingshot.core,
  org.palladiosimulator.probeframework,
- org.palladiosimulator.monitorrepository
+ org.palladiosimulator.monitorrepository,
+ org.apache.log4j

@@ -7,11 +7,14 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+import org.apache.log4j.Logger;
 import org.palladiosimulator.analyzer.slingshot.common.events.AbstractGenericEvent;
 import org.palladiosimulator.analyzer.slingshot.common.events.DESEvent;
+import org.palladiosimulator.analyzer.slingshot.snapshot.serialization.exception.ModelElementWriteException;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonIOException;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonPrimitive;
@@ -29,6 +32,8 @@ import com.google.gson.stream.JsonWriter;
  * 
  */
 public class DESEventTypeAdapterFactory implements TypeAdapterFactory {
+	
+	private static final Logger LOGGER = Logger.getLogger(DESEventTypeAdapterFactory.class);
 
 	/**
 	 * Names for the fields to be serialized into the JSON. Does not match names of
@@ -93,10 +98,20 @@ public class DESEventTypeAdapterFactory implements TypeAdapterFactory {
 		return new TypeAdapter<DESEvent>() {
 			@Override
 			public void write(final JsonWriter out, final DESEvent value) throws IOException {
-				final JsonObject obj = new JsonObject();
-				obj.addProperty(FIELD_NAME_CLASS, value.getClass().getCanonicalName());
-				obj.add(FIELD_NAME_EVENT, delegate.toJsonTree(value));
-				elementAdapter.write(out, obj);
+				try {
+					final JsonObject obj = new JsonObject();
+					obj.addProperty(FIELD_NAME_CLASS, value.getClass().getCanonicalName());
+					obj.add(FIELD_NAME_EVENT, delegate.toJsonTree(value));
+					elementAdapter.write(out, obj);
+				} catch (final ModelElementWriteException e) {
+					LOGGER.info(String.format("Skip event %s with reason: \"%s\".", value.toString(), e.getMessage()));			
+				} catch (final JsonIOException e) {
+					if (e.getCause() instanceof ModelElementWriteException) {
+						LOGGER.info(String.format("Skip event %s with reason: \"%s\".", value.toString(), e.getCause().getMessage()));			
+					} else {
+						throw e;
+					}
+				}
 			}
 
 			@Override
@@ -128,8 +143,7 @@ public class DESEventTypeAdapterFactory implements TypeAdapterFactory {
 
 				} catch (final ClassNotFoundException e) {
 					throw new JsonParseException("Failed to parse message: " + jsonElement, e);
-				}
-
+				} 
 			}
 
 			/**
