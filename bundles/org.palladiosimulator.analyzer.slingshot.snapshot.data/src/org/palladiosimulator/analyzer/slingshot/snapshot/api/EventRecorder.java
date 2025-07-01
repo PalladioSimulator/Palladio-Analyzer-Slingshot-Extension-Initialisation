@@ -2,10 +2,11 @@ package org.palladiosimulator.analyzer.slingshot.snapshot.api;
 
 import java.util.Set;
 
-import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobFinished;
+import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.AbstractJobEvent;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobInitiated;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFModelPassedElement;
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.events.UsageModelPassedElement;
+import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.events.UserAborted;
 import org.palladiosimulator.analyzer.slingshot.common.utils.events.ModelPassedEvent;
 import org.palladiosimulator.analyzer.slingshot.snapshot.entities.RecordedJob;
 import org.palladiosimulator.pcm.seff.StartAction;
@@ -94,6 +95,13 @@ public interface EventRecorder {
 	public void removeFinishedCalculator(final SEFFModelPassedElement<StopAction> event);
 
 	/**
+	 * Delete all open calculators associated with the aborted user.
+	 *
+	 * @param event event that indicates abortion of a user.
+	 */
+	public void removeOpenCalculators(final UserAborted event);
+	
+	/**
 	 * Create and store record for the job entity in the given event.
 	 *
 	 * @param event event holding the job entity
@@ -114,6 +122,6 @@ public interface EventRecorder {
 	 *
 	 * @param event event holding the job entity
 	 */
-	public void removeJobRecord(final JobFinished event);
+	public void removeJobRecord(final AbstractJobEvent event);
 
 }

@@ -12,11 +12,12 @@ import org.eclipse.emf.ecore.EObject;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.jobs.ActiveJob;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.jobs.Job;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.jobs.LinkingJob;
-import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobFinished;
+import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.AbstractJobEvent;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobInitiated;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFModelPassedElement;
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities.User;
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.events.UsageModelPassedElement;
+import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.events.UserAborted;
 import org.palladiosimulator.analyzer.slingshot.common.utils.events.ModelPassedEvent;
 import org.palladiosimulator.analyzer.slingshot.snapshot.api.EventRecorder;
 import org.palladiosimulator.pcm.core.entity.Entity;
@@ -103,9 +104,18 @@ public class InMemoryRecorder implements EventRecorder {
 			}
 		}
 	}
+	
+	@Override
+	public void removeOpenCalculators(final UserAborted event) {
+		final User user = event.getEntity().getUser();
+		
+		if (this.openCalculators.containsKey(user)) {
+			this.openCalculators.remove(user);
+		}
+	}
 
 	@Override
-	public void removeJobRecord(final JobFinished event) {
+	public void removeJobRecord(final AbstractJobEvent event) {
 		openJob.remove(this.getUser(event.getEntity()));
 	}
 

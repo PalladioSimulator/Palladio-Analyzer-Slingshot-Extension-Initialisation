@@ -14,6 +14,7 @@ import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.even
 import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.ModelAdjustmentRequested;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFModelPassedElement;
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.events.UsageModelPassedElement;
+import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.events.UserAborted;
 import org.palladiosimulator.analyzer.slingshot.common.utils.events.ModelPassedEvent;
 import org.palladiosimulator.analyzer.slingshot.core.api.SimulationEngine;
 import org.palladiosimulator.analyzer.slingshot.core.api.SimulationScheduling;
@@ -61,6 +62,8 @@ import org.palladiosimulator.pcm.usagemodel.Stop;
  */
 @OnEvent(when = ModelPassedEvent.class, then = {})
 @OnEvent(when = JobFinished.class, then = {})
+@OnEvent(when = JobAborted.class, then = {})
+@OnEvent(when = UserAborted.class, then = {})
 @OnEvent(when = SnapshotTaken.class, then = SnapshotFinished.class)
 @OnEvent(when = SnapshotInitiated.class, then = SnapshotTaken.class)
 public class SnapshotRecordingBehavior implements SimulationBehaviorExtension {
@@ -115,7 +118,17 @@ public class SnapshotRecordingBehavior implements SimulationBehaviorExtension {
 	public void removeJobRecord(final JobFinished event) {
 		this.recorder.removeJobRecord(event);
 	}
+	
+	@Subscribe
+	public void removeJobRecord(final JobAborted event) {
+		this.recorder.removeJobRecord(event);
+	}
 
+	@Subscribe
+	public void removeAbortedCalculators(final UserAborted event) {
+		this.recorder.removeOpenCalculators(event);
+	}
+	
 	/**
 	 * Create a {@link RecordedJob} before the {@link JobInitiated} get processed to capture the initial
 	 * demand.
