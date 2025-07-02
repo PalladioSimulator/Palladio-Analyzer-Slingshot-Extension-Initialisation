@@ -8,41 +8,45 @@ This extension was created for the MENTOR DFG project.
 
 ## General Explanation
 
-The over all goals of this extension, are (1) to stop and restart a simulation at an arbitrary point in time and (2) to apply scaling policies at the beginning of a simulation run.
+The over all goals of this extension are (1) to stop and restart a simulation at an arbitrary point in time and (2) to apply arbitrary scaling policies at the beginning of a simulation run.
+Considering (2), it is important to note that the policies at the beginning are not applied according to their trigger conditions.
+Instead, the user decides on their application upfront, and the extension applies (enforces) the policies in spite of trigger conditions and/or constraints. 
 
 For stopping and restarting, the extensions saves/loads snapshots to/from a JSON file.
-For applying scaling policies, the extension accepts an JSON with a list of scaling policy ids as input. 
+For applying scaling policies, the extension accepts an additional JSON file with a list of scaling policy ids as input. 
 
-For the sake of simplification, the following explanation reduces the entire machination to three components.
-These components are `application`,  `initialisation`, `simulator` and `snapshotBehaviour`. 
+For the sake of simplification, the following explanation reduces the entire extension to four components.
+These components are `application`,  `initialisation`, `simulator` and `snapshotting`. 
 
 `application` is the entrypoint. 
-It parses the commandline arguments and experiment settings, and loads the PCM instances. 
+It parses the commandline arguments and experiment settings (`*.experiments` file), and loads the PCM instances from the model files. 
 Afterwards it starts `initialisation`.
 
-`initialisation` loads the JSON-files with the snapshot and the policies to be applied and creates the result copy of the PCM instances. 
+`initialisation` loads the JSON-files with the snapshot and configurations, including the policies to be applied, and creates the result copy of the PCM instances. 
 The simulation will later on use the result copies only, such that the initial PCM instances remain unchanged. 
-Then `initialisation` provisions the snapshot, the policies to be applied and a results builder to Slingshot and starts `simulator`. 
+Then `initialisation` provisions the snapshot, further configuration parameters and the policies to be applied to Slingshot and starts `simulator`. 
 
 Slingshot is event based and event driven, for more details c.f. https://www.palladio-simulator.com/Palladio-Documentation-Slingshot/slingshot-simulator/. 
 For now the following points are relevant: 
 - Slingshot provides means to subscribe to events, and to pre- and postintercept events.  
-- Various `SimulationBehaviorExtension` contribute behaviour to the simulation by subscribing to events, and producing new events. 
+- Various `SimulationBehaviorExtension` contribute behaviour to the simulation by subscribing to events and producing new events. 
 
-Now, `simulator` loads all behaviour extensions, including the `snapshotBehaviour` contributed by this extension. 
-In reality, `snapshotBehaviour` consists of many separate behaviour extensions that each cover a distinct aspect of the entire snapshot mechanism. 
+Now, `simulator` loads all behaviour extensions, including those contributed by this extension's `snapshotting` component. 
+Each of the behaviour extensions of `snapshotting` cover a distinct aspect of the snapshot mechanism. 
 For now we will only focus on the injection of the snapshotted state at the beginning and the creation of a new snapshot at the end. 
+For the sake of simplicity, we will call the former `initBehaviour` and the latter `stateUpdateBehaviour`
 
-At first, `snapshotBehaviour` preintercepts the `SimulationStarted` event and checks, whether the current simulation run should start with initialisation from snapshot, or not. 
+At first, `initBehaviour` preintercepts the `SimulationStarted` event and checks, whether the current simulation run should start with initialisation from snapshot, or not. 
 
-If it should *not* start with initialisation from a snapshot, i.e. the simulation run actually starts at $t=0$, without any previous run, the `SimulationStarted` event remains untouched and is delivered to the respective behaviours which then creates events according to the workload defined in the usage model.
+If it should *not* start with initialisation from a snapshot, i.e. the simulation run actually starts at $t=0$, without any previous runs, the `SimulationStarted` event remains untouched and is delivered to the respective behaviours which then creates events according to the workload defined in the usage model.
 
-If it should start with initialisation from a snapshot, i.e. the simulation run starts at a point in time $t > 0$, the `SimulationStarted` event is aborted. Instead of creating new events according to the workload defined in the usage model, `snapshotBehaviour` published the snapshotted events from the previous simulation run. 
+If it should start with initialisation from a snapshot, i.e. the simulation run starts at a point in time $t > 0$, the `SimulationStarted` event is aborted.
+Instead of creating new events according to the workload defined in the usage model, `initBehaviour` published the snapshotted events from the previous simulation run. 
 
-In both cases, `snapshotBehaviour` publishes events to request adjustment for any scaling policies specified in the input JSON file. 
+In both cases, `initBehaviour` publishes events to trigger application for the scaling policies specified in the input JSON file. 
 
-During the simulation, `snapshotBehaviour` continuously checks, whether a snapshot should be taken.
-Once any of the required conditions is met, `snapshotBehaviour` takes a snapshot and ends the simulation run by publishing a `SimulationFinished` event.  
+During the simulation, various other extensions of the `snapshotting` component continuously check, whether a snapshot should be taken.
+Once any of the required conditions is met, `stateUpdateBehaviour` creates a snapshot and ends the simulation run by publishing a `SimulationFinished` event.  
 
 Finally, `initialisation` postprocesses the simulation results, and saves the snapshot and the results to file. 
 The results include the updated PCM instances, the measurements and additional information for putting the results into the state graph.  
@@ -52,14 +56,26 @@ The results include the updated PCM instances, the measurements and additional i
 * `org.palladiosimulator.analyzer.slingshot.initialisedsimulation*`: 
   Bundles related to initialising, starting and postprocessing a simulation run. 
   Stuff from these bundles happens before and after the simulation run, but does not interfere with the simulation run itself. 
+  * `*.application` : contains classes that are part of the `application` component.
+  * `*.converter`: classes for converting the Palladio-specific EDP2 format to simple value pairs. 
+    Measurements taken during a simulation run are initially saved in EDP2 but serialized to JSON as value pairs, using these classes.
+  * `*.data`: data classes of the `initialisation` component.
+  * `*.feature`: Feature project for exporting the entire Initialisation Extension as installable feature.
+  * (no additional suffix): core of the `initialisation` component.
 * `org.palladiosimulator.analyzer.slingshot.snapshot*`: 
   Bundles related to the snapshot. Mostly behaviours that interfere with the simulation be redirecting and/or injecting events, and the entire mechanism for taking the a snapshot. 
+  * (no additional suffix): core fo the `snapshotting` component, especially the behaviour extensions
+  * `*.data`: data classes of the `snapshotting` component.
+  * `*.serialization`: classes for serializing a snapshot to JSON. 
+    Depends on `com.google.gson`.
+    The most important part of the snapshot -- and the most difficult to serialize -- are the instances of `DESEvent` that mirror the state of the `simulator` component.
+    This bundle contains mostly adapters and factories for serializing different subclasses of `DESEvent` and the entities within.
 * `org.palladiosimulator.analyzer.slingshot.behavior.util`: Utility classes. Small, but well used and important.   
 
 ## Format of input and output
 
 * The PCM instances are expected in their usual XML-format, no changes at all. 
-Notably, this extensions Application builds upon ExperimentAutomation, thus an experiment model must be provided. 
+Notably, this extension's Application builds upon ExperimentAutomation, thus an experiment model (`*.experiment`-file) must be provided. 
 
 * The JSON file for the snapshot uses the file-extension `.snapshot` and must adhere/adheres to the format of this example:
   ```
@@ -73,10 +89,9 @@ Notably, this extensions Application builds upon ExperimentAutomation, thus an e
   }
   ```
 
-* The JSON file for the other information uses the file-extension `.config` and must adhere to the format of this example:
+* The JSON file for the other information uses the file-extension `.config` and must adhere to the format of this example (further configuration option will be described later on):
   ```
   {
-    "sensibility": 0.0,
     "incomingPolicies": []
   }
   ```
@@ -84,8 +99,8 @@ Notably, this extensions Application builds upon ExperimentAutomation, thus an e
 * The JSON file for the results uses the file-extension `.state` and adheres to the format of this example:
   ```
   {
-    "parentId":"id-of-the-state-this-snapshot-was-taken-for",
-    "id":"17152565-f337-4fba-943a-7b7ca5216277",
+    "parentId":"id-of-the-parent-state",
+    "id":"id-of-this-state",
     "startTime":0.0,
     "duration":110.24138783074197,
     "reasonsToLeave":["reactiveReconfiguration"],
@@ -129,24 +144,24 @@ A complete set of PCM and JSON files can be found in [EspresssoAccountingMinimal
     * config file: `EspresssoAccountingMinimalExample/input/applyPolicyConfig.json`
     * output folder: `EspresssoAccountingMinimalExample/output2`
 
-## Dev Set up
+## Dev Setup
 
 **Beware:** This extension is intended for running headless, thus you may exclude all `*.edit` and `*.editor` bundles in the following steps. 
 
 * Follow the steps in the normal Slingshot Documentation (https://palladiosimulator.github.io/Palladio-Documentation-Slingshot/tutorial/) to setup Slingshot and maybe run an (normal) example. 
 Pay attention to also import the SPD meta model and the SPD interpreter extension.
   
-* clone [Palladio-Analyzer-Slingshot-Extension-Initialisation](https://github.com/PalladioSimulator/Palladio-Analyzer-Slingshot-Extension-Initialisation)
+* Clone [Palladio-Analyzer-Slingshot-Extension-Initialisation](https://github.com/PalladioSimulator/Palladio-Analyzer-Slingshot-Extension-Initialisation)
   ```
   git clone git@github.com:PalladioSimulator/Palladio-Analyzer-Slingshot-Extension-Initialisation.git
   ```
-* in (already cloned) repository *Palladio-Analyzer-Slingshot-Extension-SPD-Interpreter* switch branch 
+* In (already cloned) repository *Palladio-Analyzer-Slingshot-Extension-SPD-Interpreter* switch branch 
   ```
   git checkout stateexplorationRequirements
   ```
-  * this is necessary, because the SPD interpreter extension is stateful but has no hook to initialise its state from the outside. 
-    on this exploration specific branch (the name is legacy) we added a possibility to initialise the state to an arbitrary value. 
-    this change was not accepted into the slingshot master, because it does not adhere to the current design of the slingshot event cycle.   
+  * This is necessary, because the SPD interpreter extension is stateful but has no hook to initialise its state from the outside. 
+    On this initialisation specific branch (the name is legacy) we added the possibility to initialise the state to an arbitrary value. 
+    This change was not accepted into the `master` branch, because it does not adhere to the current design of the slingshot event cycle.   
 
 + Import Experiment-Automation bundles. 
   * clone repository [Palladio-Addons-ExperimentAutomation](https://github.com/PalladioSimulator/Palladio-Addons-ExperimentAutomation) and switch to branch `slingshot-impl`:
@@ -154,17 +169,16 @@ Pay attention to also import the SPD meta model and the SPD interpreter extensio
   git clone git@github.com:PalladioSimulator/Palladio-Addons-ExperimentAutomation.git
   git checkout slingshot-impl
   ```
-  * import the bundle `org.palladiosimulator.experimentautomation` into the workspace of your development Eclipse instance.
-  We only need the models, thus we only need this bundle. 
+  * import the bundles `org.palladiosimulator.experimentautomation` and `org.palladiosimulator.experimentautomation.application.tooladapter.slingshot.model` into the workspace of your development Eclipse instance.
+  Ignore all other bundles. 
 
 ## Running an initialised Slingshot simulation run
-Both approaches require **Models and JSON files**.
+The following subsections describe two approaches run an initialised simulation run.
+Both of them require a set of **models and JSON files**.
 
 ### Run from within the development Eclipse instance
-* **Requires: all bundles described above imported into the workspace**
+* **Requires: all bundles described in [Dev Setup](#Dev-Setup) imported into eclipse workspace**
 + Create an *OSGi Framework* Run Configuration.
-  * Or use this one `org.palladiosimulator.analyzer.slingshot.stateexploration.application/launchconfig/headless-exploration-export.launch` 
-    * **Beware:** you still need to fix the *Program arguments* (see below)
   * Exclude all `*.edit`, `*.editor` and `*.ui` bundles. 
     * Excluding `*.edit` is not required, but we don't need it.
     * Only exclude `*.ui`. The `*.ui.events` are still needed.   
@@ -174,13 +188,13 @@ Both approaches require **Models and JSON files**.
   * Go to tab *Arguments*
   * Add `-application org.palladiosimulator.analyzer.slingshot.initialisedsimulation.application.InitialisedSimulationApplication` to *Program arguments*
   * Append further application arguments to *Program arguments*, details see [section on specifying application arguments](#Specifying-Application-Arguments).
-  * Remove from *VM arguments*: `-Declipse.ignoreApp=true`
-  * (Optional) add to *VM arguments*: `-Dlog4j.configuration=file:///path/to/log4j.properties`
+  * Remove `-Declipse.ignoreApp=true` from *VM arguments* or else the application will be ignored.
+  * (Optional) Add `-Dlog4j.configuration=file:///path/to/log4j.properties` to *VM arguments* to specify your own logging properties. 
   * Run it.
 
 
 ### Run from Commandline
-* **Requires: PalladioBench with Initialisation Extension is already installed**
+* **Requires: PalladioBench with Initialisation Extension already installed, for more details see [Manual Export and Installation](#Manual-Export-and-Installation)**
 * execute
   ```
   ./PalladioBench -data /path/to/workspace/ \
@@ -250,14 +264,14 @@ The user must ensure, that the PCM instances are at the expected locations, othe
 
 ## Manual Export and Installation
 
-**Requires: all bundles described above imported into the workspace**
+**Requires: all bundles described in [Dev Setup](#Dev-Setup) imported into the workspace**
 
 ### Export Feature
 1. open development eclipse instance with all bundles described above imported and a correctly set target platform. 
 2. export the initialisation extension as feature:
     * `export` $\rightarrow$ `Deployable Features`
     * select `org.palladiosimulator.analyzer.slingshot.initialisedsimulation.feature (1.0.0.qualifier)` $\rightarrow$ `finish`
-    * This is a all-in-one feature that just includes *everything* without any structure at all. Enjoy with caution.  
+    * This is an all-in-one feature that just includes *everything* without any structure at all. Enjoy with caution.  
 
 ### Import Feature
 1. install a fresh PalladioBench (https://updatesite.palladio-simulator.com/palladio-bench-product/releases/latest/) and open it.
@@ -269,10 +283,10 @@ The user must ensure, that the PCM instances are at the expected locations, othe
 8. Checks successful installation: 
     * Run PalladioBench from CLI with `--console` to get an OSGi console.
     * Execute `lb` to list installed Plugins. 
-    * Search for `Initialised Simulation Application`. If it is there, and the state is `Starting` every thing is fine.
+    * Search for `Initialised Simulation Application`. If it is there, and the state is `Starting` everything is fine.
 
 ### Create a Palladio Bench for running in the Docker Container.
-**Requires: the Docker Container will be a Linux system. I do not know whether the following approach works with anything other but a Linux systems.**
+**Requires: The Docker Container will be a Linux system. I do not know whether the following approach works with anything other but a Linux systems.**
 
 1. Get a Linux system, either an actual machine or a VM (i did the latter) and set it up to run a PalladioBench, e.g. by installing a fitting java version.
 2. Install a fresh PalladioBench (https://updatesite.palladio-simulator.com/palladio-bench-product/releases/latest/) and open it.
@@ -288,10 +302,10 @@ The user must ensure, that the PCM instances are at the expected locations, othe
 
 ## Advanced Configuration: Deactivate Snapshot-related Behaviour Extensions.
 
-The `snapshotBehaviour` component (c.f. [Section General Explanation](#General-Explanation)) consists of multiple separate behaviour extension classes. 
+The `snapshotting` component (c.f. [Section General Explanation](#General-Explanation)) consists of multiple separate behaviour extension classes. 
 For technical details on Slingshot's behaviour read the [Simulator's Documentation](https://www.palladio-simulator.com/Palladio-Documentation-Slingshot/slingshot-simulator/).
 
-Currently (June '25), `snapshotBehaviour` contributes 11 behaviour extensions. 
+Currently (June '25), `snapshotting` contributes 11 behaviour extensions. 
 Each extension takes care of a distinct aspect of the initialisation and snapshotting mechanism. 
 Some extensions accept additional configurations, including deactivation.
 To do additional configurations, the `.config` file must be extended.
@@ -313,11 +327,18 @@ Currently (June '25), the following behaviour extension are configurable:
     By increasing the sensibility value, snapshots are triggered earlier. 
     The maximum sensibility is `"sensitivity" : 1`. 
 * `SnapshotSLOAbortionBehavior`
+  - Aborts a simulations run, if a hard SLO threshold is violated. 
+    The output of the simulation run still contains a snapshot and a sate, but the state will be marked as `aborted`.
+  - This extension can be deactivated by adding `"active" : false` to the `.config` file. 
 * `SnapshotAbortionBehavior`
+  - Aborts a simulations run, if scaling policies were enforced at the beginning of the run, but the policies yielded no architecture changes. 
+    This happens, e.g., if a scale in and a scale out policy are applied simultaneously, and their effects cancel each other out. 
+    The output of the simulation run still contains a snapshot and a sate, but the state will be marked as `aborted` and also empty. 
+  - This extension can be deactivated by adding `"active" : false` to the `.config` file. 
 
 ### Extending the `.config` file
 
-To further configure the configurable extension, add a field `parameters`, that associates a configurable extensions with a map of configuration parameters nd values. 
+To further configure the configurable extension, add a field `parameters`, that associates a configurable extensions with a map of configuration parameters and values. 
 By default configurable behaviour extension are identified by class name.
 Deviating identification names should be documented and must be looked up in the JavaDoc.
 
