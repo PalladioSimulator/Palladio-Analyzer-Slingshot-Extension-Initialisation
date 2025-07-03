@@ -7,6 +7,7 @@ import javax.inject.Inject;
 import org.apache.log4j.Logger;
 import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.ModelAdjustmentRequested;
 import org.palladiosimulator.analyzer.slingshot.common.annotations.Nullable;
+import org.palladiosimulator.analyzer.slingshot.common.events.modelchanges.ModelAdjusted;
 import org.palladiosimulator.analyzer.slingshot.core.api.SimulationScheduling;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.PreIntercept;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.entity.interceptors.InterceptorInformation;
@@ -29,10 +30,15 @@ import org.palladiosimulator.spd.targets.TargetGroup;
 
 /**
  *
- * Triggers the creation of a {@link Snapshot} if a reconfiguration was
- * triggered, but before it gets applied.
- *
- * Drops reconfigurations under certain circumstances. 
+ * Initiates the creation of a {@link Snapshot} if a reconfiguration was
+ * triggered reactively.
+ * <br>
+ * Beware: The snapshot will be taken <i>before</i> the reconfiguration is applied to the architecture. 
+ * In Slinghsot, a reconfiguration has two phases, denoted by the events {@link ModelAdjustmentRequested} and {@link ModelAdjusted}.
+ * Instances of {@link ModelAdjustmentRequested} are published to indicated that a policy should be applied accoording to its triggers. The architecture is still unchanged.
+ * Instances of {@link ModelAdjusted} are published to indicate that a policy has been applied, i.e. the architecutre has changed.
+ * <br>
+ * Drops reconfigurations under certain circumstances, see {@link SnapshotTriggeringBehavior#isDrop(ScalingPolicy)} for details.
  * To deactivate the dropping, add {@code "doDrop" : false} to the configuration paratmeters.
  *
  * @author Sophie Stieß
@@ -77,12 +83,20 @@ public class SnapshotTriggeringBehavior extends ConfigurableSnapshotExtension {
 
 	/**
 	 * 
-	 * Preintercept {@link ModelAdjustmentRequested} and trigger a the creation of a
-	 * {@link Snapshot}, if the intercepted event belongs to a reactive
+	 * Preintercept {@link ModelAdjustmentRequested} events and initiate creation of
+	 * a {@link Snapshot}, if the intercepted event belongs to a reactive
 	 * reconfiguration.
 	 * 
 	 * Beware: all {@link ModelAdjustmentRequested} events that are part of the
-	 * simulation run initialisation must be ignored.
+	 * simulation run initialisation must and will be ignored.
+	 * 
+	 * Beware: this must be a preinterception instead of a regular subscription, as
+	 * we must initiate the snapshot before the architecture changes, i.e. before
+	 * the behaviour extension that executes the architecture transformations
+	 * receives the {@link ModelAdjustmentRequested} event. To ensure that the
+	 * architecture remains unchanged for the snapshot, the
+	 * {@link ModelAdjustmentRequested} events are aborted, if a snapshot was
+	 * initiated.
 	 * 
 	 * @param information
 	 * @param event
@@ -92,8 +106,8 @@ public class SnapshotTriggeringBehavior extends ConfigurableSnapshotExtension {
 	public InterceptionResult preInterceptModelAdjustmentRequested(final InterceptorInformation information,
 			final ModelAdjustmentRequested event) {
 		// only intercept triggered adjustments. do not intercept snapped adjustments..
-		// assumption: do not copy adjustor events from the FEL, i.e. the "first"
-		// adjustor is always from the snapshot.
+		// assumption: do not copy adjustment requested events from the FEL, i.e. the "first"
+		// adjustment requested events are always from the snapshot.
 		if (adjustmentEvents.contains(event)) {
 			LOGGER.debug(String.format("Succesfully route %s to %s", event.getName(),
 					information.getEnclosingType().get().getSimpleName()));
@@ -115,10 +129,10 @@ public class SnapshotTriggeringBehavior extends ConfigurableSnapshotExtension {
 
 	/**
 	 * Drop the application of a scaling policy, if the adjustment is a scale in on
-	 * the minimal architecture reconfiguration.
+	 * a minimal architecture reconfiguration.
 	 * 
-	 * This is some kind of short-cut to the {@link SnapshotAbortionBehavior} that
-	 * ensures a decent state length. If we rely {@link SnapshotAbortionBehavior}
+	 * This is a short-cut to the {@link SnapshotAbortionBehavior} that
+	 * ensures a decent state length. If we rely on {@link SnapshotAbortionBehavior}
 	 * only, we get a lot of aborted states that could have been skipped. Scale ins
 	 * on the minimal architecture reconfiguration keep happening if the demand is
 	 * very low. But also, reconfiguration makes no sense in these cases, thus it is

@@ -35,12 +35,20 @@ import org.palladiosimulator.spd.targets.TargetGroup;
 
 /**
  *
- * Abort simulation runs, that start with adjustments that cancel each other out
- * or otherwise yield no changes.
+ * Abort simulation runs, that start with scaling policies that yield no
+ * changes. <br>
+ * Possible policies that yield no changes:
+ * <ul>
+ * <li>Scale-in on an already minimal architecture, where not further resources
+ * or services can be removed.</li>
+ * <li>Scale-in or scale-out that are blocked due to target group size
+ * constraints, i.e., when attempting to scale from 3 to 4 resources, while a
+ * target group constraint limit the number of resources to 3.</li>
+ * <li>Combined scale-in and scale-out policies, that cancel each other, e.g., a
+ * stepwise scale-out of +1 and a stepwise scale-in of -1.</li>
+ * </ul>
  * 
- * As an example: if a simulation starts with two reconfigurations, on to scale
- * out by 1 container, and one to scale in by one container, they cancel each
- * other out and the architecture configuration remains unchanged. As such, the
+ * In all of the above cases the architecture remains unchanged. As such, the
  * simulation run would behave similar to a simulation run with the same parent
  * state and a NOOP transition.
  *
@@ -60,6 +68,7 @@ public class SnapshotAbortionBehavior extends ConfigurableSnapshotExtension {
 
 	private final boolean activated;
 
+	/* Covers all of the three types. */
 	private final Map<TargetGroupCfg, Integer> tg2size;
 
 	private final Configuration config;
@@ -107,14 +116,18 @@ public class SnapshotAbortionBehavior extends ConfigurableSnapshotExtension {
 
 	/**
 	 * 
-	 * Checker whether the number of resource containers changed after all planned adjustment were applied.
+	 * Checker whether the number of elements in any target group changed after all
+	 * planned adjustment were applied.
 	 * 
-	 * If the number of resource containers remains unchanged or is back to the initial number, this simulation is aborted. 
+	 * If the number of elements in all target groups remains unchanged or are back
+	 * to the initial number, this simulation is aborted. As this operation works
+	 * based on the number of elements, the elements themselves might still change,
+	 * e.g., if a sale-in removes a old element and a scale-out adds a new one, the
+	 * total number of elements is the same, eventhough one element was replaced.
 	 * 
-	 * Assumption: all planned reconfiguration happen before further reactive
-	 * reconfiguration happen.
-	 * 
-	 * TODO : also check size of service groups.
+	 * Requires, that all injected reconfigurations happen before further reactive
+	 * reconfiguration happen. This is not explicitly ensured by the simulation
+	 * engine, but as of now it always held.
 	 * 
 	 * @param modelAdjusted
 	 */

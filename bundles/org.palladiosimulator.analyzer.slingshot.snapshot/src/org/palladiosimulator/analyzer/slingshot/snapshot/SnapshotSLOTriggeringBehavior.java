@@ -34,17 +34,22 @@ import org.palladiosimulator.semanticspd.Configuration;
 import org.palladiosimulator.semanticspd.ElasticInfrastructureCfg;
 import org.palladiosimulator.servicelevelobjective.ServiceLevelObjective;
 import org.palladiosimulator.servicelevelobjective.ServiceLevelObjectiveRepository;
+import org.palladiosimulator.servicelevelobjective.SoftThreshold;
+import org.palladiosimulator.servicelevelobjective.Threshold;
 
 import de.uka.ipd.sdq.workflow.mdsd.blackboard.MDSDBlackboard;
 
 /**
  *
- * Triggers snapshots based on a measurements closeness to defined SLOs.
- *
+ * This behaviour extension initiates snapshots based on a measurement's closeness to the defined SLOs.
+ * 
+ * The closeness is configurable. The corresponding parameter is called "sensitivity", the value must be in [0.0, 1.0]. 
+ * For more details, c.f. {@link ValueRange}. <br>
+ * <br>
  * This class does <strong>not</strong> use the raw measurements provided by
  * {@code MeasurementMade} events. Instead it uses the aggregated values
  * provided by {@code MeasurementUpdated} events.
- * 
+ * <br>
  * Beware: The aggregated values provided by {@code MeasurementUpdated} events
  * are aggregated according to the {@code ProcessingType} elements defined in
  * the {@code MonitorRepository}. This class does not aggregate on its own.
@@ -63,10 +68,8 @@ public class SnapshotSLOTriggeringBehavior extends ConfigurableSnapshotExtension
 
 	private final boolean activated;
 
-	/* Calculate mapping to save time later on (probably) */
+	/* Calculate mapping to custom class to save time later on (probably) */
 	private final Map<MeasurementSpecification, Set<ValueRange>> mp2range;
-	
-	private final double minDuration;
 
 	@Inject
 	public SnapshotSLOTriggeringBehavior(final @Nullable StateBuilder state,
@@ -80,7 +83,6 @@ public class SnapshotSLOTriggeringBehavior extends ConfigurableSnapshotExtension
 			this.state = state;
 			this.semanticSpd = semanticSpd; 	
 			this.mp2range = this.initMeasuringPoint2RangeMap(blackboard);
-			this.minDuration = config.getMinDuration();
 
 			this.activated = super.isActive();
 		} else {
@@ -88,7 +90,6 @@ public class SnapshotSLOTriggeringBehavior extends ConfigurableSnapshotExtension
 			this.state = null;
 			this.semanticSpd = null;
 			this.mp2range = null;
-			this.minDuration = -1;
 			
 			LOGGER.warn(String.format("Extension %s is deactivated because a required parameter is null.", this.getClass().getSimpleName()));
 		}
@@ -119,7 +120,7 @@ public class SnapshotSLOTriggeringBehavior extends ConfigurableSnapshotExtension
 		final double sensitivity = toggle.hasParameter(SENSITIVITY, Double.class) ? toggle.getParameter(SENSITIVITY) : 0.0;
 		
 		if (sensitivity < 0 || sensitivity > 1) {
-			throw new IllegalArgumentException("Parameter \"sensitivity\" must be in [0,1] but is " + sensitivity + ".");
+			throw new IllegalArgumentException("Parameter \"sensitivity\" must be in [0.0, 1.0] but is " + sensitivity + ".");
 		}
 		
 		for (final ServiceLevelObjective slo : sloRepo.getServicelevelobjectives()) {
@@ -140,21 +141,44 @@ public class SnapshotSLOTriggeringBehavior extends ConfigurableSnapshotExtension
 			}
 			if (slo.getLowerThreshold() == null) {
 				map.get(mp).add(new SingleEndedRange(
-						(Measure<Object, Quantity>) slo.getUpperThreshold().getThresholdLimit(), sensitivity));
+						getLimit(slo.getUpperThreshold()), sensitivity));
 			} else {
 				map.get(mp).add(new DoubleEndedRange(
-						(Measure<Object, Quantity>) slo.getUpperThreshold().getThresholdLimit(),
-						(Measure<Object, Quantity>) slo.getLowerThreshold().getThresholdLimit(), sensitivity));
+						getLimit(slo.getUpperThreshold()),
+						getLimit(slo.getLowerThreshold()), sensitivity));
 			}
 		}
 		return map;
 	}
 
+	/**
+	 * Get the limit of the given threshold. In case the given threshold is a
+	 * {@link SoftThreshold}, this operation gets the soft limit instead of the hard
+	 * one.
+	 * 
+	 * @param threshold
+	 * @return Hard- or soft limit of the given threshold.
+	 */
+	private Measure<Object, Quantity> getLimit(final Threshold threshold) {
+		if (SoftThreshold.class.isInstance(threshold)) {
+			return SoftThreshold.class.cast(threshold).getSoftLimit();
+		} else {
+			return (Measure<Object, Quantity>) threshold.getThresholdLimit();
+		}
+	}
+	
+	/**
+	 * Check whether the measurement value insed the given event is too close to an
+	 * SLO and initiates a snapshot, if the former is the case.
+	 * 
+	 * @param event
+	 * @return {@link SnapshotInitiated} if the measurement value inside the given
+	 *         event is too close to an SLO, an empty result.
+	 */
 	@Subscribe
 	public Result<SnapshotInitiated> onMeasurementUpdated(final MeasurementUpdated event) {
 
-		if (event.time() < minDuration
-				|| !mp2range.containsKey(event.getEntity().getProcessingType().getMeasurementSpecification())) {
+		if (!mp2range.containsKey(event.getEntity().getProcessingType().getMeasurementSpecification())) {
 			return Result.empty();
 		}
 
@@ -218,14 +242,34 @@ public class SnapshotSLOTriggeringBehavior extends ConfigurableSnapshotExtension
 	}
 
 	/**
-	 * Value range with upper and lower sensibility bound. Bounds are calculated
-	 * based on the upper and lower thresholds of the SLO and the provided
-	 * sensibility.
+	 * Value range with upper and lower bound. Bounds are calculated based on the
+	 * upper and lower thresholds of the SLO and the provided {@code sensitivity}.
+	 * <br>
+	 * The {@code sensitivity} must be in [0.0, 1.0]. 
+	 * A higher {@code sensitivity} implies a smaller acceptable value range.
+	 * <br>
+	 * Example: SLO wih upper threshold 5.0 and lower threshold 1.0
+	 * <ul>
+	 * <li>sensitivity = 0:</li>
+	 * <ul>
+	 * <li>lower = 1.0 + ((5.0 - 1.0) / 2) * 0 = 1.0</li>
+	 * <li>upper = 5.0 - ((5.0 - 1.0) / 2) * 0 = 1.0</li>
+	 * </ul>
+	 * <li>sensitivity = 0.5:</li>
+	 * <ul>
+	 * <li>lower = 1.0 + ((5.0 - 1.0) / 2) * 0.5 = 2.0</li>
+	 * <li>upper = 5.0 - ((5.0 - 1.0) / 2) * 0.5 = 4.0</li>
+	 * </ul>
+	 * <li>sensitivity = 1:</li>
+	 * <ul>
+	 * <li>lower = 1.0 + ((5.0 - 1.0) / 2) * 1 = 3.0</li>
+	 * <li>upper = 5.0 - ((5.0 - 1.0) / 2) * 1 = 3.0</li>
+	 * </ul>
+	 * </ul>
 	 *
 	 * If a measured value is greater than the upper bound, or smaller than the
 	 * lower bound, the range is considered violated and the simulation run should
 	 * stop.
-	 *
 	 *
 	 * @author Sarah Stieß
 	 *
@@ -236,6 +280,11 @@ public class SnapshotSLOTriggeringBehavior extends ConfigurableSnapshotExtension
 		protected final double lower;
 
 		/**
+		 * Creates a instance of {@link ValueRange}.
+		 * 
+		 * Upper and lower bound of the range are calculated based on the upper and lower bound of the corresponding SLO and the given sensitivity. 
+		 * A higher {@code sensitivity} implies a smaller acceptable value range. 
+		 *
 		 *
 		 * @param upper       Upper Threshold of SLO
 		 * @param lower       Lower Threshold of SLO
@@ -285,7 +334,7 @@ public class SnapshotSLOTriggeringBehavior extends ConfigurableSnapshotExtension
 	}
 
 	/**
-	 * Value range with upper and lower sensibility bound.
+	 * Value range with upper and lower bound.
 	 *
 	 * @author Sarah Stieß
 	 *
@@ -307,7 +356,7 @@ public class SnapshotSLOTriggeringBehavior extends ConfigurableSnapshotExtension
 	}
 
 	/**
-	 * Value range with only an upper sensibility bound. For calculation, the lower
+	 * Value range with only an upper bound. For calculation, the lower
 	 * bound is treated as zero. For checks, only the upper bound is considered.
 	 *
 	 * @author Sarah Stieß

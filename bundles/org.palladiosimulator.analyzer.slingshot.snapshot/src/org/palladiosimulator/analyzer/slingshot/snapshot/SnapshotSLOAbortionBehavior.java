@@ -32,15 +32,19 @@ import de.uka.ipd.sdq.workflow.mdsd.blackboard.MDSDBlackboard;
 
 /**
  *
- * Abort simulation runs, if any measurement value violates a SLO hard threshold. 
- *
+ * Abort simulation runs, if any measurement value violates a SLO hard
+ * threshold.
+ * <br>
  * This class does <strong>not</strong> use the raw measurements provided by
  * {@code MeasurementMade} events. Instead it uses the aggregated values
- * provided by {@code MeasurementUpdated} events.
- * 
+ * provided by {@code MeasurementUpdated} events. <br>
  * Beware: The aggregated values provided by {@code MeasurementUpdated} events
  * are aggregated according to the {@code ProcessingType} elements defined in
- * the {@code MonitorRepository}. This class does not aggregate on its own.
+ * the {@code MonitorRepository}. This class does not aggregate on its own. 
+ * <br>
+ * Generally, states that violate a hard threshold should be aborted, because
+ * they are unacceptable, even if the result improve again at a later point in
+ * time.
  *
  * @author Sophie Stieß
  *
