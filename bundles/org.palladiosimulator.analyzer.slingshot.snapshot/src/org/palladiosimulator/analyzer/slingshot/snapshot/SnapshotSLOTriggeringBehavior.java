@@ -253,7 +253,7 @@ public class SnapshotSLOTriggeringBehavior extends ConfigurableSnapshotExtension
 	 * <li>sensitivity = 0:</li>
 	 * <ul>
 	 * <li>lower = 1.0 + ((5.0 - 1.0) / 2) * 0 = 1.0</li>
-	 * <li>upper = 5.0 - ((5.0 - 1.0) / 2) * 0 = 1.0</li>
+	 * <li>upper = 5.0 - ((5.0 - 1.0) / 2) * 0 = 5.0</li>
 	 * </ul>
 	 * <li>sensitivity = 0.5:</li>
 	 * <ul>

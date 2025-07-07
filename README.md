@@ -155,13 +155,23 @@ Pay attention to also import the SPD meta model and the SPD interpreter extensio
   ```
   git clone git@github.com:PalladioSimulator/Palladio-Analyzer-Slingshot-Extension-Initialisation.git
   ```
+* Clone [Palladio-Analyzer-Slingshot-Extension-Cost](https://github.com/PalladioSimulator/Palladio-Analyzer-Slingshot-Extension-Cost)
+  ```
+  git clone git@github.com:PalladioSimulator/Palladio-Analyzer-Slingshot-Extension-Cost.git
+  ```  
+  * This is necessary, because measuring the cost of resource containers is not yet supported in Slingshot.  
+  * Beware, this repository does not follow the correct bundle-structure. 
+
 * In (already cloned) repository *Palladio-Analyzer-Slingshot-Extension-SPD-Interpreter* switch branch 
   ```
   git checkout stateexplorationRequirements
   ```
-  * This is necessary, because the SPD interpreter extension is stateful but has no hook to initialise its state from the outside. 
+  * Switching to another branch is necessary, because the SPD interpreter extension is stateful but has no hook to initialise its state from the outside. 
     On this initialisation specific branch (the name is legacy) we added the possibility to initialise the state to an arbitrary value. 
-    This change was not accepted into the `master` branch, because it does not adhere to the current design of the slingshot event cycle.   
+    This change was not accepted into the `master` branch, because it does not adhere to the current design of the slingshot event cycle.  
+    For more details, confer [section on recreating the SPD adjustor contexts' states](Development-Details-:-Recreating-the-State-of-the-SPD-adjustor-contexts) 
+
+* **[TODO]** check on *Palladio-Addons-SPD-Metamodel*: is transformation fix already merged? 
 
 + Import Experiment-Automation bundles. 
   * clone repository [Palladio-Addons-ExperimentAutomation](https://github.com/PalladioSimulator/Palladio-Addons-ExperimentAutomation) and switch to branch `slingshot-impl`:
@@ -171,6 +181,7 @@ Pay attention to also import the SPD meta model and the SPD interpreter extensio
   ```
   * import the bundles `org.palladiosimulator.experimentautomation` and `org.palladiosimulator.experimentautomation.application.tooladapter.slingshot.model` into the workspace of your development Eclipse instance.
   Ignore all other bundles. 
+  * Switching to another branch is necessary, because the `*.experiment`-files' meta-model on `master` does not yet include the slingshot specific SPD-model and its semantic model. 
 
 ## Running an initialised Slingshot simulation run
 The following subsections describe two approaches run an initialised simulation run.
@@ -387,8 +398,6 @@ All configurable behaviour extension should extend the abstract class `Configura
 The class already implements the interface `SimulationBehaviorExtension`. 
 For further information confer the JavaDoc.
 
-
-
 ## Development Details : Snapshot (De-)Serialisation.
 
 Serializing and deserializing a snapshot to JSON required several design decisions. 
@@ -549,6 +558,71 @@ The values of those fields are serialized as canonical names:
 }
 ```
 
-## Development Details : Noninvasively Recreating the State of `ResourceSimulation`.
+## Development Details : Recreating the State of `ResourceSimulation`.
 
-## Development Details : Invasively Recreating the State of the SPD adjustor contexts.
+The behaviour extension `ResourceSimulation` is where a systems resource consumption gets simulated. 
+The behaviour extension is stateful. 
+It holds a queue of simulated request for each of the system's resources.
+
+During simulation, the events `JobInitiated`, `JobProgressed`, `JobFinished` and `JobAborted` indicated changes to the queue's state. 
+
+By recording and replaying these events, the state of the queues can be recreated without any changes to the existing behaviour extension.  
+
+There are many pitfalls and minor details that must be taken into account.
+For more details, check the documentation of `SnapshotRecordingBehavior`, `EventRecorder` and `Camera`.  
+
+However, in the end, recreating the State of the `ResourceSimulation` behaviour extension did not require any code changes inside the existing extension.  
+
+## Development Details : Recreating the State of the SPD adjustor contexts.
+
+Each `SPDAdjustorContext` is responsible for a single scaling policy.
+It consists of a filter chain for checking the policies trigger conditions and an event handler for receiving and publishing events. 
+
+If a scaling policy or its target group have constraints, the policy's adjustor context is state full. 
+E.g., in case of a [cooldown constraint](https://www.palladio-simulator.com/Palladio-Documentation-Slingshot/constraints/#cooldown-constraint) the adjustor context must keep track of the point in time of a policies previous application. 
+
+As of now, Slingshot provides no way for initialising or even accessing the state of the adjustor contexts. 
+Thus, we changed the *Palladio-Analyzer-Slingshot-Extension-SPD-Interpreter* and created an loophole to access the states.
+To get a complete overview of the changes `git diff` the `stateexplorationRequirements` branch against the `master` branch. 
+
+As a summary:
+* We added some getter to get access to the adjustor state.
+* We added a new event `SPDAdjustorStateRegistered` that published the adjustor state right after the creation. 
+* We moved the classes `SPDAdjustorState` and `TargetGroupState` to the `data` bundle due to dependency problems.  
+
+These changes are already sufficient. 
+The adjustor context state is mutable, thus the snapshot extension that listens to the `SPDAdjustorStateRegistered` events, gets th adjustor context state that is encapsulated in the event and can just directly change the values of the adjustor context state. 
+
+### Arguments on why this must be kept on a separate branch. 
+
+As of now (June '25) this state access remains contained on its separate branch and must not be merged into `master`.
+After thorough discussions with Slingshot's main developer we decided against merging for two major reasons:
+1. (less important) The currently proposed access makes the simulation too vulnerable.
+  Anyone can introduce a new extension behaviour that subscribes to `SPDAdjustorStateRegistered` and accesses and changes the adjustor context states, thereby hampering the correct interpretation of the SPD rules. 
+2. (more important) From a slingshot perspective, initialising the adjustor context states likes this does not fit into Slingshot's event cycle.
+  
+Considering the second reason, slingshot's event cycle is (supposed to be) split into three phases, *presimulation*, *perimsimulation* and *postsimulation*. 
+As of now, most of the existing Slingshot behaviours contribute to the *perisimulation phase*.
+Any initialisation should be done in the *presimulation phase*. 
+(Remark: the rest of the snapshot-based initialisation completely ignores the phases, but no one cares, because there are no changes to existing behaviours, i.e., no one except for us *knows*.)
+
+In the end Floriment and I decided, that initialisation of the adjustor context state will only be merged into `master`, once we developed a general concept on how to do a proper initialisation within the *presimulation phase*. 
+However, we won't achieve this withing the remaining time.  
+
+A visualization of the phases can be found in Slingshot's documentation repository: [`eventloop.drawio`](https://github.com/PalladioSimulator/Palladio-Documentation-Slingshot/blob/master/images/sources/eventloop.drawio). 
+Enjoy with caution, this document is not official. 
+
+
+## Development Details : Initialisation Specific Branches and How to Maintain Them
+* list the branches
+* describe, how i maintained them up to now -> just merge master an pray for no conflicts. 
+
+## JSON scema / versions nummer
+* do this. 
+
+## @Snapshottriggering:
+kann man das generische machen, also an stelle hardgecoded einen falls abzudecken (scale in auf min), alls generisch analog zum abortiong. problem: snapshot brauch unverändertes system. lässt sich das easy fixen?
+currently the *drop* cases are hardcoded. 
+
+
+## Tests basierend auf existierendem state file. 
