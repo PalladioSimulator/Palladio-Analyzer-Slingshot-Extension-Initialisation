@@ -30,7 +30,7 @@ import com.google.gson.stream.JsonWriter;
  * <li> non-empty Optional and the value is an object that was not yet serialised: value is serialised with respective adapter.
  * <ul>
  * <li> object: {@code {"class":"java.util.Optional","value":{"class":"...","refId":"...","obj":{....}}}}
- * <li> PCM element : {@code {"class":"java.util.Optional","value":"file:..."}} (the "file" prefix is important for recognising PCM elements)
+ * <li> PCM element : {@code {"class":"java.util.Optional","value":"..."}} 
  * </ul>
  * <li> non-empty Optional and the value is an object that was already serialised: reference to the object and type of the object.
  * <ul>

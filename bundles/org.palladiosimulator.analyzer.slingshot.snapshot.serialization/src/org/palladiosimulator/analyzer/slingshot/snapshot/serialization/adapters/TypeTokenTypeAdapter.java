@@ -10,6 +10,13 @@ import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
+/**
+ * 
+ * Serializes the content of fields of type {@link TypeToken} as the type token's raw type's canonical name. 
+ * 
+ * @author Sophie Stieß
+ *
+ */
 public class TypeTokenTypeAdapter extends TypeAdapter<TypeToken<?>> {
 
 	public TypeTokenTypeAdapter() {

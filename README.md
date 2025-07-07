@@ -388,4 +388,167 @@ The class already implements the interface `SimulationBehaviorExtension`.
 For further information confer the JavaDoc.
 
 
-## Development Pitfall (partially out of context)
+
+## Development Details : Snapshot (De-)Serialisation.
+
+Serializing and deserializing a snapshot to JSON required several design decisions. 
+Most of them depend on the structure of Slingshot's events and entities, thus this section starts of with a brief dive into that topic, before elaborating on the actual serialisation.
+
+### Slingshot's Events and Entities
+
+The Slingshot simulator sports an event-oriented worldview.
+Everything that happens during a simulation, such as a user entering the system, or the processing of a request finishing, is announced with an event. 
+For more details on the events checkout the [Simulator's Documentation](https://www.palladio-simulator.com/Palladio-Documentation-Slingshot/slingshot-simulator/)
+
+Most events, especially those related to specific users, hold entities that represent the current context for simulating a user. 
+The entities are nested structures and are getting more complex the further the simulation progresses. 
+
+The figure below shows a simplified excerpt of the entities' class graph.
+The most important points are: 
+1. There are class hierarchies and information about the dynamic type of references must be maintained, or else the deserialization is impossible.
+2. Slingshot's entities reference each other, and references must be kept. 
+   E.g. both `RequestProcessingContext` and `UserInterpretationContext` reference the same instance of `User`.
+3. There are circular references.
+   E.g. the `behavior`/`context`relation between `SeffBehaviorWrapper` and `SeffBehaviorContextHolder`.
+4. Many entities reference elements from the PCMs. 
+   The PCM elements are `EObjects` and need special treatment.
+
+Additional points, that caused problems during implementation: 
+
+5. There are `Optional`s, that need special treatment.
+6. There are `EList`s, that need special treatment.
+7. Some event types hold additional information about generic types, that would otherwise be lost due to type erasure. These fields of type `TypeToken` and `Class` need special treatment.
+
+### 1. Maintaining information about the dynamic types
+
+Each event and entity is always serialised with an additional field that hold the type information. 
+For an event, it may look like this:
+```
+{
+  "type": "org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobInitiated",
+  "event": { ... }
+}
+```
+* `type` contains the canonical name of the event's dynamic type.
+* `event` contains the serialization of the actual event. 
+
+For an entity, it may look like this:
+```
+{
+  "class": "org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.SEFFInterpretationContext",
+  "refId": "227998366$393118622",
+  "obj": { ... }
+}
+```
+* `class` contains the canonical name of the entity's dynamic type.
+* `refId` will be explained in the next section.
+* `obj` contains the serialization of the actual entity.
+
+For deserialization, the respective type adapter factories maintain a mapping from dynamic types to specific type adapters for delegation. 
+The mapping is created based on predefined sets of types.
+Those sets are defined in `org.palladiosimulator.analyzer.slingshot.snapshot.serialization.util.SlingshotTypeTokenSets`.
+(De-)Serializing any event or entity whose type is not listed in those sets might result in errors or unexpected behaviour.
+
+### 2. Keep the references between entities
+As mentioned in the previous section, a serialized entity may look like this: 
+```
+{
+  "class": "org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.SEFFInterpretationContext",
+  "refId": "227998366$393118622",
+  "obj": { ... }
+}
+```
+* `class` and `obj`: see previous section.
+* `refId` id of the entity. 
+  The id is calculated in `org.palladiosimulator.analyzer.slingshot.snapshot.serialization.util.SnapshotSerialisationUtils#getReferenceId`. 
+  Confer the JavaDoc for more details.  
+  
+However, the serialized entity only looks like this the first time it occurs. 
+All subsequent occurrences are references only, e.g. the serialisation of a `SEFFModelPassedElement` event that get serialized after the entity shown above, but holds a references to the entity in the field `context` looks like this: 
+
+```
+{
+  "type": "org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFModelPassedElement",
+  "event": {
+    "context": "227998366$393118622",
+          ...
+  }
+}
+```
+* `context`: instead of serializing the entire `SEFFInterpretationContext` entity as shown in the previous snippet again, only the id is written. 
+
+During Serialisation, the entities' type adapters maintain a data structure to track which entities are already serialized.
+During Deserialisation, the entities' type adapters maintain a data structure to resolve reference ids to already deserialized entities.
+
+Notably, this approach cannot handle circular references.
+This approach requires that all references in the JSON occur after the actual serialisation of an entity, which is not given in case of circular references. 
+Regarding the resolution of this problem, confer the next section.     
+
+### 3. Circular References 
+
+Slingshot's entities graph contains circles, which cannot be deserialized with the reference id approach described in the previous section.
+Serialisation works just fine though.
+
+Currently, the only known (and handled) circle exists between `SeffBehaviorWrapper` and `SeffBehaviorContextHolder`, where the wrapper references the context holder as `context` and the context holder has field `behaviors` that is a list of wrappers.
+
+The additional two additional type adapters resolve the circle between wrapper and context holders. 
+When reading a JSON, they delegate the deserialisation to the "normal" entity type adapter. 
+If the "normal" type adapter encounters an unknown reference id, it returns `null`. 
+Thus, next the circle-resolving adapters check whether the fields that form the circle are `null`.
+If the fields are not `null` – i.e. the other half of the circle is already (incompletely) deserialized – the circle-resolving adapters use reflections to set the references, such that the circle is complete. 
+
+### 4. PCM elements
+
+The PCM instances use their own XML format for serialisation.
+We decided, that translating or including the XML-serialisations into the JSON files is a bad idea.
+Instead we decided to serialise all PCM elements as String representation fo the model element. 
+E.g. the serialisation of an `ActiveJob` entity looks like this:
+```
+{
+  "processingResourceType": "pathmap://PCM_MODELS/Palladio.resourcetype#_oro4gG3fEdy4YaaT-RYrLQ",
+  "allocationContext": "default.allocation#_nzKigFWREfChJLy4meFBug",
+  "request": { ... }
+  ...
+}
+```
+An `ActiveJob` entity has fields `processingResourceType` and `allocationContext` that reference PCM elements.
+For PCM elements, that have a files resources, such as `allocationContext` in the snippet above, only the file name and the PCM element's fragment is written. 
+For all other PCM elements, such  as `processingResourceType` in the snippet above, the entire URI is written. 
+
+For PCM elements, that have a files resources, file name and fragment is enough to get the correct object, because for each simulation run, we already have an experiments file that holds the information about the exact location of the models. 
+
+Thus the precondition for deserializing PCM elements are:
+
+1. PCM instances are already loaded. 
+2. The experiments file and the snapshot originate from the same simulation run, i.e. reference the same PCM instances.  
+
+### 5. `Optional`
+
+If i recall correctly, we required a special adapter for optionals, because otherwise the type of the optional's value would not be recognized correctly. 
+Also, there were some difficulties with empty optionals, and fields of type `Optional` with value `null`.
+
+### 6. `EList`
+
+Some entities use `EList` as collection type.
+Sadly, gson's normal collection adapters could not handle `EList`s.
+
+### 7. `TypeToken` and `Class`
+
+Some events and entities have fields of type `TypeToken` or `Class`.
+Those fields are mostly necessary to retain some types that would otherwise be erased by type erasure. 
+
+The values of those fields are serialized as canonical names:
+```
+{
+  "type": "org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFModelPassedElement",
+  "event": {
+    "context": "238194056$393118622",
+    "genericTypeToken": "org.palladiosimulator.pcm.seff.impl.StartActionImpl",
+    ...
+  }
+}
+```
+
+## Development Details : Noninvasively Recreating the State of `ResourceSimulation`.
+
+## Development Details : Invasively Recreating the State of the SPD adjustor contexts.

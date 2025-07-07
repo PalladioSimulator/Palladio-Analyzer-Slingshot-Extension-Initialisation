@@ -23,8 +23,12 @@ import com.google.gson.stream.JsonWriter;
  * 
  * Factory to create {@link TypeAdapter}s for any slingshot entities.
  * 
- * Notable, the adapters include the entities runtime type into the JSON, and
+ * Notably, the adapters include the entities runtime type into the JSON, and
  * use references if an object is referenced by multiple other objects.
+ * 
+ * Also, on serialisation, the datastructure of tracking the already written
+ * entities must be updated before actually writing the entity, or else this
+ * factory's adapters fail on circular references.
  * 
  * @author Sophie Stieß
  * 

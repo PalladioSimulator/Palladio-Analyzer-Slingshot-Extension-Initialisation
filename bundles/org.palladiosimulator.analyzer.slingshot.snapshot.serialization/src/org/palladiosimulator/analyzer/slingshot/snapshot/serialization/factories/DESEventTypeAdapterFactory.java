@@ -208,7 +208,7 @@ public class DESEventTypeAdapterFactory implements TypeAdapterFactory {
 
 			/**
 			 * 
-			 * Just llexing on how to access the fields.
+			 * Just flexing on how to access the fields.
 			 * 
 			 * @param <T>
 			 * @param json

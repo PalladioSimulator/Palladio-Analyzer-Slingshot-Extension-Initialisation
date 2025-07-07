@@ -49,6 +49,10 @@ public final class SnapshotSerialisationUtils {
 	 * central operation for creating them, such that the ids are always constructed
 	 * the same way.
 	 * 
+	 * The id is a combination of object and class hash, because an initial attempt
+	 * with object hash only resulted in duplicated ids among objects of different
+	 * types.
+	 * 
 	 * @param <R>
 	 * @param value object to create a reference id for.
 	 * @return reference id for the given value

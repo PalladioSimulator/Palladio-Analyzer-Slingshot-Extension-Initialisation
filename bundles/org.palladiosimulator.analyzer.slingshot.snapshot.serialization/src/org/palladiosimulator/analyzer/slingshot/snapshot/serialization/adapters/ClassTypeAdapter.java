@@ -9,6 +9,13 @@ import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
+/**
+ * 
+ * Serializes the content of fields of type {@link Class} as the class' canonical name. 
+ * 
+ * @author Sophie Stieß
+ *
+ */
 public class ClassTypeAdapter extends TypeAdapter<Class<?>> {
 
 	public ClassTypeAdapter() {
