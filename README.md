@@ -617,10 +617,18 @@ Enjoy with caution, this document is not official.
 * list the branches
 * describe, how i maintained them up to now -> just merge master an pray for no conflicts. 
 
-## JSON scema / versions nummer
-* generated with [https://github.com/MetaConfigurator/meta-configurator](https://github.com/MetaConfigurator/meta-configurator), and manually adapted where necessary.
-* for snapshots, schema does not map all possible entities 
-* sadly, `com.google.gson` does not support validation against schemas, orbit has no libraries for validation against schemas, and m2e, which appears to be about the only viable possibility for getting maven dependencies into a targetplatform, cannot be installed into my version of eclipse.  
+## JSON schema
+Schemas for the config, snapshot ant state json can be found in [json-schema](link-to-folder-in-github).
+We generated the schemas with [https://github.com/MetaConfigurator/meta-configurator](https://github.com/MetaConfigurator/meta-configurator), and manually adapted them where necessary.
+
+For the snapshot json, the sch does not map the structure of entities in detail, instead we simplified it to `object`. 
+
+Also, the initialisation plugin does not use the schemas for validation because...
+1. ...our current json library (`com.google.gson`) does not support validation against schemas.
+2. ...orbit provides no alternative library for validation against schemas. 
+3. ...the m2e plugin, which might be the only viable possibility for getting maven dependencies into our target platform (c.f. [vogella](https://www.vogella.com/tutorials/EclipseJarToPlugin/article.html)), cannot be installed into my version of eclipse.  
+
+In conclusion, schemas are provided, but validation must be done manually. 
 
 ## @Snapshottriggering:
 kann man das generische machen, also an stelle hardgecoded einen falls abzudecken (scale in auf min), alls generisch analog zum abortiong. problem: snapshot brauch unverändertes system. lässt sich das easy fixen?
