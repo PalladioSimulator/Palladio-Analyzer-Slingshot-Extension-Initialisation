@@ -33,7 +33,7 @@ public class MeasurementSet {
 	private String metricDescriptionId;
 	
 
-	private List<Measure> measure;
+	private transient List<Measure> measure;
 
 	public MeasurementSet() {
 		super();
@@ -145,7 +145,7 @@ public class MeasurementSet {
 		this.specificationName = specificationName;
 	}
 	
-	public void setMeasure(List<Measure> m) {
+	public void setMeasure(final List<Measure> m) {
 		this.measure = m;
 	}
 	
