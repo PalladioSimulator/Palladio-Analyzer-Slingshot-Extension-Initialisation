@@ -1,0 +1,152 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "description": "A state representing one slice of a simulation run.",
+  "properties": {
+    "parentId": {
+      "type": "string",
+      "description": "Id of this state's parent state."
+    },
+    "id": {
+      "type": "string",
+      "description": "Id of this state.",
+      "format": "uuid"
+    },
+    "startTime": {
+      "type": "integer"
+    },
+    "duration": {
+      "type": "number"
+    },
+    "reasonsToLeave": {
+      "type": "array",
+      "description": "Reasons why the simulation was sliced, i.e. why this state was created.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "utility": {
+      "type": "object",
+      "description": "Utility of this state.",
+      "properties": {
+        "totalUtility": {
+          "type": "number"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "utility": {
+                "type": "number"
+              },
+              "type": {
+                "$ref": "#/$defs/utilityType"
+              }
+            },
+            "required": [
+              "id",
+              "utility",
+              "type"
+            ]
+          }
+        }
+      },
+      "required": [
+        "totalUtility",
+        "data"
+      ]
+    },
+    "outgoingPolicyIds": {
+      "type": "array",
+      "description": "Ids of the scaling policies that caused the creation of this state. Empty, if this state did not end because of reactive reconfiguration.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "measurementSets": {
+      "type": "array",
+      "description": "Measurement values taken during this state.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "elements": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "measure": {
+                  "type": "number"
+                },
+                "timeStamp": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "measure",
+                "timeStamp"
+              ]
+            }
+          },
+          "name": {
+            "type": "string"
+          },
+          "monitorId": {
+            "type": "string"
+          },
+          "monitorName": {
+            "type": "string"
+          },
+          "specificationId": {
+            "type": "string"
+          },
+          "specificationName": {
+            "type": "string"
+          },
+          "metricName": {
+            "type": "string"
+          },
+          "metricDescription": {
+            "type": "string"
+          },
+          "metricDescriptionId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "elements",
+          "name",
+          "monitorId",
+          "monitorName",
+          "specificationId",
+          "specificationName",
+          "metricName",
+          "metricDescription",
+          "metricDescriptionId"
+        ]
+      }
+    }
+  },
+  "required": [
+    "parentId",
+    "id",
+    "startTime",
+    "duration",
+    "reasonsToLeave",
+    "utility",
+    "outgoingPolicyIds",
+    "measurementSets"
+  ],
+  "$defs": {
+    "utilityType": {
+      "type": "string",
+      "enum": [
+        "SLO",
+        "COST"
+      ]
+    }
+  }
+}

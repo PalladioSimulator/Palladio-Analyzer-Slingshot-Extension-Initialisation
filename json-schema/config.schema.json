@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "incomingPolicies": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "minDuration": {
+      "type": "number",
+      "description": "minimal duration for the simulation run."
+    },
+    "parameters": {
+      "type": "object",
+      "description": "Optional parameters for configuring the simulation run e.g. by configuring certain behaviour extensions.",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "active": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "pointInTime": {
+      "type": "number"
+    },
+    "snapshot": {
+      "type": "object",
+      "properties": {
+        "events": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string"
+              },
+              "event": {
+                "type": "object",
+                "properties": {
+                  "entity": {
+                    "type": "object",
+                    "properties": {
+                      "class": {
+                        "type": "string"
+                      },
+                      "refId": {
+                        "type": "string"
+                      },
+                      "obj": {
+                        "type": "object"
+                      }
+                    },
+                    "required": [
+                      "class",
+                      "refId",
+                      "obj"
+                    ]
+                  },
+                  "scheduledTime": {
+                    "type": "number"
+                  },
+                  "delay": {
+                    "type": "number"
+                  },
+                  "id": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "entity",
+                  "scheduledTime",
+                  "delay",
+                  "id"
+                ]
+              }
+            },
+            "required": [
+              "type",
+              "event"
+            ]
+          }
+        },
+        "statevalues": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "latestAdjustmentAtSimulationTime": {
+                "type": "number"
+              },
+              "numberScales": {
+                "type": "integer"
+              },
+              "targetGroupState": {
+                "type": "object",
+                "properties": {
+                  "targetGroup": {
+                    "type": "string"
+                  },
+                  "enactmentTimeOfScalingPolicies": {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    }
+                  },
+                  "enactedScalingPolicies": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "targetGroup",
+                  "enactmentTimeOfScalingPolicies",
+                  "enactedScalingPolicies"
+                ]
+              },
+              "scalingPolicy": {
+                "type": "string"
+              },
+              "coolDownEnd": {
+                "type": "number"
+              },
+              "numberOfScalesInCooldown": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "latestAdjustmentAtSimulationTime",
+              "numberScales",
+              "targetGroupState",
+              "scalingPolicy",
+              "coolDownEnd",
+              "numberOfScalesInCooldown"
+            ]
+          }
+        }
+      },
+      "required": [
+        "events",
+        "statevalues"
+      ]
+    }
+  },
+  "required": [
+    "id",
+    "pointInTime",
+    "snapshot"
+  ]
+}

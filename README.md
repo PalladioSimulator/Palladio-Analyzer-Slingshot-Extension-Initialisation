@@ -169,7 +169,7 @@ Pay attention to also import the SPD meta model and the SPD interpreter extensio
   * Switching to another branch is necessary, because the SPD interpreter extension is stateful but has no hook to initialise its state from the outside. 
     On this initialisation specific branch (the name is legacy) we added the possibility to initialise the state to an arbitrary value. 
     This change was not accepted into the `master` branch, because it does not adhere to the current design of the slingshot event cycle.  
-    For more details, confer [section on recreating the SPD adjustor contexts' states](Development-Details-:-Recreating-the-State-of-the-SPD-adjustor-contexts) 
+    For more details, confer [section on Recreating the SPD adjustor contexts' states](Development-Details-:-Recreating-the-State-of-the-SPD-adjustor-contexts) 
 
 * **[TODO]** check on *Palladio-Addons-SPD-Metamodel*: is transformation fix already merged? 
 
@@ -618,7 +618,9 @@ Enjoy with caution, this document is not official.
 * describe, how i maintained them up to now -> just merge master an pray for no conflicts. 
 
 ## JSON scema / versions nummer
-* do this. 
+* generated with [https://github.com/MetaConfigurator/meta-configurator](https://github.com/MetaConfigurator/meta-configurator), and manually adapted where necessary.
+* for snapshots, schema does not map all possible entities 
+* sadly, `com.google.gson` does not support validation against schemas, orbit has no libraries for validation against schemas, and m2e, which appears to be about the only viable possibility for getting maven dependencies into a targetplatform, cannot be installed into my version of eclipse.  
 
 ## @Snapshottriggering:
 kann man das generische machen, also an stelle hardgecoded einen falls abzudecken (scale in auf min), alls generisch analog zum abortiong. problem: snapshot brauch unverändertes system. lässt sich das easy fixen?
