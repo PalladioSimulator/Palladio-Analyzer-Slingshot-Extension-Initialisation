@@ -155,7 +155,7 @@ public class SnapshotStateUpdateBehaviour implements SimulationBehaviorExtension
 		if (!event.getEntity().getModelAdjustmentRequestedEvent().isEmpty()) {
 			stateBuilder.addReasonToLeave(ReasonToLeave.reactiveReconfiguration);
 		}
-		if (event.time() == snapshotConfig.getMinDuration()) {
+		if (event.time() == snapshotConfig.getMaxDuration()) {
 			stateBuilder.addReasonToLeave(ReasonToLeave.interval);
 		}
 	}

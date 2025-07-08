@@ -23,19 +23,19 @@ import java.util.Map;
  */
 public final class SnapshotConfiguration {
 
-	private final double minDuration;
+	private final double maxDuration;
 	private final boolean startFromSnapshot;
 	
 	private final Map<String, SnapshotBehaviourConfigurationParameters> parameters;
 
-	public SnapshotConfiguration(final boolean startFromSnapshot, final double minDuration, final Map<String, SnapshotBehaviourConfigurationParameters> parameters) {
+	public SnapshotConfiguration(final boolean startFromSnapshot,final double maxDuration, final Map<String, SnapshotBehaviourConfigurationParameters> parameters) {
 		this.startFromSnapshot = startFromSnapshot;
-		this.minDuration = minDuration;
+		this.maxDuration = maxDuration;
 		this.parameters = parameters;
 	}
-
-	public double getMinDuration() {
-		return this.minDuration;
+	
+	public double getMaxDuration() {
+		return this.maxDuration;
 	}
 
 	public Map<String, SnapshotBehaviourConfigurationParameters> getConfigurationParameters() {

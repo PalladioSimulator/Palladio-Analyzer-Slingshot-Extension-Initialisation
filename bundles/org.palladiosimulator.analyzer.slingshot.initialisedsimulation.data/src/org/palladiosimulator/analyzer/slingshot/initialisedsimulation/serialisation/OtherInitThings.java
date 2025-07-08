@@ -18,7 +18,6 @@ public class OtherInitThings {
 	private final List<ScalingPolicy> incomingPolicies; 
 	private final Map<String, SnapshotBehaviourConfigurationParameters> parameters;
 
-
 	/**
 	 * 
 	 * @param sensibility for configuring the snapshot mechanism.
@@ -32,7 +31,7 @@ public class OtherInitThings {
 	
 	/**
 	 * 
-	 * @return
+	 * @return map of configruation parameters, identified by string-keys. 
 	 */
 	public Map<String, SnapshotBehaviourConfigurationParameters> getConfigurationParameters() {
 		return this.parameters != null ? this.parameters : new HashMap<>();
@@ -45,4 +44,5 @@ public class OtherInitThings {
 	public List<ScalingPolicy> getIncomingPolicies() {
 		return this.incomingPolicies != null ? this.incomingPolicies : List.of();
 	}
+
 }

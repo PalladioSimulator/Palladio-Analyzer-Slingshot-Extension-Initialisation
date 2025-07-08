@@ -102,7 +102,7 @@ public class SnapshotInitFromBehaviour implements SimulationBehaviorExtension {
 	@Subscribe
 	public Result<SnapshotInitiated> onConfigurationStarted(
 			final PreSimulationConfigurationStarted configurationStarted) {
-		return Result.of(new SnapshotInitiated(this.snapshotConfig.getMinDuration()));
+		return Result.of(new SnapshotInitiated(this.snapshotConfig.getMaxDuration()));
 	}
 
 	/**

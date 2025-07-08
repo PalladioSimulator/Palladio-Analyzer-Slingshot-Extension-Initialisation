@@ -25,7 +25,7 @@ import com.google.gson.reflect.TypeToken;
 
 /**
  * 
- * TODO 
+ * Deserialize configuration information provided as input. 
  * 
  * 
  * @author Sophie Stieß
@@ -38,15 +38,21 @@ public final class OtherStuffDeserialization implements DeserializeParent<OtherI
 	private final Gson gson;
 	private final SPD spd;
 	
+	/**
+	 * 
+	 * @param partition partition for accesing the spd model.
+	 */
 	public OtherStuffDeserialization(final PCMResourceSetPartition partition) {
 		super();
-			
 		this.spd = PCMResourcePartitionHelper.getSPD(partition);
 		this.gson = createGson();
 	}
 
+	/**
+	 * 
+	 * @return gson object with all adapter required to deserialize instances of {@link OtherInitThings}.
+	 */
 	private Gson createGson() {
-		
 		return new GsonBuilder()
 				.registerTypeAdapter(ScalingPolicy.class, new ScalingPolicyDeserializer())
 				.registerTypeAdapter(SnapshotBehaviourConfigurationParameters.class, new ConfigurationParameterDeserializer())
@@ -60,6 +66,15 @@ public final class OtherStuffDeserialization implements DeserializeParent<OtherI
 	}
 	
 	/**
+	 * 
+	 * Deserialize a scaling policy.
+	 * 
+	 * In the json, scaling policies are represented by their string id. 
+	 * This deserializer looks the given ids up in the spd model and returns the matching policy.
+	 * 
+	 * Requires that the spd is already loaded. 
+	 * 
+	 * Fails, if the scaling policy does not belong to the spd. 
 	 * 
 	 * @author Sophie Stieß
 	 *
@@ -90,6 +105,8 @@ public final class OtherStuffDeserialization implements DeserializeParent<OtherI
 	}
 	
 	/**
+	 * 
+	 * Deserialize the additional configuration parameters. 
 	 * 
 	 * @author Sophie Stieß
 	 *
