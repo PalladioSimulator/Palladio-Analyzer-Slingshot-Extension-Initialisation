@@ -612,10 +612,26 @@ However, we won't achieve this withing the remaining time.
 A visualization of the phases can be found in Slingshot's documentation repository: [`eventloop.drawio`](https://github.com/PalladioSimulator/Palladio-Documentation-Slingshot/blob/master/images/sources/eventloop.drawio). 
 Enjoy with caution, this document is not official. 
 
+## Design Decision Details : Minimal Duration of States
 
-## Development Details : Initialisation Specific Branches and How to Maintain Them
-* list the branches
-* describe, how i maintained them up to now -> just merge master an pray for no conflicts. 
+Users requested a minimal state duration. 
+
+We decided against a general minimal state duration. 
+With Slingshot's current extension based architecture, anyone can add further behaviour extension that are able to initiate snapshots as well. 
+However, we cannot force new behaviour extension to adhere to the minimal state duration.
+This might result in unexpected behaviour. 
+
+Globally enforcing the minimal state duration, e.g. by preintercepting and aborting `SnapshotInitiated` events is dangerous, because a minimal state duration has different implications for different behaviour extensions. 
+As an example, for the behaviour extension `SnapshotTriggeringBehavior` one must consider how to handle reactive reconfiguration that happen before the minimal state duration is reached. 
+
+Instead of a minimal state duration, we added a parameters with similar effects to the behaviour extensions `SnapshotTriggeringBehavior` and `SnapshotSLOTriggeringBehavior`.
+For more details, confer the classes' java doc. 
+
+We actively decided against adding a similar parameter for the behavior extensions `SnapshotSLOAbortionBehavior` and `SnapshotAbortionBehavior`.
+For the latter, a delayed activation makes no sense, because it can only abort at $t=0$, i.e. a delayed activation equals an deactivation.
+For both, i argue that a delayed activation is unrewarding. 
+An abortion should be known as soon as possible, otherwise we waste computation time on a state we will not explore further.  
+
 
 ## JSON schema
 Schemas for the config, snapshot ant state json can be found in [json-schema](link-to-folder-in-github).
@@ -636,3 +652,11 @@ currently the *drop* cases are hardcoded.
 
 
 ## Tests basierend auf existierendem state file. 
+
+
+## Development Details : Initialisation Specific Branches and How to Maintain Them
+* TODO list the branches
+* TODO describe, how i maintained them up to now -> just merge master an pray for no conflicts. 
+
+## Known Problem : useless triggering of snapshots on minimal arch configuration. 
+

@@ -8,6 +8,7 @@ import org.apache.log4j.Logger;
 import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.ModelAdjustmentRequested;
 import org.palladiosimulator.analyzer.slingshot.common.annotations.Nullable;
 import org.palladiosimulator.analyzer.slingshot.common.events.modelchanges.ModelAdjusted;
+import org.palladiosimulator.analyzer.slingshot.common.utils.SPDHelper;
 import org.palladiosimulator.analyzer.slingshot.core.api.SimulationScheduling;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.PreIntercept;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.entity.interceptors.InterceptorInformation;
@@ -20,12 +21,9 @@ import org.palladiosimulator.analyzer.slingshot.snapshot.api.Snapshot;
 import org.palladiosimulator.analyzer.slingshot.snapshot.configuration.SnapshotConfiguration;
 import org.palladiosimulator.analyzer.slingshot.snapshot.events.SnapshotInitiated;
 import org.palladiosimulator.semanticspd.Configuration;
-import org.palladiosimulator.semanticspd.ElasticInfrastructureCfg;
-import org.palladiosimulator.semanticspd.ServiceGroupCfg;
+import org.palladiosimulator.semanticspd.TargetGroupCfg;
 import org.palladiosimulator.spd.ScalingPolicy;
 import org.palladiosimulator.spd.adjustments.StepAdjustment;
-import org.palladiosimulator.spd.targets.ElasticInfrastructure;
-import org.palladiosimulator.spd.targets.ServiceGroup;
 import org.palladiosimulator.spd.targets.TargetGroup;
 
 /**
@@ -40,6 +38,12 @@ import org.palladiosimulator.spd.targets.TargetGroup;
  * <br>
  * Drops reconfigurations under certain circumstances, see {@link SnapshotTriggeringBehavior#isDrop(ScalingPolicy)} for details.
  * To deactivate the dropping, add {@code "doDrop" : false} to the configuration paratmeters.
+ * <br>
+ * This extension provides a configuration parameter called "dropInterval". The value must be a double.
+ * If the value is greater than 0.0, this behaviour extension drops all reactive reconfigurations during the interval [0.0, value).
+ * Beware, this also changes the beheaviour of the simulation, as droping a reconfiguration is implemented by aborting the respective {@link ModelAdjustmentRequested} event.
+ * <br>
+ * <br>
  *
  * @author Sophie Stieß
  *
@@ -57,8 +61,10 @@ public class SnapshotTriggeringBehavior extends ConfigurableSnapshotExtension {
 	private final Configuration config;
 	
 	private final boolean doDrop;
-	private final static String DO_DROP = "doDrop";
-
+	private final double delay;
+	private final static String DO_DROP = "dodrop"; // TODO : dropEffectlessAdaptions
+	private final static String DELAY = "dropInterval";
+	
 	@Inject
 	public SnapshotTriggeringBehavior(final @Nullable StateBuilder state,
 			final @Nullable InitWrapper eventsWapper, final SimulationScheduling scheduling,
@@ -72,6 +78,7 @@ public class SnapshotTriggeringBehavior extends ConfigurableSnapshotExtension {
 		this.config = semanticSpd;
 
 		this.doDrop = this.toggle.hasParameter(DO_DROP, Boolean.class) ? this.toggle.getParameter(DO_DROP) : true; 
+		this.delay = this.toggle.hasParameter(DELAY, Double.class) ? this.toggle.getParameter(DELAY) : 0.0; 
 		
 		this.activated = state != null && eventsWapper != null;
 	}
@@ -113,6 +120,10 @@ public class SnapshotTriggeringBehavior extends ConfigurableSnapshotExtension {
 					information.getEnclosingType().get().getSimpleName()));
 			return InterceptionResult.success();
 		}
+		
+		if (event.time() < this.delay) {
+			return InterceptionResult.abort();
+		}
 
 		// keep or delete?
 		if (isDrop(event.getScalingPolicy())) {
@@ -120,7 +131,7 @@ public class SnapshotTriggeringBehavior extends ConfigurableSnapshotExtension {
 		}
 
 		state.addReasonToLeave(ReasonToLeave.reactiveReconfiguration);
-		scheduling.scheduleEvent(new SnapshotInitiated(0, event));
+		scheduling.scheduleEvent(new SnapshotInitiated(event));
 
 		LOGGER.debug(String.format("Abort routing %s to %s", event.getName(),
 				information.getEnclosingType().get().getSimpleName()));
@@ -144,30 +155,10 @@ public class SnapshotTriggeringBehavior extends ConfigurableSnapshotExtension {
 	private boolean isDrop(final ScalingPolicy policy) {
 		if (this.doDrop && policy.getAdjustmentType() instanceof final StepAdjustment adjustment && adjustment.getStepValue() < 0) {
 			// Scale in!
-			final TargetGroup tg = policy.getTargetGroup();
-			if (tg instanceof final ElasticInfrastructure ei) {
-				final List<ElasticInfrastructureCfg> elements = config.getTargetCfgs().stream()
-						.filter(ElasticInfrastructureCfg.class::isInstance).map(ElasticInfrastructureCfg.class::cast)
-						.filter(eic -> eic.getUnit().getId().equals(ei.getUnit().getId())).toList();
-
-				if (elements.size() != 1) {
-					throw new RuntimeException("Help, wrong number of matching elastic infrastructure group configs.");
-				}
-
-				return elements.get(0).getElements().size() == 1;
-			}
-
-			if (tg instanceof final ServiceGroup sg) {
-				final List<ServiceGroupCfg> elements = config.getTargetCfgs().stream()
-						.filter(ServiceGroupCfg.class::isInstance).map(ServiceGroupCfg.class::cast)
-						.filter(sgc -> sgc.getUnit().getId().equals(sg.getUnitAssembly().getId())).toList();
-
-				if (elements.size() != 1) {
-					throw new RuntimeException("Help, wrong number of matching service group configs.");
-				}
-
-				return elements.get(0).getElements().size() == 1;
-			}
+			final TargetGroup tg = policy.getTargetGroup();			
+			final TargetGroupCfg tgCfg = SPDHelper.getMatchingTargetGroupCfg(tg, config);
+			
+			return SPDHelper.isMinTargetGroup(tgCfg, SPDHelper.getTargetGroupSizeConstraint(tg));
 
 		}
 		return false;

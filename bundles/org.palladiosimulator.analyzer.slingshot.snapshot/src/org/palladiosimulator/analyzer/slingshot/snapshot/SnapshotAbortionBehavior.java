@@ -9,10 +9,10 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 import org.apache.log4j.Logger;
-import org.eclipse.emf.ecore.EObject;
 import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.ModelAdjustmentRequested;
 import org.palladiosimulator.analyzer.slingshot.common.annotations.Nullable;
 import org.palladiosimulator.analyzer.slingshot.common.events.modelchanges.ModelAdjusted;
+import org.palladiosimulator.analyzer.slingshot.common.utils.SPDHelper;
 import org.palladiosimulator.analyzer.slingshot.core.api.SimulationScheduling;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.Subscribe;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.eventcontract.OnEvent;
@@ -22,16 +22,10 @@ import org.palladiosimulator.analyzer.slingshot.initialisedsimulation.providers.
 import org.palladiosimulator.analyzer.slingshot.snapshot.api.ConfigurableSnapshotExtension;
 import org.palladiosimulator.analyzer.slingshot.snapshot.configuration.SnapshotConfiguration;
 import org.palladiosimulator.analyzer.slingshot.snapshot.events.SnapshotInitiated;
-import org.palladiosimulator.semanticspd.CompetingConsumersGroupCfg;
+import org.palladiosimulator.pcm.core.entity.Entity;
 import org.palladiosimulator.semanticspd.Configuration;
-import org.palladiosimulator.semanticspd.ElasticInfrastructureCfg;
-import org.palladiosimulator.semanticspd.ServiceGroupCfg;
 import org.palladiosimulator.semanticspd.TargetGroupCfg;
 import org.palladiosimulator.spd.SPD;
-import org.palladiosimulator.spd.targets.CompetingConsumersGroup;
-import org.palladiosimulator.spd.targets.ElasticInfrastructure;
-import org.palladiosimulator.spd.targets.ServiceGroup;
-import org.palladiosimulator.spd.targets.TargetGroup;
 
 /**
  *
@@ -96,12 +90,12 @@ public class SnapshotAbortionBehavior extends ConfigurableSnapshotExtension {
 			 * but not the number of resource containers. Unclear whether this is a bug or a
 			 * feature in the SPD transformations.
 			 */
-			final Set<EObject> targetGroups = spd.getTargetGroups().stream().map(tg -> getUnitOf(tg))
+			final Set<Entity> targetGroups = spd.getTargetGroups().stream().map(tg -> SPDHelper.getUnitOf(tg))
 					.collect(Collectors.toSet());
 
 			for (final TargetGroupCfg tgcfg : semanticSpd.getTargetCfgs()) {
-				if (targetGroups.contains(getUnitOf(tgcfg))) {
-					tg2size.put(tgcfg, getSizeOf(tgcfg));
+				if (targetGroups.contains(SPDHelper.getUnitOf(tgcfg))) {
+					tg2size.put(tgcfg, SPDHelper.getSizeOf(tgcfg));
 				}
 			}
 		}
@@ -149,8 +143,8 @@ public class SnapshotAbortionBehavior extends ConfigurableSnapshotExtension {
 			for (final TargetGroupCfg tgcfg : config.getTargetCfgs()) {
 				if (tg2size.containsKey(tgcfg)) {
 					LOGGER.debug(tgcfg.getClass().getSimpleName() + ": old " + tg2size.get(tgcfg) + " new "
-							+ getSizeOf(tgcfg));
-					if (tg2size.get(tgcfg) != getSizeOf(tgcfg)) {
+							+ SPDHelper.getSizeOf(tgcfg));
+					if (tg2size.get(tgcfg) != SPDHelper.getSizeOf(tgcfg)) {
 						return;
 					}
 				}
@@ -161,59 +155,6 @@ public class SnapshotAbortionBehavior extends ConfigurableSnapshotExtension {
 		}
 	}
 
-	/**
-	 * Helper for accessing the size of a {@link TargetGroupCfg} (the thing from the semantic SPD).
-	 * 
-	 * @param tgcfg the target group configuration to be accessed
-	 * @return size of the target group configuration
-	 */
-	private static int getSizeOf(final TargetGroupCfg tgcfg) {
-		if (tgcfg instanceof final ElasticInfrastructureCfg ecfg) {
-			return ecfg.getElements().size();
-		} else if (tgcfg instanceof final ServiceGroupCfg scfg) {
-			return scfg.getElements().size();
-		} else if (tgcfg instanceof final CompetingConsumersGroupCfg ccfg) {
-			return ccfg.getElements().size();
-		} else {
-			throw new IllegalArgumentException(
-					"TargetGroupConfiguration of unknown type, cannot determine size of elements.");
-		}
-	}
 
-	/**
-	 * Helper for accessing the unit of a {@link TargetGroupCfg} (the thing from the semantic SPD).
-	 * 
-	 * @param tgcfg the target group configuration to be accessed
-	 * @return unit of the given target group configuration
-	 */
-	private static EObject getUnitOf(final TargetGroupCfg tgcfg) {
-		if (tgcfg instanceof final ElasticInfrastructureCfg ecfg) {
-			return ecfg.getUnit();
-		} else if (tgcfg instanceof final ServiceGroupCfg scfg) {
-			return scfg.getUnit();
-		} else if (tgcfg instanceof final CompetingConsumersGroupCfg ccfg) {
-			return ccfg.getUnit();
-		} else {
-			throw new IllegalArgumentException(
-					"TargetGroupConfiguration of unknown type, cannot determine size of elements.");
-		}
-	}
 
-	/**
-	 * Helper for accessing the unit of a {@link TargetGroup} (the thing from the normal SPD).
-	 * 
-	 * @param tg the target group to be accessed.
-	 * @return unit of the given target group
-	 */
-	private static EObject getUnitOf(final TargetGroup tg) {
-		if (tg instanceof final ElasticInfrastructure etg) {
-			return etg.getUnit();
-		} else if (tg instanceof final ServiceGroup stg) {
-			return stg.getUnitAssembly();
-		} else if (tg instanceof final CompetingConsumersGroup ctg) {
-			return ctg.getUnitAssembly();
-		} else {
-			throw new IllegalArgumentException("TargetGroup of unknown type, cannot determine size of elements.");
-		}
-	}
 }

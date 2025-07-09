@@ -2,7 +2,6 @@ package org.palladiosimulator.analyzer.slingshot.snapshot;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -12,9 +11,9 @@ import javax.measure.quantity.Dimensionless;
 import javax.measure.quantity.Quantity;
 
 import org.apache.log4j.Logger;
-import org.eclipse.emf.common.util.EList;
 import org.palladiosimulator.analyzer.slingshot.common.annotations.Nullable;
 import org.palladiosimulator.analyzer.slingshot.common.utils.PCMResourcePartitionHelper;
+import org.palladiosimulator.analyzer.slingshot.common.utils.SPDHelper;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.Subscribe;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.eventcontract.OnEvent;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.returntypes.Result;
@@ -28,14 +27,12 @@ import org.palladiosimulator.analyzer.workflow.ConstantsContainer;
 import org.palladiosimulator.analyzer.workflow.blackboard.PCMResourceSetPartition;
 import org.palladiosimulator.metricspec.MetricDescription;
 import org.palladiosimulator.monitorrepository.MeasurementSpecification;
-import org.palladiosimulator.pcm.resourceenvironment.ResourceContainer;
-import org.palladiosimulator.pcmmeasuringpoint.ActiveResourceMeasuringPoint;
 import org.palladiosimulator.semanticspd.Configuration;
-import org.palladiosimulator.semanticspd.ElasticInfrastructureCfg;
 import org.palladiosimulator.servicelevelobjective.ServiceLevelObjective;
 import org.palladiosimulator.servicelevelobjective.ServiceLevelObjectiveRepository;
 import org.palladiosimulator.servicelevelobjective.SoftThreshold;
 import org.palladiosimulator.servicelevelobjective.Threshold;
+import org.palladiosimulator.spd.SPD;
 
 import de.uka.ipd.sdq.workflow.mdsd.blackboard.MDSDBlackboard;
 
@@ -43,8 +40,11 @@ import de.uka.ipd.sdq.workflow.mdsd.blackboard.MDSDBlackboard;
  *
  * This behaviour extension initiates snapshots based on a measurement's closeness to the defined SLOs.
  * 
- * The closeness is configurable. The corresponding parameter is called "sensitivity", the value must be in [0.0, 1.0]. 
+ * The closeness is configurable. The corresponding parameter is called "sensitivity", the value must be a double in [0.0, 1.0]. 
  * For more details, c.f. {@link ValueRange}. <br>
+ * <br>
+ * Activation of this behaviour extension can be delayed. The corresponding parameter is called "activationDelay", the value must be a double.
+ * If the value is less than or equal to 0.0, this behaviour extension is always active.<br>
  * <br>
  * This class does <strong>not</strong> use the raw measurements provided by
  * {@code MeasurementMade} events. Instead it uses the aggregated values
@@ -65,8 +65,12 @@ public class SnapshotSLOTriggeringBehavior extends ConfigurableSnapshotExtension
 
 	private final StateBuilder state;
 	private final Configuration semanticSpd;
+	private final SPD spd;
 
 	private final boolean activated;
+	
+	private final double delay;
+	private final static String DELAY = "activationDelay";
 
 	/* Calculate mapping to custom class to save time later on (probably) */
 	private final Map<MeasurementSpecification, Set<ValueRange>> mp2range;
@@ -75,21 +79,26 @@ public class SnapshotSLOTriggeringBehavior extends ConfigurableSnapshotExtension
 	public SnapshotSLOTriggeringBehavior(final @Nullable StateBuilder state,
 			final @Nullable MDSDBlackboard blackboard,
 			final @Nullable Configuration semanticSpd,
+			final @Nullable SPD spd,
 			final @Nullable SnapshotConfiguration config) {
 		
 		super(config);
 		
-		if (state != null || semanticSpd != null || blackboard != null) {
+		if (state != null && semanticSpd != null && spd != null && blackboard != null) {
+			this.activated = true;
 			this.state = state;
-			this.semanticSpd = semanticSpd; 	
+			this.semanticSpd = semanticSpd; 
+			this.spd = spd;
 			this.mp2range = this.initMeasuringPoint2RangeMap(blackboard);
-
-			this.activated = super.isActive();
+			this.delay = this.toggle.hasParameter(DELAY, Double.class) ? this.toggle.getParameter(DELAY) : 0.0; 
+			
 		} else {
 			this.activated = false;
 			this.state = null;
 			this.semanticSpd = null;
+			this.spd = null;
 			this.mp2range = null;
+			this.delay = 0.0;
 			
 			LOGGER.warn(String.format("Extension %s is deactivated because a required parameter is null.", this.getClass().getSimpleName()));
 		}
@@ -177,6 +186,10 @@ public class SnapshotSLOTriggeringBehavior extends ConfigurableSnapshotExtension
 	 */
 	@Subscribe
 	public Result<SnapshotInitiated> onMeasurementUpdated(final MeasurementUpdated event) {
+		
+		if (event.time() < this.delay) {
+			return Result.empty();
+		}
 
 		if (!mp2range.containsKey(event.getEntity().getProcessingType().getMeasurementSpecification())) {
 			return Result.empty();
@@ -184,18 +197,18 @@ public class SnapshotSLOTriggeringBehavior extends ConfigurableSnapshotExtension
 
 		final MetricDescription base = event.getEntity().getProcessingType().getMeasurementSpecification()
 				.getMetricDescription();
-
 		final Measure<Double, Quantity> value = event.getEntity().getMeasuringValue().getMeasureForMetric(base);
-
 		final double calculationValue = value.doubleValue(value.getUnit());
-
 		final MeasurementSpecification spec = event.getEntity().getProcessingType().getMeasurementSpecification();
 
+		// precalculate, because digging into the semantic model is probably expensive
+		final boolean isMinArch = SPDHelper.isMinArchitecture(semanticSpd, spd);
+		final boolean isMaxArch = SPDHelper.isMaxArchitecture(semanticSpd, spd);
+		
 		for (final ValueRange range : mp2range.get(spec)) {
 			if (range.isViolatedBy(calculationValue)) {
-				if (range.isLowerViolatedBy(calculationValue)
-						&& spec.getMonitor().getMeasuringPoint() instanceof final ActiveResourceMeasuringPoint armp
-						&& this.isMinimalConfig(armp)) {
+				if (range.isLowerViolatedBy(calculationValue) && isMinArch
+						|| range.isUpperViolatedBy(calculationValue) && isMaxArch) {
 					continue;
 				}
 				state.addReasonToLeave(ReasonToLeave.closenessToSLO);
@@ -211,35 +224,7 @@ public class SnapshotSLOTriggeringBehavior extends ConfigurableSnapshotExtension
 
 		return Result.empty();
 	}
-
-	/**
-	 * Checks whether a measuring point measures at an active resource, that is
-	 * already all scaled in, or whether the resource can be scaled in further.
-	 *
-	 * @param measuringPoint the measuring point whose resource is to be checked.
-	 * @return true if the measured active resource is already all scaled in, false
-	 *         otherwise or id no matching target group config is found.
-	 */
-	private boolean isMinimalConfig(final ActiveResourceMeasuringPoint measuringPoint) {
-		final ResourceContainer container = measuringPoint.getActiveResource()
-				.getResourceContainer_ProcessingResourceSpecification();
-
-		final List<EList<ResourceContainer>> elements = this.semanticSpd.getTargetCfgs().stream()
-				.filter(ElasticInfrastructureCfg.class::isInstance).map(ElasticInfrastructureCfg.class::cast)
-				.map(cfg -> cfg.getElements()).filter(set -> set.contains(container)).toList();
-
-		if (elements.isEmpty()) {
-			LOGGER.warn(String.format("No matching target group configuration for %s[s%] ", container.getEntityName(),
-					container.getId()));
-			return false;
-		} else if (elements.size() > 1) {
-			throw new IllegalStateException(String.format(
-					"Container %s[%s] is in too many target group configurations. Should onyl be in one, but is in %d.",
-					container.getEntityName(), container.getId(), elements.size()));
-		} else {
-			return elements.get(0).size() == 1;
-		}
-	}
+	
 
 	/**
 	 * Value range with upper and lower bound. Bounds are calculated based on the
