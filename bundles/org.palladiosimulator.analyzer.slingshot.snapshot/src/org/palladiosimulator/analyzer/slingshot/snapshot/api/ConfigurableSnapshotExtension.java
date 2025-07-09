@@ -6,14 +6,21 @@ import org.palladiosimulator.analyzer.slingshot.snapshot.configuration.SnapshotC
 
 /**
  * 
- * Parent for all configurable behaviour extenstions. 
- * 
- * 
+ * Parent for all configurable behaviour extenstions. <br>
+ * <br>
+ * Defines the key for mapping the configuration parameter to their respective
+ * behaviour extension. For more details, confer
+ * {@link ConfigurableSnapshotExtension#getKey()} <br>
+ * <br>
+ * The configuration parameters are extracted from a config-json. The key in the
+ * config-json must match the key returned by
+ * {@link ConfigurableSnapshotExtension#getKey()}, to associate the config
+ * parameters with the correct behaviour extension. <br>
  * 
  * @author Sophie Stieß
  */
 public abstract class ConfigurableSnapshotExtension implements SimulationBehaviorExtension {
-	protected final SnapshotBehaviourConfigurationParameters toggle;
+	protected final SnapshotBehaviourConfigurationParameters configParameters;
 	
 	/**
 	 * 
@@ -21,10 +28,10 @@ public abstract class ConfigurableSnapshotExtension implements SimulationBehavio
 	 */
 	public ConfigurableSnapshotExtension(final SnapshotConfiguration configuration) {
 		super();
-		if (configuration != null && configuration.getConfigurationParameters().containsKey(this.getToggleKey())) {
-			this.toggle = configuration.getConfigurationParameters().get(this.getToggleKey());
+		if (configuration != null && configuration.getConfigurationParameters().containsKey(this.getKey())) {
+			this.configParameters = configuration.getConfigurationParameters().get(this.getKey());
 		} else {
-			this.toggle = new SnapshotBehaviourConfigurationParameters(true);
+			this.configParameters = new SnapshotBehaviourConfigurationParameters(true);
 		}	
 	}
 
@@ -36,13 +43,13 @@ public abstract class ConfigurableSnapshotExtension implements SimulationBehavio
 	 * 
 	 * @return key for identifying the {@link SnapshotBehaviourConfigurationParameters} of this class
 	 */
-	public String getToggleKey() {
+	public String getKey() {
 		return this.getClass().getSimpleName();
 	}
 	
 	@Override
 	public final boolean isActive() {
-		return toggle.isActive() && this.getActivated();
+		return configParameters.isActive() && this.getActivated();
 	}
 	
 	protected abstract boolean getActivated();

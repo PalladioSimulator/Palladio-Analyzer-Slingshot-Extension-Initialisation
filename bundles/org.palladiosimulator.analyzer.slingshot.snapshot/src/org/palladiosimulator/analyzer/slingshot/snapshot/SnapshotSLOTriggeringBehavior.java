@@ -90,7 +90,7 @@ public class SnapshotSLOTriggeringBehavior extends ConfigurableSnapshotExtension
 			this.semanticSpd = semanticSpd; 
 			this.spd = spd;
 			this.mp2range = this.initMeasuringPoint2RangeMap(blackboard);
-			this.delay = this.toggle.hasParameter(DELAY, Double.class) ? this.toggle.getParameter(DELAY) : 0.0; 
+			this.delay = this.configParameters.hasParameter(DELAY, Double.class) ? this.configParameters.getParameter(DELAY) : 0.0; 
 			
 		} else {
 			this.activated = false;
@@ -126,7 +126,7 @@ public class SnapshotSLOTriggeringBehavior extends ConfigurableSnapshotExtension
 		
 		final ServiceLevelObjectiveRepository sloRepo = PCMResourcePartitionHelper.getSLORepository((PCMResourceSetPartition)
 				blackboard.getPartition(ConstantsContainer.DEFAULT_PCM_INSTANCE_PARTITION_ID));
-		final double sensitivity = toggle.hasParameter(SENSITIVITY, Double.class) ? toggle.getParameter(SENSITIVITY) : 0.0;
+		final double sensitivity = configParameters.hasParameter(SENSITIVITY, Double.class) ? configParameters.getParameter(SENSITIVITY) : 0.0;
 		
 		if (sensitivity < 0 || sensitivity > 1) {
 			throw new IllegalArgumentException("Parameter \"sensitivity\" must be in [0.0, 1.0] but is " + sensitivity + ".");

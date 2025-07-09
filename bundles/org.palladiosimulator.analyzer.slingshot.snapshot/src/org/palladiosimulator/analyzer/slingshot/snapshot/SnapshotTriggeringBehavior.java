@@ -77,8 +77,8 @@ public class SnapshotTriggeringBehavior extends ConfigurableSnapshotExtension {
 		this.adjustmentEvents = eventsWapper == null ? null : eventsWapper.getAdjustmentEvents();
 		this.config = semanticSpd;
 
-		this.doDrop = this.toggle.hasParameter(DO_DROP, Boolean.class) ? this.toggle.getParameter(DO_DROP) : true; 
-		this.delay = this.toggle.hasParameter(DELAY, Double.class) ? this.toggle.getParameter(DELAY) : 0.0; 
+		this.doDrop = this.configParameters.hasParameter(DO_DROP, Boolean.class) ? this.configParameters.getParameter(DO_DROP) : true; 
+		this.delay = this.configParameters.hasParameter(DELAY, Double.class) ? this.configParameters.getParameter(DELAY) : 0.0; 
 		
 		this.activated = state != null && eventsWapper != null;
 	}
