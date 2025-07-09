@@ -19,6 +19,9 @@ import org.palladiosimulator.spd.targets.TargetGroup;
  * 
  * Simple Test cases for some operations of {@link SPDHelper}.
  * 
+ * Execute as normal junit tests. 
+ * Execution as plugin-tests not required. 
+ * 
  * @author Sophie Stieß
  *
  */
