@@ -8,4 +8,9 @@ Bundle-RequiredExecutionEnvironment: JavaSE-17
 Require-Bundle: org.junit.jupiter.api,
  org.palladiosimulator.spd,
  org.palladiosimulator.spd.semantic,
- org.palladiosimulator.analyzer.slingshot.behavior.util
+ org.palladiosimulator.analyzer.slingshot.behavior.util,
+ org.palladiosimulator.analyzer.slingshot.common,
+ org.palladiosimulator.analyzer.slingshot.eventdriver,
+ org.palladiosimulator.analyzer.slingshot.core,
+ com.google.gson,
+ org.palladiosimulator.analyzer.slingshot.snapshot.serialization

@@ -21,6 +21,8 @@ import com.google.gson.stream.JsonWriter;
  * 
  * The adapter is only of {@link EList}s that contain {@link EObject}s.
  * 
+ * Make sure to also register the appropriate Adapter for {@link EObject}s.
+ * 
  * @author Sophie Stieß
  */
 public class ElistTypeAdapterFactory implements TypeAdapterFactory {

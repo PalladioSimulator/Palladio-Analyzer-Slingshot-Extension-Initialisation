@@ -1,29 +1,23 @@
-package spielwiese.version2;
+package org.palladiosimulator.analyzer.slingshot.snapshot.serialization;
 
-import java.io.IOException;
-import java.lang.reflect.Type;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import org.apache.log4j.Logger;
 import org.eclipse.emf.common.util.URI;
-import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
-import org.eclipse.emf.ecore.xmi.XMLResource;
 import org.palladiosimulator.analyzer.slingshot.common.events.DESEvent;
-import org.palladiosimulator.analyzer.slingshot.core.events.SimulationFinished;
 import org.palladiosimulator.analyzer.slingshot.core.events.SimulationStarted;
-import org.palladiosimulator.analyzer.slingshot.snapshot.serialization.adapters.EObjectTypeAdapter;
-import org.palladiosimulator.analyzer.slingshot.snapshot.serialization.adapters.TypeTokenTypeAdapter;
-import org.palladiosimulator.analyzer.slingshot.snapshot.serialization.factories.DESEventTypeAdapterFactory;
-import org.palladiosimulator.analyzer.slingshot.snapshot.serialization.factories.ElistTypeAdapterFactory;
-import org.palladiosimulator.analyzer.slingshot.snapshot.serialization.factories.EntityTypeAdapterFactory;
-import org.palladiosimulator.analyzer.slingshot.snapshot.serialization.factories.OptionalTypeAdapterFactory;
+import org.palladiosimulator.analyzer.slingshot.snapshot.serialization.data.rubbisch.ClassThing;
+import org.palladiosimulator.analyzer.slingshot.snapshot.serialization.data.rubbisch.EListThing;
+import org.palladiosimulator.analyzer.slingshot.snapshot.serialization.data.rubbisch.LoopThingChild;
+import org.palladiosimulator.analyzer.slingshot.snapshot.serialization.data.rubbisch.LoopThingParent;
+import org.palladiosimulator.analyzer.slingshot.snapshot.serialization.data.rubbisch.OptionalThing;
+import org.palladiosimulator.analyzer.slingshot.snapshot.serialization.data.rubbisch.PCMEvent;
+import org.palladiosimulator.analyzer.slingshot.snapshot.serialization.data.rubbisch.PCMThing;
+import org.palladiosimulator.analyzer.slingshot.snapshot.serialization.data.rubbisch.Thing;
 import org.palladiosimulator.pcm.core.CoreFactory;
 import org.palladiosimulator.pcm.core.PCMRandomVariable;
 import org.palladiosimulator.pcm.usagemodel.ClosedWorkload;
@@ -34,101 +28,14 @@ import org.palladiosimulator.pcm.usagemodel.Stop;
 import org.palladiosimulator.pcm.usagemodel.UsageModel;
 import org.palladiosimulator.pcm.usagemodel.UsageScenario;
 import org.palladiosimulator.pcm.usagemodel.UsagemodelFactory;
-import org.palladiosimulator.pcm.usagemodel.util.UsagemodelResourceImpl;
+import org.palladiosimulator.pcm.usagemodel.util.UsagemodelResourceFactoryImpl;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.TypeAdapter;
-import com.google.gson.reflect.TypeToken;
-
-import spielwiese.SpecialLoopResolvingTypeAdapterFactory3;
-
-
-public class Main {
-
-	private static final Logger LOGGER = Logger.getLogger(Main.class);
-
-	private static ResourceSet set = new ResourceSetImpl();
+public class EventCreationHelper {
 	
-	public static void main(final String[] args) {		
-		
-		final Set<DESEvent> events = createEvents();
-
-		final Set<DESEvent> events2 = Main.deserailize(events);
-		
-		
-		System.out.println("Hello Moon");
-	}
+	final ResourceSet set = new ResourceSetImpl();
 	
-	
-	public static Set<DESEvent> deserailize(final Set<DESEvent> events) {
-		// shared data structures
-		final Map<String, Object> objs = new HashMap<>();
-		final Map<String, TypeAdapter<?>> thingTypes = new HashMap<>();
-				
-		final GsonBuilder adaptereBuilder = new GsonBuilder();
-		adaptereBuilder.registerTypeHierarchyAdapter(EObject.class, new EObjectTypeAdapter(set));
-		adaptereBuilder.registerTypeHierarchyAdapter(com.google.common.reflect.TypeToken.class, new TypeTokenTypeAdapter());
-
-		
-		
-		adaptereBuilder.registerTypeAdapterFactory(new SpecialLoopResolvingTypeAdapterFactory3(objs, thingTypes));
-		adaptereBuilder.registerTypeAdapterFactory(new EntityTypeAdapterFactory(Set.of(
-				TypeToken.get(Thing.class), TypeToken.get(OptionalThing.class), TypeToken.get(LoopThingChild.class), TypeToken.get(LoopThingParent.class))));
-		adaptereBuilder.registerTypeAdapterFactory(new OptionalTypeAdapterFactory(Set.of()));
-		adaptereBuilder.registerTypeAdapterFactory(new ElistTypeAdapterFactory());
-		
-		adaptereBuilder.registerTypeAdapterFactory(new DESEventTypeAdapterFactory(Set.of()));
-		
-		
-		final Gson gsonwithAdapter = adaptereBuilder.create();
-
-		
-		final Set<EventAndType> typedEvent = new HashSet<>();
-		
-		for (final DESEvent e : events) {
-			typedEvent.add(new EventAndType(e, e.getClass().getCanonicalName()));
-		}
-	
-		
-		final Map<String, Class<? extends DESEvent>> eventTypes = new HashMap<>();
-		eventTypes.put(SimulationStarted.class.getCanonicalName(), SimulationStarted.class);
-		eventTypes.put(SimulationFinished.class.getCanonicalName(), SimulationFinished.class);
-		eventTypes.put(PCMEvent.class.getCanonicalName(), PCMEvent.class);
-		eventTypes.put(GenericPCMEvent.class.getCanonicalName(), GenericPCMEvent.class);
-		eventTypes.put(GenericPCMEvent2.class.getCanonicalName(), GenericPCMEvent2.class);
-		
-		final String eventJsonString = gsonwithAdapter.toJson(events);		
-		System.out.println(eventJsonString);
-		
-		final Type set2Type = new TypeToken<HashSet<DESEvent>>(){}.getType();
-
-		return gsonwithAdapter.fromJson(eventJsonString, set2Type);
-		
-	}
-	
-	public static UsageModel readUsageModel() {
-		createUsageModel(); // for call to eINSTANCES ;)
-		final Resource res = new UsagemodelResourceImpl(URI.createURI("file:/var/folders/y4/01qwswz94051py5_hwg72_740000gn/T/6bcac7c2-ab7a-4fb6-98df-c5b51b7518d6/4a419e1c-38b3-4b5d-93dd-027f68d027d3/default.usagemodel"));
-
-		set.getResources().add(res);
-		if (res.getContents().isEmpty()) {
-			try {
-				LOGGER.debug(String.format("Contents of Resource %s was empty and had to be loaded manually.",
-						res.getURI().toString()));
-				res.unload();
-				res.load(((XMLResource) res).getDefaultLoadOptions());
-				
-				return (UsageModel) res.getContents().get(0);
-			} catch (final IOException e) {
-				e.printStackTrace();
-			}
-		} 
-		return null;
-	}
-	
-	public static Set<DESEvent> createEvents() {	
-		final UsageModel model = readUsageModel();
+	public Set<DESEvent> createEvents() {	
+		final UsageModel model = createUsageModel();
 		
 		final LoopThingParent loopParent = new LoopThingParent("loopParent");
 		final LoopThingChild loopChild1 = new LoopThingChild("loopChild1", loopParent);
@@ -185,7 +92,7 @@ public class Main {
 		return events;
 	}
 	
-	public static UsageModel createUsageModel() {
+	public UsageModel createUsageModel() {
 		final UsageModel usageModel = UsagemodelFactory.eINSTANCE.createUsageModel();
 		final UsageScenario usageScenario = UsagemodelFactory.eINSTANCE.createUsageScenario();
 
@@ -216,6 +123,8 @@ public class Main {
 
 		// references
 		startEntity.setScenarioBehaviour_AbstractUserAction(behavior);
+		delayEntity.setScenarioBehaviour_AbstractUserAction(behavior);
+		stopEntity.setScenarioBehaviour_AbstractUserAction(behavior);
 		startEntity.setSuccessor(delayEntity);
 		delayEntity.setSuccessor(stopEntity);
 		stopEntity.setPredecessor(delayEntity);
@@ -223,7 +132,13 @@ public class Main {
 		behavior.setUsageScenario_SenarioBehaviour(usageScenario);
 		usageScenario.setScenarioBehaviour_UsageScenario(behavior);
 		usageModel.getUsageScenario_UsageModel().add(usageScenario);
-
+		
+		final Resource res  = (new UsagemodelResourceFactoryImpl()).createResource(URI.createFileURI("model.usagemodel"));
+		res.getContents().add(usageModel);
+		
+		
+		set.getResources().add(res);
+		
 		return usageModel;
 	}
 }
