@@ -6,10 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
-import java.lang.reflect.Type;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -18,45 +14,74 @@ import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.junit.jupiter.api.Test;
+import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.RootBehaviorContextHolder;
+import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.SeffBehaviorContextHolder;
+import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.SeffBehaviorWrapper;
+import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities.interpretationcontext.ClosedWorkloadUserInterpretationContext;
+import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities.interpretationcontext.UserInterpretationContext;
+import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.events.UsageModelPassedElement;
 import org.palladiosimulator.analyzer.slingshot.common.events.DESEvent;
-import org.palladiosimulator.analyzer.slingshot.core.events.SimulationFinished;
 import org.palladiosimulator.analyzer.slingshot.core.events.SimulationStarted;
 import org.palladiosimulator.analyzer.slingshot.snapshot.serialization.adapters.ClassTypeAdapter;
 import org.palladiosimulator.analyzer.slingshot.snapshot.serialization.adapters.EObjectTypeAdapter;
 import org.palladiosimulator.analyzer.slingshot.snapshot.serialization.adapters.TypeTokenTypeAdapter;
 import org.palladiosimulator.analyzer.slingshot.snapshot.serialization.data.ReferenceEntity;
 import org.palladiosimulator.analyzer.slingshot.snapshot.serialization.data.SimpleEntity;
-import org.palladiosimulator.analyzer.slingshot.snapshot.serialization.data.rubbisch.GenericPCMEvent;
-import org.palladiosimulator.analyzer.slingshot.snapshot.serialization.data.rubbisch.GenericPCMEvent2;
-import org.palladiosimulator.analyzer.slingshot.snapshot.serialization.data.rubbisch.LoopThingChild;
-import org.palladiosimulator.analyzer.slingshot.snapshot.serialization.data.rubbisch.LoopThingParent;
-import org.palladiosimulator.analyzer.slingshot.snapshot.serialization.data.rubbisch.OptionalThing;
-import org.palladiosimulator.analyzer.slingshot.snapshot.serialization.data.rubbisch.PCMEvent;
-import org.palladiosimulator.analyzer.slingshot.snapshot.serialization.data.rubbisch.Thing;
+import org.palladiosimulator.analyzer.slingshot.snapshot.serialization.data.SimpleGenericEvent;
 import org.palladiosimulator.analyzer.slingshot.snapshot.serialization.exception.ModelElementWriteException;
 import org.palladiosimulator.analyzer.slingshot.snapshot.serialization.factories.DESEventTypeAdapterFactory;
 import org.palladiosimulator.analyzer.slingshot.snapshot.serialization.factories.ElistTypeAdapterFactory;
 import org.palladiosimulator.analyzer.slingshot.snapshot.serialization.factories.EntityTypeAdapterFactory;
 import org.palladiosimulator.analyzer.slingshot.snapshot.serialization.factories.OptionalTypeAdapterFactory;
+import org.palladiosimulator.analyzer.slingshot.snapshot.serialization.util.SnapshotSerialisationUtils;
+import org.palladiosimulator.pcm.seff.ResourceDemandingBehaviour;
 import org.palladiosimulator.pcm.usagemodel.AbstractUserAction;
+import org.palladiosimulator.pcm.usagemodel.Start;
 import org.palladiosimulator.pcm.usagemodel.UsageModel;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.TypeAdapter;
 import com.google.gson.reflect.TypeToken;
 
 public class TestClass {
 	
-	EventCreationHelper helper = new EventCreationHelper();
+	ModelCreationHelper helper = new ModelCreationHelper();
 	
 	@Test
-	public void foo() {
-
+	public void testHolderToWrapperLoop() {		
+		final ResourceDemandingBehaviour behaviour = helper.createResourceDemandingBehaviour();
 		
+		final SeffBehaviorContextHolder holder = new RootBehaviorContextHolder(behaviour);
+		final SeffBehaviorWrapper wrapper = holder.getCurrentProcessedBehavior();
+		
+		final Gson writegson = SnapshotSerialisationUtils.createGsonForSlingshot(helper.set);
+		final Gson readgson = SnapshotSerialisationUtils.createGsonForSlingshot(helper.set);
+	
+		final SeffBehaviorContextHolder actualHolder = readgson.fromJson(writegson.toJson(holder), SeffBehaviorContextHolder.class);		
+		
+		assertEquals(actualHolder, actualHolder.getCurrentProcessedBehavior().getContext());
 	}
+	
+	@Test
+	public void testWrapperToHolderLoop() {		
+		final ResourceDemandingBehaviour behaviour = helper.createResourceDemandingBehaviour();
+		
+		final SeffBehaviorContextHolder holder = new RootBehaviorContextHolder(behaviour);
+		final SeffBehaviorWrapper wrapper = holder.getCurrentProcessedBehavior();
+		
+		final Gson writegson = SnapshotSerialisationUtils.createGsonForSlingshot(helper.set);
+		final Gson readgson = SnapshotSerialisationUtils.createGsonForSlingshot(helper.set);
+	
+		final SeffBehaviorWrapper actualWrapper = readgson.fromJson(writegson.toJson(wrapper), SeffBehaviorWrapper.class);		
+		
+		assertEquals(actualWrapper, actualWrapper.getContext().getCurrentProcessedBehavior());
+	}
+	
+	/**
+	 * Test PCM element inside an Optional.
+	 */
 	@Test
 	public void testOptionalPCM() {
 		final Gson writegson = new GsonBuilder()
@@ -88,8 +113,6 @@ public class TestClass {
 
 		assertEquals(action.getClass().getCanonicalName(), actualValue.getAsJsonObject().get(OptionalTypeAdapterFactory.FIELD_NAME_CLASS).getAsString());
 		assertEquals(writegson.toJsonTree(action).getAsString(), actualValue.getAsJsonObject().get(OptionalTypeAdapterFactory.REFERENCE_FIELD).getAsString());
-		
-		
 		
 		final Optional<AbstractUserAction> actualOptionalAction = readgson.fromJson(actual, new TypeToken<Optional<AbstractUserAction>>() {}.getType());
 		
@@ -198,7 +221,7 @@ public class TestClass {
 		assertTrue(actualObj.has(EntityTypeAdapterFactory.FIELD_NAME_ID_FOR_REFERENCE));
 		
 		assertTrue(actualObj.has(EntityTypeAdapterFactory.FIELD_NAME_CLASS));
-		assertEquals("\"" + entity.getClass().getCanonicalName() + "\"", actualObj.get(EntityTypeAdapterFactory.FIELD_NAME_CLASS).toString());
+		assertEquals(entity.getClass().getCanonicalName(), actualObj.get(EntityTypeAdapterFactory.FIELD_NAME_CLASS).getAsString());
 		
 		assertTrue(actualObj.has(EntityTypeAdapterFactory.FIELD_NAME_OBJECT));
 		assertTrue(actualObj.get(EntityTypeAdapterFactory.FIELD_NAME_OBJECT).isJsonObject());
@@ -209,16 +232,64 @@ public class TestClass {
 	}
 	
 	/**
-	 * test one of the events with type generics. 
+	 * Test one of the events with type generics as it appears in the actual simulation. 
 	 */
 	@Test
 	public void testGenericDESEvent() {
-		// TODO, e.g. Abstract Entity Changed
+		final Set<TypeToken<?>> typetokens = Set.of(new TypeToken<UserInterpretationContext>() {}, new TypeToken<ClosedWorkloadUserInterpretationContext>() {});
 		
+		final Gson readGson = new GsonBuilder()
+				.registerTypeHierarchyAdapter(Class.class, new ClassTypeAdapter())
+				.registerTypeHierarchyAdapter(com.google.common.reflect.TypeToken.class, new TypeTokenTypeAdapter())
+				.registerTypeHierarchyAdapter(EObject.class, new EObjectTypeAdapter(helper.set))
+				.registerTypeAdapterFactory(new OptionalTypeAdapterFactory(Set.of()))
+				.registerTypeAdapterFactory(new EntityTypeAdapterFactory(typetokens))
+				.registerTypeAdapterFactory(new DESEventTypeAdapterFactory(Set.of())).create();
+		final Gson writeGson = new GsonBuilder()
+				.registerTypeHierarchyAdapter(Class.class, new ClassTypeAdapter())
+				.registerTypeHierarchyAdapter(com.google.common.reflect.TypeToken.class, new TypeTokenTypeAdapter())
+				.registerTypeHierarchyAdapter(EObject.class, new EObjectTypeAdapter(helper.set))
+				.registerTypeAdapterFactory(new OptionalTypeAdapterFactory(Set.of()))
+				.registerTypeAdapterFactory(new EntityTypeAdapterFactory(typetokens))
+				.registerTypeAdapterFactory(new DESEventTypeAdapterFactory(Set.of())).create();
+		
+		final AbstractUserAction action = helper.createUsageModel().getUsageScenario_UsageModel().get(0)
+				.getScenarioBehaviour_UsageScenario().getActions_ScenarioBehaviour().get(0);
+		final DESEvent event = new UsageModelPassedElement<>(action, ClosedWorkloadUserInterpretationContext.builder().build());
+		
+		final UsageModelPassedElement<Start> actualEvent = readGson.fromJson(writeGson.toJsonTree(event), new TypeToken<UsageModelPassedElement<Start>>() {}.getType());
+		
+		assertTrue(Start.class.isInstance(actualEvent.getEntity()));
+		assertTrue(Start.class.isAssignableFrom(actualEvent.getGenericType()));
+		assertTrue(com.google.common.reflect.TypeToken.of(Start.class).isSupertypeOf(actualEvent.getTypeToken()));
 	}
 	
 	/**
-	 * Check wheter serialisation of a simple DES event has corrects fields, and
+	 * Test handling of reified event with a simple event that does not appear in the actual simulation. 
+	 */
+	@Test
+	public void testSimpleGenericDESEvent() {
+		final Gson readGson = new GsonBuilder()
+				.registerTypeHierarchyAdapter(Class.class, new ClassTypeAdapter())
+				.registerTypeHierarchyAdapter(com.google.common.reflect.TypeToken.class, new TypeTokenTypeAdapter())
+				.registerTypeAdapterFactory(new DESEventTypeAdapterFactory(Set.of())).create();
+		final Gson writeGson = new GsonBuilder()
+				.registerTypeHierarchyAdapter(Class.class, new ClassTypeAdapter())
+				.registerTypeHierarchyAdapter(com.google.common.reflect.TypeToken.class, new TypeTokenTypeAdapter())
+				.registerTypeAdapterFactory(new DESEventTypeAdapterFactory(Set.of())).create();
+		
+		final SimpleEntity entitiy = new SimpleEntity("entity");
+		final DESEvent event = new SimpleGenericEvent(SimpleEntity.class, entitiy, 0);
+				
+		final SimpleGenericEvent actualEvent = readGson.fromJson(writeGson.toJsonTree(event), SimpleGenericEvent.class);
+		
+		assertTrue(SimpleEntity.class.isInstance(actualEvent.getEntity()));
+		assertEquals(SimpleEntity.class, actualEvent.getGenericType());
+		assertEquals(com.google.common.reflect.TypeToken.of(SimpleEntity.class), actualEvent.getTypeToken());
+	}
+	
+	/**
+	 * Check wheter serialisation of a simple DES event has corrects fields, and 
 	 * whether deserialisation of the very event has the correct values again.
 	 */
 	@Test
@@ -234,7 +305,7 @@ public class TestClass {
 		final JsonObject actualObj = actual.getAsJsonObject();
 		
 		assertTrue(actualObj.has("type"));
-		assertEquals("\"" + event.getClass().getCanonicalName() + "\"", actualObj.get("type").toString());
+		assertEquals(event.getClass().getCanonicalName(), actualObj.get("type").getAsString());
 		
 		assertTrue(actualObj.has("event"));
 		assertTrue(actualObj.get("event").isJsonObject());
@@ -332,56 +403,13 @@ public class TestClass {
 	
 	@Test
 	public void testClassTypeAdpater() {
-		assertEquals("\"" + String.class.getCanonicalName() + "\"", (new ClassTypeAdapter()).toJson(String.class));	
+		assertEquals(String.class.getCanonicalName(), (new ClassTypeAdapter()).toJsonTree(String.class).getAsString());	
 	}
 	
 	@Test
 	public void testTypeTokenTypeAdpater() {
-		assertEquals("\"" + String.class.getCanonicalName() + "\"", (new TypeTokenTypeAdapter()).toJson(new com.google.common.reflect.TypeToken<String>() {}));	
+		assertEquals(String.class.getCanonicalName(), (new TypeTokenTypeAdapter()).toJsonTree(new com.google.common.reflect.TypeToken<String>() {}).getAsString());	
 	}
 	
-	
-	public void deserailize(final Set<DESEvent> events) {
-		
-		
-		// shared data structures
-		final Map<String, Object> objs = new HashMap<>();
-		final Map<String, TypeAdapter<?>> thingTypes = new HashMap<>();
-				
-		final GsonBuilder adaptereBuilder = new GsonBuilder();
-		adaptereBuilder.registerTypeHierarchyAdapter(EObject.class, new EObjectTypeAdapter(helper.set));
-		adaptereBuilder.registerTypeHierarchyAdapter(com.google.common.reflect.TypeToken.class, new TypeTokenTypeAdapter());
-
-		
-		
-		adaptereBuilder.registerTypeAdapterFactory(new EntityTypeAdapterFactory(Set.of(
-				TypeToken.get(Thing.class), TypeToken.get(OptionalThing.class), TypeToken.get(LoopThingChild.class), TypeToken.get(LoopThingParent.class))));
-		adaptereBuilder.registerTypeAdapterFactory(new OptionalTypeAdapterFactory(Set.of()));
-		adaptereBuilder.registerTypeAdapterFactory(new ElistTypeAdapterFactory());
-		
-		adaptereBuilder.registerTypeAdapterFactory(new DESEventTypeAdapterFactory(Set.of()));
-		
-		
-		final Gson gsonwithAdapter = adaptereBuilder.create();
-
-		
-		
-	
-		
-		final Map<String, Class<? extends DESEvent>> eventTypes = new HashMap<>();
-		eventTypes.put(SimulationStarted.class.getCanonicalName(), SimulationStarted.class);
-		eventTypes.put(SimulationFinished.class.getCanonicalName(), SimulationFinished.class);
-		eventTypes.put(PCMEvent.class.getCanonicalName(), PCMEvent.class);
-		eventTypes.put(GenericPCMEvent.class.getCanonicalName(), GenericPCMEvent.class);
-		eventTypes.put(GenericPCMEvent2.class.getCanonicalName(), GenericPCMEvent2.class);
-		
-		final String eventJsonString = gsonwithAdapter.toJson(events);		
-		System.out.println(eventJsonString);
-		
-		final Type set2Type = new TypeToken<HashSet<DESEvent>>(){}.getType();
-
-		final Set<DESEvent> results =  gsonwithAdapter.fromJson(eventJsonString, set2Type);
-		
-	}
 
 }

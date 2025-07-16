@@ -51,6 +51,10 @@ public class EObjectTypeAdapter extends TypeAdapter<EObject> {
 	 */
 	@Override
 	public void write(final JsonWriter out, final EObject value) throws IOException {	
+		if (value == null) {
+			out.value("");
+			return;
+		}
 		
 		if (value.eResource() == null) {
 			throw new ModelElementWriteException(
@@ -79,6 +83,10 @@ public class EObjectTypeAdapter extends TypeAdapter<EObject> {
 	@Override
 	public EObject read(final JsonReader in) throws IOException {
 		final String s = in.nextString();
+		
+		if (s.isEmpty()) {
+			return null;
+		}
 		
 		final String file = s.split("#")[0];
 		

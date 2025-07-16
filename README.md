@@ -542,6 +542,9 @@ Thus the precondition for deserializing PCM elements are:
 If i recall correctly, we required a special adapter for optionals, because otherwise the type of the optional's value would not be recognized correctly. 
 Also, there were some difficulties with empty optionals, and fields of type `Optional` with value `null`.
 
+The Exception was something like this:
+`java.lang.reflect.InaccessibleObjectException: Unable to make field private final java.lang.Object java.util.Optional.value accessible: module java.base does not "opens java.util" to unnamed module @782663d3`
+
 ### 6. `EList`
 
 Some entities use `EList` as collection type.
@@ -689,3 +692,6 @@ This approach has the following pitfalls:
   No guarantee on this one though.
   It might work just fine. 
   If these assumptions hold, the snapshot must only be initiated, if the simulation is terminated right after the snapshot is finished.   
+
+
+  

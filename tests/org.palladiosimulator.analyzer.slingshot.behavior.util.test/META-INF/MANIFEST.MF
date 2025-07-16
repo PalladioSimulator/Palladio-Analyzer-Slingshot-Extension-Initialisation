@@ -13,4 +13,6 @@ Require-Bundle: org.junit.jupiter.api,
  org.palladiosimulator.analyzer.slingshot.eventdriver,
  org.palladiosimulator.analyzer.slingshot.core,
  com.google.gson,
- org.palladiosimulator.analyzer.slingshot.snapshot.serialization
+ org.palladiosimulator.analyzer.slingshot.snapshot.serialization,
+ org.palladiosimulator.analyzer.slingshot.behavior.usagesimulation.data,
+ org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.data
