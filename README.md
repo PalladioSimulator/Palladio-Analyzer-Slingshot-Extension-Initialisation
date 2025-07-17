@@ -126,23 +126,56 @@ Notably, this extension's Application builds upon ExperimentAutomation, thus an 
 ### Example Files
 A complete set of PCM and JSON files can be found in [EspresssoAccountingMinimalExample](https://github.com/meccr/example-models/tree/main/EspresssoAccountingMinimalExample).
 
-* The folder `input` contains the JSONs for starting a simulation run at $t=0$ with or without policy application. 
+* The folder `input` contains the JSONs for starting a simulation run at $t=0$ with or without policy applications. 
+* The folder `output` contains results for six different example runs.
+  The naming shame is `<state>_<action>[_<action>]`.
+  * E.g. the folder `root_out-policy` contains the result of initialising a simulation to the root state (i.e. no initialisation at all) and applying the scale out policy.
+  * E.g. the folder `root_out-policy_in-policy` contains the result of initialising a simulation to the state, that resulted form applying the scale out policy to the root node, and the applying the scale in policy.
 
-* The folder `output` contains the PCM copies and JSONs created after initialising a simulation on an empty snapshot and apply no policies at the beginning.
+Here some more details about each result folder:
+* `root_no-policy`: PCM copies and JSONs created after initialising a simulation on an empty snapshot and applying no policies at the beginning.
   * Beware, the  PCM files should be identical to the ones in the parent folder. 
   * Files and folders used as arguments:
     * model files: those in `EspresssoAccountingMinimalExample`
-    * snapshot file: `EspresssoAccountingMinimalExample/input/snapshot.json`
-    * config file: `EspresssoAccountingMinimalExample/input/config.json`
-    * output folder: `EspresssoAccountingMinimalExample/output`
+    * snapshot file: `EspresssoAccountingMinimalExample/input/snapshot.snapshot`
+    * config file: `EspresssoAccountingMinimalExample/input/config.config`
+    * output folder: `EspresssoAccountingMinimalExample/output/root_no-policy`
 
-* The folder `output2` contains the PCM copies and JSONs created after initialising a simulation on the snapshot from the previous run (`output`) and apply a policies at the beginning. 
-  * Beware, the  PCM files should now differ from the ones in the `output` folder, as the applied policy was a scale out.  
+* `root_out-policy`: PCM copies and JSONs created after initialising a simulation on an empty snapshot and  applying a scale out policy at the beginning.
+  * Beware, the  PCM files should have additional instance, because of the scale out.  
+  * Files and folders used as arguments:    
+    * model & snapshot files: *as above*
+    * config file: `EspresssoAccountingMinimalExample/input/applyOUTPolicyConfig.json`
+    * output folder: `EspresssoAccountingMinimalExample/output/root_out-policy`
+
+* `root_in-policy`: PCM copies and JSONs created after initialising a simulation on an empty snapshot and applying a scale in policy at the beginning.
+  * Beware, the  PCM files should be identical to the ones in the parent folder and the state should have `aborted` as reason to leave and a duration of $0$.
   * Files and folders used as arguments:
-    * model files: those in `EspresssoAccountingMinimalExample/output`
-    * snapshot file: `EspresssoAccountingMinimalExample/output/snapshot.json`
-    * config file: `EspresssoAccountingMinimalExample/input/applyPolicyConfig.json`
-    * output folder: `EspresssoAccountingMinimalExample/output2`
+    * model & snapshot files: *as above*
+    * config file: `EspresssoAccountingMinimalExample/input/applyINPolicyConfig.json`
+    * output folder: `EspresssoAccountingMinimalExample/output/root_in-policy`
+
+* `root_out-policy_no-policy`: PCM copies and JSONs created after initialising a simulation on a non-empty snapshot and applying no policies at the beginning.
+  * Files and folders used as arguments:
+    * model & snapshot files: those in `EspresssoAccountingMinimalExample/output/root_out-policy`
+    * config file: `EspresssoAccountingMinimalExample/input/config.config`
+    * output folder: `EspresssoAccountingMinimalExample/output/root_out-policy_no-policy`
+
+* `root_out-policy_out-policy`: PCM copies and JSONs created after initialising a simulation on a non-empty snapshot and applying a scale out policy at the beginning.
+  * Beware, the  PCM files should have even more additional instance, because of the scale out.  
+  * Files and folders used as arguments:
+    * model & snapshot files: those in `EspresssoAccountingMinimalExample/output/root_out-policy`
+    * config file: `EspresssoAccountingMinimalExample/input/applyOUTPolicyConfig.json`
+    * output folder: `EspresssoAccountingMinimalExample/output/root_out-policy_out-policy`
+
+* `root_out-policy_in-policy`: PCM copies and JSONs created after initialising a simulation on a non-empty snapshot and applying a scale in policy at the beginning.
+  * Beware, the  PCM files should again be identical to the ones in the input folder.
+  * Files and folders used as arguments:
+    * model & snapshot files: those in `EspresssoAccountingMinimalExample/output/root_out-policy`
+    * config file: `EspresssoAccountingMinimalExample/input/applyINPolicyConfig.json`
+    * output folder: `EspresssoAccountingMinimalExample/output/root_out-policy_in-policy`
+
+
 
 ## Dev Setup
 
@@ -692,6 +725,3 @@ This approach has the following pitfalls:
   No guarantee on this one though.
   It might work just fine. 
   If these assumptions hold, the snapshot must only be initiated, if the simulation is terminated right after the snapshot is finished.   
-
-
-  

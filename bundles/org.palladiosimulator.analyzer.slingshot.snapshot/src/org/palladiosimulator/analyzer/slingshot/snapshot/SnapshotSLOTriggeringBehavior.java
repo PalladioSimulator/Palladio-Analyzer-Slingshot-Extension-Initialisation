@@ -207,8 +207,8 @@ public class SnapshotSLOTriggeringBehavior extends ConfigurableSnapshotExtension
 		
 		for (final ValueRange range : mp2range.get(spec)) {
 			if (range.isViolatedBy(calculationValue)) {
-				if (range.isLowerViolatedBy(calculationValue) && isMinArch
-						|| range.isUpperViolatedBy(calculationValue) && isMaxArch) {
+				if ((range.isLowerViolatedBy(calculationValue) && isMinArch)
+						|| (range.isUpperViolatedBy(calculationValue) && isMaxArch)) {
 					continue;
 				}
 				state.addReasonToLeave(ReasonToLeave.closenessToSLO);
