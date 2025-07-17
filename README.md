@@ -126,23 +126,56 @@ Notably, this extension's Application builds upon ExperimentAutomation, thus an 
 ### Example Files
 A complete set of PCM and JSON files can be found in [EspresssoAccountingMinimalExample](https://github.com/meccr/example-models/tree/main/EspresssoAccountingMinimalExample).
 
-* The folder `input` contains the JSONs for starting a simulation run at $t=0$ with or without policy application. 
+* The folder `input` contains the JSONs for starting a simulation run at $t=0$ with or without policy applications. 
+* The folder `output` contains results for six different example runs.
+  The naming shame is `<state>_<action>[_<action>]`.
+  * E.g. the folder `root_out-policy` contains the result of initialising a simulation to the root state (i.e. no initialisation at all) and applying the scale out policy.
+  * E.g. the folder `root_out-policy_in-policy` contains the result of initialising a simulation to the state, that resulted form applying the scale out policy to the root node, and the applying the scale in policy.
 
-* The folder `output` contains the PCM copies and JSONs created after initialising a simulation on an empty snapshot and apply no policies at the beginning.
+Here some more details about each result folder:
+* `root_no-policy`: PCM copies and JSONs created after initialising a simulation on an empty snapshot and applying no policies at the beginning.
   * Beware, the  PCM files should be identical to the ones in the parent folder. 
   * Files and folders used as arguments:
     * model files: those in `EspresssoAccountingMinimalExample`
-    * snapshot file: `EspresssoAccountingMinimalExample/input/snapshot.json`
-    * config file: `EspresssoAccountingMinimalExample/input/config.json`
-    * output folder: `EspresssoAccountingMinimalExample/output`
+    * snapshot file: `EspresssoAccountingMinimalExample/input/snapshot.snapshot`
+    * config file: `EspresssoAccountingMinimalExample/input/config.config`
+    * output folder: `EspresssoAccountingMinimalExample/output/root_no-policy`
 
-* The folder `output2` contains the PCM copies and JSONs created after initialising a simulation on the snapshot from the previous run (`output`) and apply a policies at the beginning. 
-  * Beware, the  PCM files should now differ from the ones in the `output` folder, as the applied policy was a scale out.  
+* `root_out-policy`: PCM copies and JSONs created after initialising a simulation on an empty snapshot and  applying a scale out policy at the beginning.
+  * Beware, the  PCM files should have additional instance, because of the scale out.  
+  * Files and folders used as arguments:    
+    * model & snapshot files: *as above*
+    * config file: `EspresssoAccountingMinimalExample/input/applyOUTPolicyConfig.json`
+    * output folder: `EspresssoAccountingMinimalExample/output/root_out-policy`
+
+* `root_in-policy`: PCM copies and JSONs created after initialising a simulation on an empty snapshot and applying a scale in policy at the beginning.
+  * Beware, the  PCM files should be identical to the ones in the parent folder and the state should have `aborted` as reason to leave and a duration of $0$.
   * Files and folders used as arguments:
-    * model files: those in `EspresssoAccountingMinimalExample/output`
-    * snapshot file: `EspresssoAccountingMinimalExample/output/snapshot.json`
-    * config file: `EspresssoAccountingMinimalExample/input/applyPolicyConfig.json`
-    * output folder: `EspresssoAccountingMinimalExample/output2`
+    * model & snapshot files: *as above*
+    * config file: `EspresssoAccountingMinimalExample/input/applyINPolicyConfig.json`
+    * output folder: `EspresssoAccountingMinimalExample/output/root_in-policy`
+
+* `root_out-policy_no-policy`: PCM copies and JSONs created after initialising a simulation on a non-empty snapshot and applying no policies at the beginning.
+  * Files and folders used as arguments:
+    * model & snapshot files: those in `EspresssoAccountingMinimalExample/output/root_out-policy`
+    * config file: `EspresssoAccountingMinimalExample/input/config.config`
+    * output folder: `EspresssoAccountingMinimalExample/output/root_out-policy_no-policy`
+
+* `root_out-policy_out-policy`: PCM copies and JSONs created after initialising a simulation on a non-empty snapshot and applying a scale out policy at the beginning.
+  * Beware, the  PCM files should have even more additional instance, because of the scale out.  
+  * Files and folders used as arguments:
+    * model & snapshot files: those in `EspresssoAccountingMinimalExample/output/root_out-policy`
+    * config file: `EspresssoAccountingMinimalExample/input/applyOUTPolicyConfig.json`
+    * output folder: `EspresssoAccountingMinimalExample/output/root_out-policy_out-policy`
+
+* `root_out-policy_in-policy`: PCM copies and JSONs created after initialising a simulation on a non-empty snapshot and applying a scale in policy at the beginning.
+  * Beware, the  PCM files should again be identical to the ones in the input folder.
+  * Files and folders used as arguments:
+    * model & snapshot files: those in `EspresssoAccountingMinimalExample/output/root_out-policy`
+    * config file: `EspresssoAccountingMinimalExample/input/applyINPolicyConfig.json`
+    * output folder: `EspresssoAccountingMinimalExample/output/root_out-policy_in-policy`
+
+
 
 ## Dev Setup
 
@@ -171,8 +204,14 @@ Pay attention to also import the SPD meta model and the SPD interpreter extensio
     This change was not accepted into the `master` branch, because it does not adhere to the current design of the slingshot event cycle.  
     For more details, confer [section on Recreating the SPD adjustor contexts' states](Development-Details-:-Recreating-the-State-of-the-SPD-adjustor-contexts) 
 
-* **[TODO]** check on *Palladio-Addons-SPD-Metamodel*: is transformation fix already merged? 
-
+* **Temporary Workaround** In (already cloned) repository *Palladio-Addons-SPD-Metamodel* switch branch 
+  ```
+  git checkout bug-fix-scaling-in-transformation
+  ```
+  * There is a bug when scaling in, that is currently (Jul'25) being fixed on that branch. 
+    Once that branch is merge and deleted, the repository *Palladio-Addons-SPD-Metamodel* must remain on `master`.
+  
+  
 + Import Experiment-Automation bundles. 
   * clone repository [Palladio-Addons-ExperimentAutomation](https://github.com/PalladioSimulator/Palladio-Addons-ExperimentAutomation) and switch to branch `slingshot-impl`:
   ```
@@ -536,6 +575,9 @@ Thus the precondition for deserializing PCM elements are:
 If i recall correctly, we required a special adapter for optionals, because otherwise the type of the optional's value would not be recognized correctly. 
 Also, there were some difficulties with empty optionals, and fields of type `Optional` with value `null`.
 
+The Exception was something like this:
+`java.lang.reflect.InaccessibleObjectException: Unable to make field private final java.lang.Object java.util.Optional.value accessible: module java.base does not "opens java.util" to unnamed module @782663d3`
+
 ### 6. `EList`
 
 Some entities use `EList` as collection type.
@@ -634,7 +676,7 @@ An abortion should be known as soon as possible, otherwise we waste computation 
 
 
 ## JSON schema
-Schemas for the config, snapshot ant state json can be found in [json-schema](link-to-folder-in-github).
+Schemas for the config, snapshot ant state json can be found in [json-schema](https://github.com/PalladioSimulator/Palladio-Analyzer-Slingshot-Extension-Initialisation/tree/master/json-schema).
 We generated the schemas with [https://github.com/MetaConfigurator/meta-configurator](https://github.com/MetaConfigurator/meta-configurator), and manually adapted them where necessary.
 
 For the snapshot json, the sch does not map the structure of entities in detail, instead we simplified it to `object`. 
@@ -646,17 +688,40 @@ Also, the initialisation plugin does not use the schemas for validation because.
 
 In conclusion, schemas are provided, but validation must be done manually. 
 
-## @Snapshottriggering:
-kann man das generische machen, also an stelle hardgecoded einen falls abzudecken (scale in auf min), alls generisch analog zum abortiong. problem: snapshot brauch unverändertes system. lässt sich das easy fixen?
-currently the *drop* cases are hardcoded. 
-
-
-## Tests basierend auf existierendem state file. 
-
+## Tests
+There are no end2end test. 
+However, there are Unit tests for some of the util classes and for parts of the serialisation. 
+All of those must be executed manually as normal JUnitTests. 
 
 ## Development Details : Initialisation Specific Branches and How to Maintain Them
-* TODO list the branches
-* TODO describe, how i maintained them up to now -> just merge master an pray for no conflicts. 
+As of now (Jul'25) only two repositories must be switched to branches other than `master`.
 
-## Known Problem : useless triggering of snapshots on minimal arch configuration. 
+* [`Palladio-Addons-ExperimentAutomation/slingshot-impl`](https://github.com/PalladioSimulator/Palladio-Addons-ExperimentAutomation/tree/slingshot-impl)
+  * This is branch is *not* MENTOR specific, but provides changes required for all of Slingshot.
+  * This branch is maintained by the [Slingshot developers](https://www.palladio-simulator.com/Palladio-Documentation-Slingshot/contributors/), i.e. no further effort required from the MENTOR team. 
 
+* [`Palladio-Analyzer-Slingshot-Extension-SPD-Interpreter/stateexplorationRequirements`](https://github.com/PalladioSimulator/Palladio-Analyzer-Slingshot-Extension-SPD-Interpreter/tree/stateexplorationRequirements)
+  * This branch is MENTOR specific and must be maintained by the MENTOR team. 
+  Confer section on development details about recreating the state of the SPD adjustor context for more background information.
+  * Maintenance process:
+    1. regularly merge changes from `master` into this branch.
+    2. if `master` introduces any changes, that break the MENTOR specific stuff, find a work around. 
+  * As already mentioned in an earlier section, this branch must remain. It must not be merged, because it bypasses some Slingshot design decisions. 
+
+
+## Future Ideas: Generic Implementation for Dropping Effectless Adaptations 
+
+As described in the earlier section on advanced configuration of certain snapshot-related behaviour extensions, the `SnapshotTriggeringBehavior` drops effectless adaptations, i.e. the behaviour does not initiate a snapshot because the adaptation that took place changed nothing about the architecture. 
+
+As of now (Jul'25) the dropping is implemented by checking the scaling direction and the architecture configuration in a hardcoded fashion, confer the JavaDoc of `SnapshotTriggeringBehavior` for more information. 
+
+However, a more generic dropping would be preferable. 
+One possibility would be to actually execute the adaptation, check for changes and only initiate the snapshot, if changes occurred.
+This approach has the following pitfalls:
+1. If the adaptation actually yields changes, and we only initiate the snapshot *after* applying the adaptation, the architecture is wrong. 
+  I.e. the architecture must be snapshotted/saved *before* it gets transformed. 
+  Attempting to undo the changes is futile.
+2. The process of taking a snapshot could change the simulation's behavior, due to additional update events and similar stuff. 
+  No guarantee on this one though.
+  It might work just fine. 
+  If these assumptions hold, the snapshot must only be initiated, if the simulation is terminated right after the snapshot is finished.   

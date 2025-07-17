@@ -8,6 +8,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.eclipse.emf.ecore.EObject;
+import org.palladiosimulator.analyzer.slingshot.snapshot.serialization.util.SnapshotSerialisationUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
@@ -104,7 +105,7 @@ public class OptionalTypeAdapterFactory implements TypeAdapterFactory {
 					final TypeAdapter<Object> delegate = this.getDelegateAdapter(gson, optional.get());
 					final JsonElement valueJson =  delegate.toJsonTree(optional.get());
 					
-					if (valueJson.isJsonObject() || this.isPCMModelReference(valueJson)) {
+					if (valueJson.isJsonObject()) {
 						jsonObject.add(OPTIONAL_VALUE_FIELD, valueJson);
 					} else {
 						final JsonObject refWarp = new JsonObject();
@@ -129,6 +130,19 @@ public class OptionalTypeAdapterFactory implements TypeAdapterFactory {
 
 				if (value.isJsonObject()) {
 					final String valueType = value.getAsJsonObject().get(FIELD_NAME_CLASS).getAsString();
+					
+					try {
+						final Class<?> clazz = SnapshotSerialisationUtils.getClassHelper(valueType);
+						if (EObject.class.isAssignableFrom(clazz)) {
+							if (value.getAsJsonObject().has(REFERENCE_FIELD)) {
+								return Optional.of(gson.fromJson(value.getAsJsonObject().get(REFERENCE_FIELD), EObject.class));
+							} else {
+								throw new JsonParseException("Expeceted serialisation with field \"" + REFERENCE_FIELD + "\", but found " + value + ".");
+							}
+						} 
+					} catch (final ClassNotFoundException e) {
+						throw new JsonParseException("Object of unknown type" + valueType + " inside an Optional", e);
+					}
 
 					if (optionalValuesDelegators.containsKey(valueType)) {
 						final TypeAdapter<Object> delegate = (TypeAdapter<Object>) optionalValuesDelegators.get(valueType);
@@ -139,24 +153,13 @@ public class OptionalTypeAdapterFactory implements TypeAdapterFactory {
 							return Optional.of(delegate.fromJsonTree(value));
 						}
 					} else {
-						throw new JsonParseException("Missing delegate for value of type" + valueType + "inside an Optional");
+						throw new JsonParseException("Missing delegate for value of type" + valueType + " inside an Optional");
 					}
 				} else if (value.getAsString().equals(OPTIONAL_EMPTY)) {
 					return Optional.empty();
-				} else if (this.isPCMModelReference(value)) {
-					return Optional.of(gson.fromJson(value, EObject.class));
 				} else {
 					throw new JsonParseException("Unexpected and unhandled primitive inside Optional: " + value.toString());
 				}
-			}
-
-			/**
-			 * 
-			 * @param value
-			 * @return true, if {@code value} represents a PCM model file, false otherwise.  
-			 */
-			private boolean isPCMModelReference(final JsonElement value) {
-				return value.getAsString().startsWith("file:");
 			}
 			
 			/**

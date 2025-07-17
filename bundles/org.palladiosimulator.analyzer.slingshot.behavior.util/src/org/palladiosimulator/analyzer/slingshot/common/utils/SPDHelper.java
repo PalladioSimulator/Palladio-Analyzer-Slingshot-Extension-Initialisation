@@ -44,6 +44,8 @@ public final class SPDHelper {
 	 * policies, if none of the policies can further reduce the number of elements
 	 * in the architecture.
 	 * 
+	 * If the configuration has no target group configurations it is NOT considered minimal.
+	 * 
 	 * @param config sematic configuration for the given spd.
 	 * @param spd set of scaling policies for determining minimalism.
 	 * @return true iff the architecture is minimal.
@@ -52,7 +54,12 @@ public final class SPDHelper {
 		boolean isMin = !config.getTargetCfgs().isEmpty();
 	
 		for (final TargetGroupCfg tgcfg : config.getTargetCfgs()) {
-			isMin &= SPDHelper.isMinTargetGroup(tgcfg, getTargetGroupSizeConstraint(getMatchingTargetGroup(tgcfg, spd)));
+			final Optional<TargetGroup> match = getMatchingTargetGroup(tgcfg, spd);
+			if (match.isPresent()) {
+				isMin &= SPDHelper.isMinTargetGroup(tgcfg, getTargetGroupSizeConstraint(match.get()));
+			} else {
+				isMin &= SPDHelper.isMinTargetGroup(tgcfg, Optional.empty());				
+			}
 		} 
 		return isMin;
 	}
@@ -64,6 +71,9 @@ public final class SPDHelper {
 	 * policies, if none of the policies can further increase the number of elements
 	 * in the architecture.
 	 * 
+	 *  If the configuration has no target group configurations it is considered maximal.
+	 *  
+	 * 
 	 * @param config sematic configuration for the given spd.
 	 * @param spd set of scaling policies for determining maximalism.
 	 * @return true iff the architecture is maximal.
@@ -72,7 +82,12 @@ public final class SPDHelper {
 		boolean isMax = !config.getTargetCfgs().isEmpty();
 		
 		for (final TargetGroupCfg tgcfg : config.getTargetCfgs()) {
-			isMax &= SPDHelper.isMaxTargetGroup(tgcfg, getTargetGroupSizeConstraint(getMatchingTargetGroup(tgcfg, spd)));
+			final Optional<TargetGroup> match = getMatchingTargetGroup(tgcfg, spd);
+			if (match.isPresent()) {
+				isMax &= SPDHelper.isMaxTargetGroup(tgcfg, getTargetGroupSizeConstraint(match.get()));
+			} else {
+				isMax &= SPDHelper.isMaxTargetGroup(tgcfg, Optional.empty());				
+			}
 		} 
 		return isMax;
 	}
@@ -114,30 +129,29 @@ public final class SPDHelper {
 	/**
 	 * Get a {@link TargetGroup} from the given {@link SPD} that references the same unit as the given {@link TargetGroupCfg}.
 	 * 
-	 * Requires, that the target group configuration's semantic model belong to the given {@link SPD}
+	 * Requires, that the target group configuration's semantic model belong to the given {@link SPD}, throws an {@link IllegalArgumentException} otherwise.
 	 * 
 	 * @param tgcfg semantic configuration 
 	 * @param spd spd to extract the matching target group from 
-	 * @return target group with the same unit as the given target group configuration.
+	 * @return target group with the same unit as the given target group configuration, or an empty optional, if no match exists.
 	 */
-	public static TargetGroup getMatchingTargetGroup(final TargetGroupCfg tgcfg, final SPD spd) {
-		if (!((Configuration) tgcfg.eContainer()).getSpd().equals(spd)) {
-			new IllegalArgumentException("The given target group configuration does not belong to the given spd.");
+	public static Optional<TargetGroup> getMatchingTargetGroup(final TargetGroupCfg tgcfg, final SPD spd) {
+		if (!spd.equals(((Configuration) tgcfg.eContainer()).getSpd())) {
+			throw new IllegalArgumentException("The given target group configuration does not belong to the given spd.");
 		}
 		
 		final Entity unit = getUnitOf(tgcfg);
 		
-		return spd.getTargetGroups().stream().filter(tg -> getUnitOf(tg).equals(unit)).findAny()
-				.orElseThrow(() -> new IllegalArgumentException(String.format(
-						"No matching TargetGroup for TargetGroupCfg with Unit %s[%s] in %s[%s]. This is a violation on the model requirements. Every TargetGroupCfg needs a corresponding TargetGroup.",
-						unit.getEntityName(), unit.getId(), spd.getEntityName(), spd.getId())));
+		return spd.getTargetGroups().stream().filter(tg -> getUnitOf(tg).equals(unit)).findAny();
 	}
 	
 	/**	
 	 * 
 	 * Get a {@link TargetGroupCfg} from the given {@link Configuration} that references the same unit as the given {@link TargetGroup}.
 	 * 
-	 * Requires, that the semantic configuration model belong to the given target group's {@link SPD}
+	 * Requires, that the semantic configuration model belong to the given target group's {@link SPD}, throws an {@link IllegalArgumentException} otherwise.
+	 * 
+	 * Throws an {@link IllegalArgumentException} if no match exists.
 	 * 
 	 * @param tg target group
 	 * @param config semantic configuration to extract the matching target group configuration from 
@@ -145,7 +159,7 @@ public final class SPDHelper {
 	 */
 	public static TargetGroupCfg getMatchingTargetGroupCfg(final TargetGroup tg, final Configuration config) {
 		if (!((SPD) tg.eContainer()).equals(config.getSpd())) {
-			new IllegalArgumentException("The given target group does not belong to the given semantic configuration.");
+			throw new IllegalArgumentException("The given target group does not belong to the given semantic configuration.");
 		}
 		
 		final Entity unit = getUnitOf(tg);
