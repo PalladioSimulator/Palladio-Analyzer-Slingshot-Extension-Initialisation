@@ -45,10 +45,22 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 
-public class TestClass {
+/**
+ * 
+ * Tests for the type adapter and type adapter factories for serializing
+ * snapshots, respectively the events and entities within.
+ * 
+ * @author Sophie Stieß
+ *
+ */
+public class SerialisationTests {
 	
 	ModelCreationHelper helper = new ModelCreationHelper();
 	
+	/**
+	 * Test (de-)serialisation of a seff behaviour context holder and wrapper with a
+	 * circular dependency between them, if the holder is serialized first.
+	 */
 	@Test
 	public void testHolderToWrapperLoop() {		
 		final ResourceDemandingBehaviour behaviour = helper.createResourceDemandingBehaviour();
@@ -64,6 +76,10 @@ public class TestClass {
 		assertEquals(actualHolder, actualHolder.getCurrentProcessedBehavior().getContext());
 	}
 	
+	/**
+	 * Test (de-)serialisation of a seff behaviour context holder and wrapper with a
+	 * circular dependency between them, if the wrapper is serialized first.
+	 */
 	@Test
 	public void testWrapperToHolderLoop() {		
 		final ResourceDemandingBehaviour behaviour = helper.createResourceDemandingBehaviour();
@@ -120,6 +136,9 @@ public class TestClass {
 		assertEquals(action, actualOptionalAction.get());
 	}
 	
+	/**
+	 * Test for correct (de-)serialisation of empty optionals.
+	 */
 	@Test
 	public void testOptionalEmpty() {
 		final Gson writegson = new GsonBuilder().registerTypeAdapterFactory(new OptionalTypeAdapterFactory(Set.of(new TypeToken<SimpleEntity>() {}))).create();
@@ -142,6 +161,11 @@ public class TestClass {
 		assertTrue(actualOptional.isEmpty());
 	}
 	
+	/**
+	 * Test for consistent (de-)serialisation of optionals, if the entitiy inside
+	 * the optional is also sserialised on its own, i.e. the optional only contains
+	 * a reference.
+	 */
 	@Test
 	public void testOptionalWithReference() {
 		final Gson writegson = new GsonBuilder().registerTypeAdapterFactory(new EntityTypeAdapterFactory(Set.of(new TypeToken<SimpleEntity>() {}))).registerTypeAdapterFactory(new OptionalTypeAdapterFactory(Set.of(new TypeToken<SimpleEntity>() {}))).create();
@@ -183,7 +207,8 @@ public class TestClass {
 	}
 		
 	/**
-	 * Check consistency of references for (de-)serialization of an entity with the {@link EntityTypeAdapterFactory}.
+	 * Check consistency of references for (de-)serialization of an entity with the
+	 * {@link EntityTypeAdapterFactory}.
 	 */
 	@Test
 	public void testEntityReferenceConsistency() {
@@ -204,7 +229,8 @@ public class TestClass {
 	}
 	
 	/**
-	 * Check correct (de-)serialization of a simple entity with the {@link EntityTypeAdapterFactory}.
+	 * Check correct (de-)serialization of a simple entity with the
+	 * {@link EntityTypeAdapterFactory}.
 	 */
 	@Test
 	public void testSimpleEntity() {
@@ -232,7 +258,8 @@ public class TestClass {
 	}
 	
 	/**
-	 * Test one of the events with type generics as it appears in the actual simulation. 
+	 * Test one of the events with type generics as it appears in the actual
+	 * simulation.
 	 */
 	@Test
 	public void testGenericDESEvent() {
@@ -265,7 +292,8 @@ public class TestClass {
 	}
 	
 	/**
-	 * Test handling of reified event with a simple event that does not appear in the actual simulation. 
+	 * Test handling of reified event with a simple event that does not appear in
+	 * the actual simulation.
 	 */
 	@Test
 	public void testSimpleGenericDESEvent() {
@@ -402,13 +430,23 @@ public class TestClass {
 	}
 	
 	@Test
-	public void testClassTypeAdpater() {
+	public void testWriteClassTypeAdpater() {
 		assertEquals(String.class.getCanonicalName(), (new ClassTypeAdapter()).toJsonTree(String.class).getAsString());	
 	}
 	
 	@Test
-	public void testTypeTokenTypeAdpater() {
+	public void testWriteTypeTokenTypeAdpater() {
 		assertEquals(String.class.getCanonicalName(), (new TypeTokenTypeAdapter()).toJsonTree(new com.google.common.reflect.TypeToken<String>() {}).getAsString());	
+	}
+	
+	@Test
+	public void testReadClassTypeAdpater() throws IOException {
+		assertEquals(String.class, (new ClassTypeAdapter()).fromJson("\""+String.class.getCanonicalName()+"\""));	
+	}
+	
+	@Test
+	public void testReadTypeTokenTypeAdpater() throws IOException {
+		assertEquals(new com.google.common.reflect.TypeToken<String>() {}, (new TypeTokenTypeAdapter()).fromJson("\""+String.class.getCanonicalName()+"\""));	
 	}
 	
 
