@@ -12,4 +12,4 @@ Require-Bundle: org.apache.log4j,
  org.palladiosimulator.spd;visibility:=reexport,
  org.palladiosimulator.spd.semantic;visibility:=reexport,
  org.palladiosimulator.servicelevelobjective;visibility:=reexport,
- de.uka.ipd.sdq.workflow.mdsd.blackboard;bundle-version="5.1.0"
+ de.uka.ipd.sdq.workflow.mdsd.blackboard
