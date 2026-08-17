@@ -4,7 +4,7 @@ Bundle-Name: Slingshot Initialisation Data
 Bundle-SymbolicName: org.palladiosimulator.analyzer.slingshot.initialisedsimulation.data
 Bundle-Version: 1.0.0.qualifier
 Automatic-Module-Name: org.palladiosimulator.analyzer.slingshot.initialisedsimulation.data
-Bundle-RequiredExecutionEnvironment: JavaSE-17
+Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: org.palladiosimulator.analyzer.slingshot.initialisedsimulation.graphstate,
  org.palladiosimulator.analyzer.slingshot.initialisedsimulation.serialisation
 Require-Bundle: org.palladiosimulator.analyzer.slingshot.common.utils,

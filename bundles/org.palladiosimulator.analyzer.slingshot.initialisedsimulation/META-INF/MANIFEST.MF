@@ -6,7 +6,7 @@ Bundle-Version: 1.0.0.qualifier
 Automatic-Module-Name: org.palladiosimulator.analyzer.slingshot.initialisedsimulation
 Bundle-ClassPath: lib/json-20240303.jar,
  .
-Bundle-RequiredExecutionEnvironment: JavaSE-17
+Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: org.palladiosimulator.analyzer.slingshot.initialisedsimulation,
  org.palladiosimulator.analyzer.slingshot.initialisedsimulation.configuration,
  org.palladiosimulator.analyzer.slingshot.initialisedsimulation.jobs,
@@ -32,7 +32,6 @@ Require-Bundle: org.palladiosimulator.edp2,
  org.palladiosimulator.analyzer.slingshot.workflow,
  org.palladiosimulator.spd.semantic,
  org.jgrapht.core,
- org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.data,
  org.palladiosimulator.analyzer.slingshot.behavior.usagesimulation.data,
  com.google.gson,
  org.scaledl.usageevolution,

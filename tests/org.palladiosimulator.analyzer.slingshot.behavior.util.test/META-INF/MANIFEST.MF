@@ -4,8 +4,8 @@ Bundle-Name: Initialisation Behaviour Util Test
 Bundle-SymbolicName: org.palladiosimulator.analyzer.slingshot.behavior.util.test
 Bundle-Version: 1.0.0.qualifier
 Automatic-Module-Name: org.palladiosimulator.analyzer.slingshot.behavior.util.test
-Bundle-RequiredExecutionEnvironment: JavaSE-17
-Require-Bundle: org.junit.jupiter.api,
+Bundle-RequiredExecutionEnvironment: JavaSE-21
+Require-Bundle: junit-jupiter-api,
  org.palladiosimulator.spd,
  org.palladiosimulator.spd.semantic,
  org.palladiosimulator.analyzer.slingshot.behavior.util,
