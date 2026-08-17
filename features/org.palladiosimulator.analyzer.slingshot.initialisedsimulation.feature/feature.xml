@@ -44,7 +44,7 @@
       <import plugin="com.google.inject" version="5.0.1" match="greaterOrEqual"/>
       <import plugin="ca.umontreal.iro.simul.ssj" version="3.3.1" match="greaterOrEqual"/>
       <import plugin="org.eclipse.osgi"/>
-      <import plugin="javax.inject"/>
+      <import plugin="jakarta.inject.jakarta.inject-api"/>
       <import plugin="org.palladiosimulator.analyzer.workflow"/>
       <import plugin="de.uka.ipd.sdq.workflow.mdsd.blackboard"/>
       <import plugin="org.palladiosimulator.mdsdprofiles.api"/>
